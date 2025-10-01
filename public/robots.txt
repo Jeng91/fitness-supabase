@@ -1,3 +1,11 @@
+# PJ Fitness - Robots.txt
 # https://www.robotstxt.org/robotstxt.html
+
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /private/
+
+# Sitemap (เพิ่มเมื่อมี sitemap)
+# Sitemap: https://yourdomain.com/sitemap.xml
