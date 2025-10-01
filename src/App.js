@@ -20,7 +20,9 @@ function App() {
     const [sortBy, setSortBy] = useState('newest'); // การเรียง
     const [showImageModal, setShowImageModal] = useState(false); // Modal สำหรับแสดงรูป
     const [showDetailModal, setShowDetailModal] = useState(false); // Modal สำหรับแสดงรายละเอียด
+    const [showImageGallery, setShowImageGallery] = useState(false); // Modal สำหรับแสดง Gallery
     const [selectedFitness, setSelectedFitness] = useState(null); // ฟิตเนสที่เลือกดู
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0); // รูปที่เลือกดู
     const [formData, setFormData] = useState({
       email: '',
       password: '',
@@ -287,6 +289,36 @@ function App() {
   const handleCloseDetailModal = () => {
     setShowDetailModal(false);
     setSelectedFitness(null);
+  };
+
+  // ฟังก์ชันสำหรับ Image Gallery
+  const handleOpenImageGallery = (fitness, imageIndex = 0) => {
+    setSelectedFitness(fitness);
+    setSelectedImageIndex(imageIndex);
+    setShowImageGallery(true);
+  };
+
+  const handleCloseImageGallery = () => {
+    setShowImageGallery(false);
+    setSelectedFitness(null);
+    setSelectedImageIndex(0);
+  };
+
+  // ฟังก์ชันดูพิกัด
+  const handleViewLocation = (fitness) => {
+    if (fitness.fit_location) {
+      const coords = fitness.fit_location.split(',');
+      if (coords.length === 2) {
+        const lat = parseFloat(coords[0].trim());
+        const lng = parseFloat(coords[1].trim());
+        const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+        window.open(googleMapsUrl, '_blank');
+      } else {
+        alert('ข้อมูลพิกัดไม่ถูกต้อง');
+      }
+    } else {
+      alert('ไม่มีข้อมูลพิกัด');
+    }
   };
 
   // เพิ่ม useEffect สำหรับโหลดข้อมูลฟิตเนสเมื่อเริ่มต้น
@@ -753,18 +785,44 @@ function App() {
                             src={selectedFitness.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
                             alt={selectedFitness.fitness_name}
                             className="detail-main-image"
+                            onClick={() => handleOpenImageGallery(selectedFitness, 0)}
+                            style={{ cursor: 'pointer' }}
                             onError={(e) => {
                               e.target.src = "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E";
                             }}
                           />
                         </div>
-                        {selectedFitness.image_secondary && (
-                          <div className="secondary-image-container">
-                            <img 
-                              src={selectedFitness.image_secondary} 
-                              alt="รูปรอง" 
-                              className="detail-secondary-image"
-                            />
+                        
+                        {/* รูปภาพเสริม */}
+                        {(selectedFitness.fit_image2 || selectedFitness.fit_image3 || selectedFitness.fit_image4) && (
+                          <div className="additional-images">
+                            <h4>รูปภาพเพิ่มเติม</h4>
+                            <div className="additional-images-grid">
+                              {selectedFitness.fit_image2 && (
+                                <img 
+                                  src={selectedFitness.fit_image2} 
+                                  alt="รูปเสริม 1" 
+                                  className="detail-additional-image"
+                                  onClick={() => handleOpenImageGallery(selectedFitness, 1)}
+                                />
+                              )}
+                              {selectedFitness.fit_image3 && (
+                                <img 
+                                  src={selectedFitness.fit_image3} 
+                                  alt="รูปเสริม 2" 
+                                  className="detail-additional-image"
+                                  onClick={() => handleOpenImageGallery(selectedFitness, 2)}
+                                />
+                              )}
+                              {selectedFitness.fit_image4 && (
+                                <img 
+                                  src={selectedFitness.fit_image4} 
+                                  alt="รูปเสริม 3" 
+                                  className="detail-additional-image"
+                                  onClick={() => handleOpenImageGallery(selectedFitness, 3)}
+                                />
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
@@ -831,6 +889,12 @@ function App() {
                           <button className="contact-btn">
                             📞 ติดต่อ
                           </button>
+                          <button 
+                            className="location-btn"
+                            onClick={() => handleViewLocation(selectedFitness)}
+                          >
+                            📍 ดูพิกัด
+                          </button>
                           <button className="favorite-btn-large">
                             ❤️ บันทึก
                           </button>
@@ -839,6 +903,93 @@ function App() {
                           </button>
                         </div>
                       </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Image Gallery Modal */}
+            {showImageGallery && selectedFitness && (
+              <div className="image-gallery-overlay" onClick={handleCloseImageGallery}>
+                <div className="image-gallery-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="gallery-header">
+                    <h3>{selectedFitness.fitness_name} - รูปภาพ</h3>
+                    <button className="close-btn" onClick={handleCloseImageGallery}>×</button>
+                  </div>
+                  <div className="gallery-body">
+                    <div className="main-gallery-image">
+                      {(() => {
+                        const images = [
+                          selectedFitness.image,
+                          selectedFitness.fit_image2,
+                          selectedFitness.fit_image3,
+                          selectedFitness.fit_image4
+                        ].filter(img => img);
+                        
+                        return images[selectedImageIndex] ? (
+                          <img 
+                            src={images[selectedImageIndex]} 
+                            alt={`รูปภาพ ${selectedImageIndex + 1}`}
+                            className="gallery-main-image"
+                          />
+                        ) : (
+                          <div className="no-image">ไม่มีรูปภาพ</div>
+                        );
+                      })()}
+                    </div>
+                    
+                    <div className="gallery-thumbnails">
+                      {[
+                        { src: selectedFitness.image, label: 'รูปหลัก' },
+                        { src: selectedFitness.fit_image2, label: 'รูปเสริม 1' },
+                        { src: selectedFitness.fit_image3, label: 'รูปเสริม 2' },
+                        { src: selectedFitness.fit_image4, label: 'รูปเสริม 3' }
+                      ].map((item, index) => (
+                        item.src && (
+                          <div 
+                            key={index}
+                            className={`thumbnail ${selectedImageIndex === index ? 'active' : ''}`}
+                            onClick={() => setSelectedImageIndex(index)}
+                          >
+                            <img src={item.src} alt={item.label} />
+                            <span className="thumbnail-label">{item.label}</span>
+                          </div>
+                        )
+                      ))}
+                    </div>
+                    
+                    <div className="gallery-navigation">
+                      <button 
+                        className="nav-btn prev"
+                        onClick={() => {
+                          const images = [
+                            selectedFitness.image,
+                            selectedFitness.fit_image2,
+                            selectedFitness.fit_image3,
+                            selectedFitness.fit_image4
+                          ].filter(img => img);
+                          const prevIndex = selectedImageIndex > 0 ? selectedImageIndex - 1 : images.length - 1;
+                          setSelectedImageIndex(prevIndex);
+                        }}
+                      >
+                        ‹ ก่อนหน้า
+                      </button>
+                      <button 
+                        className="nav-btn next"
+                        onClick={() => {
+                          const images = [
+                            selectedFitness.image,
+                            selectedFitness.fit_image2,
+                            selectedFitness.fit_image3,
+                            selectedFitness.fit_image4
+                          ].filter(img => img);
+                          const nextIndex = selectedImageIndex < images.length - 1 ? selectedImageIndex + 1 : 0;
+                          setSelectedImageIndex(nextIndex);
+                        }}
+                      >
+                        ถัดไป ›
+                      </button>
                     </div>
                   </div>
                 </div>
