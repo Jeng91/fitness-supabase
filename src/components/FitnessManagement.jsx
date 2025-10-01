@@ -19,7 +19,7 @@ const FitnessManagement = ({
     fit_address: '',
     fit_contact: '',
     fit_location: '',
-    fit_user: ownerData?.owner_id || '',
+    created_by: ownerData?.owner_uid || '',
     fit_phone: '',
     fit_dateopen: '',
     fit_dateclose: '',
@@ -33,13 +33,18 @@ const FitnessManagement = ({
 
   // Load existing fitness data
   const loadExistingFitnessData = useCallback(async () => {
-    if (!ownerData?.owner_id) return;
+    console.log('loadExistingFitnessData called with ownerData:', ownerData);
+    
+    if (!ownerData?.owner_uid) {
+      console.log('No ownerData.owner_uid available for loading fitness data');
+      return;
+    }
 
     try {
       const { data: loadedData, error } = await supabase
         .from('tbl_fitness')
         .select('*')
-        .eq('owner_id', ownerData.owner_id)
+        .eq('created_by', ownerData.owner_uid)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -66,7 +71,7 @@ const FitnessManagement = ({
     } catch (error) {
       console.error('Error in loadExistingFitnessData:', error);
     }
-  }, [ownerData?.owner_id, onUpdate]);
+  }, [ownerData, onUpdate]);
 
   useEffect(() => {
     if (initialFitnessData) {
@@ -217,10 +222,19 @@ const FitnessManagement = ({
           .single();
       } else {
         // Update existing fitness
+        console.log('Updating fitness with ownerData:', ownerData);
+        
+        if (!ownerData?.owner_uid) {
+          console.error('Error: ownerData.owner_uid is undefined');
+          alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_uid');
+          setSaving(false);
+          return;
+        }
+        
         result = await supabase
           .from('tbl_fitness')
           .update(saveData)
-          .eq('owner_id', ownerData.owner_id)
+          .eq('created_by', ownerData.owner_uid)
           .select()
           .single();
       }
@@ -260,6 +274,254 @@ const FitnessManagement = ({
 
   return (
     <div className="fitness-management">
+      <style jsx>{`
+        .fitness-management {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+
+        .fitness-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 30px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #e9ecef;
+        }
+
+        .fitness-header h2 {
+          color: #333;
+          margin: 0;
+          font-size: 28px;
+        }
+
+        .view-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .btn {
+          padding: 10px 20px;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .btn.secondary {
+          background: #6c757d;
+          color: white;
+        }
+
+        .btn.secondary:hover {
+          background: #5a6268;
+          transform: translateY(-2px);
+        }
+
+        .fitness-display-card {
+          background: white;
+          border-radius: 16px;
+          padding: 30px;
+          box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+          border: 1px solid #e9ecef;
+        }
+
+        .fitness-image-gallery {
+          margin-bottom: 30px;
+        }
+
+        .main-image-container {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          height: 300px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .main-fitness-image {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .no-image-placeholder {
+          height: 300px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+          border-radius: 12px;
+          color: #6c757d;
+          font-size: 48px;
+        }
+
+        .no-image-placeholder p {
+          margin: 10px 0 0 0;
+          font-size: 16px;
+        }
+
+        .image-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(transparent, rgba(0,0,0,0.7));
+          padding: 20px;
+        }
+
+        .image-label {
+          color: white;
+          font-size: 16px;
+          font-weight: 600;
+        }
+
+        .fitness-info-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          margin-bottom: 30px;
+        }
+
+        .info-card {
+          background: #f8f9fa;
+          border-radius: 12px;
+          padding: 20px;
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          transition: all 0.3s ease;
+          border-left: 4px solid #dee2e6;
+        }
+
+        .info-card:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .info-card.primary {
+          border-left-color: #007bff;
+          background: linear-gradient(135deg, #007bff);
+        }
+
+        .info-card.price {
+          border-left-color: #28a745;
+          background: linear-gradient(135deg, #28a745);
+        }
+
+        .info-card.location {
+          border-left-color: #dc3545;
+          background: linear-gradient(135deg, #dc3545);
+        }
+
+        .info-card.contact {
+          border-left-color: #ffc107;
+          background: linear-gradient(135deg, #ffc107);
+        }
+
+        .info-card.time {
+          border-left-color: #6f42c1;
+          background: linear-gradient(135deg, #6f42c1);
+        }
+
+        .info-card.social {
+          border-left-color: #20c997;
+          background: linear-gradient(135deg,  #20c997);
+        }
+
+        .info-icon {
+          font-size: 24px;
+          width: 40px;
+          height: 40px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: white;
+          border-radius: 10px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-content h3, .info-content h4 {
+          margin: 0 0 5px 0;
+          color: #333;
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        .info-label {
+          margin: 0;
+          color: #6c757d;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .gps-info {
+          background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
+          border-radius: 12px;
+          padding: 20px;
+          border-left: 4px solid #17a2b8;
+        }
+
+        .gps-info h4 {
+          margin: 0 0 15px 0;
+          color: #333;
+          font-size: 18px;
+        }
+
+        .gps-coords {
+          display: flex;
+          gap: 20px;
+          margin-bottom: 15px;
+          flex-wrap: wrap;
+        }
+
+        .gps-coords span {
+          background: white;
+          padding: 8px 15px;
+          border-radius: 20px;
+          font-size: 14px;
+          color: #333;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-map {
+          background: #17a2b8;
+          color: white;
+          border: none;
+          padding: 10px 20px;
+          border-radius: 25px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.3s ease;
+        }
+
+        .btn-map:hover {
+          background: #138496;
+          transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+          .fitness-header {
+            flex-direction: column;
+            gap: 15px;
+            text-align: center;
+          }
+
+          .fitness-info-grid {
+            grid-template-columns: 1fr;
+          }
+
+          .gps-coords {
+            flex-direction: column;
+            gap: 10px;
+          }
+        }
+      `}</style>
       <div className="section-header">
         <h2>🏋️ จัดการข้อมูลฟิตเนส</h2>
         <div className="header-actions">
@@ -312,38 +574,103 @@ const FitnessManagement = ({
       )}
 
       {fitnessMode === 'view' && hasFitnessData ? (
-        // View Mode
+        // View Mode - แสดงข้อมูลอย่างสวยงาม
         <div className="fitness-view">
-          <div className="fitness-card">
-            <div className="fitness-images">
-              {fitnessData.fit_image && (
-                <img 
-                  src={fitnessData.fit_image} 
-                  alt="รูปหลัก"
-                  className="fitness-main-image"
-                />
-              )}
-              {fitnessData.fit_image2 && (
-                <img 
-                  src={fitnessData.fit_image2} 
-                  alt="รูปเสริม"
-                  className="fitness-secondary-image"
-                />
-              )}
-            </div>
-            
-            <div className="fitness-details">
-              <h3>{fitnessData.fit_name}</h3>
-              <p className="price">฿{fitnessData.fit_price?.toLocaleString()}/เดือน</p>
-              <p className="description">{fitnessData.fit_detail}</p>
-              <p className="location">📍 {fitnessData.fit_location}</p>
-              {coordinates.lat && coordinates.lng && (
-                <p className="coordinates">
-                  🌍 ละติจูด: {coordinates.lat.toFixed(6)}, 
-                  ลองจิจูด: {coordinates.lng.toFixed(6)}
-                </p>
+          <div className="fitness-header">
+            <h2>🏢 ข้อมูลฟิตเนสของคุณ</h2>
+          </div>
+
+          <div className="fitness-display-card">
+            {/* รูปภาพหลัก */}
+            <div className="fitness-image-gallery">
+              {fitnessData.fit_image ? (
+                <div className="main-image-container">
+                  <img 
+                    src={fitnessData.fit_image} 
+                    alt={fitnessData.fit_name}
+                    className="main-fitness-image"
+                  />
+                  <div className="image-overlay">
+                    <span className="image-label">รูปหลัก</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-image-placeholder">
+                  🏢
+                  <p>ยังไม่มีรูปภาพ</p>
+                </div>
               )}
             </div>
+
+            {/* ข้อมูลหลัก */}
+            <div className="fitness-info-grid">
+              <div className="info-card primary">
+                <div className="info-icon">🏋️‍♂️</div>
+                <div className="info-content">
+                  <h3>{fitnessData.fit_name || 'ไม่ระบุชื่อ'}</h3>
+                  <p className="info-label">ชื่อฟิตเนส</p>
+                </div>
+              </div>
+
+              <div className="info-card price">
+                <div className="info-icon">💵</div>
+                <div className="info-content">
+                  <h3>฿{fitnessData.fit_price ? Number(fitnessData.fit_price).toLocaleString() : '0'}</h3>
+                  <p className="info-label">บาท/เดือน</p>
+                </div>
+              </div>
+
+              <div className="info-card location">
+                <div className="info-icon">🏠</div>
+                <div className="info-content">
+                  <h4>{fitnessData.fit_address || 'ไม่ระบุที่อยู่'}</h4>
+                  <p className="info-label">ที่อยู่</p>
+                </div>
+              </div>
+
+              <div className="info-card contact">
+                <div className="info-icon">☎️</div>
+                <div className="info-content">
+                  <h4>{fitnessData.fit_phone || 'ไม่ระบุเบอร์โทร'}</h4>
+                  <p className="info-label">เบอร์โทรติดต่อ</p>
+                </div>
+              </div>
+
+              <div className="info-card time">
+                <div className="info-icon">🕑</div>
+                <div className="info-content">
+                  <h4>
+                    {fitnessData.fit_dateopen || '00:00'} - {fitnessData.fit_dateclose || '00:00'}
+                  </h4>
+                  <p className="info-label">เวลาเปิด-ปิด</p>
+                </div>
+              </div>
+
+              <div className="info-card social">
+                <div className="info-icon">📲</div>
+                <div className="info-content">
+                  <h4>{fitnessData.fit_contact || 'ไม่ระบุ'}</h4>
+                  <p className="info-label">ช่องทางติดต่อ (โซเชียล)</p>
+                </div>
+              </div>
+            </div>
+
+            {/* GPS Location */}
+            {coordinates.lat && coordinates.lng && (
+              <div className="gps-info">
+                <h4>🌍 ตำแหน่ง GPS</h4>
+                <div className="gps-coords">
+                  <span>ละติจูด: {coordinates.lat.toFixed(6)}</span>
+                  <span>ลองจิจูด: {coordinates.lng.toFixed(6)}</span>
+                </div>
+                <button 
+                  className="btn-map"
+                  onClick={() => window.open(`https://maps.google.com/?q=${coordinates.lat},${coordinates.lng}`, '_blank')}
+                >
+                  🗺️ เปิดใน Google Maps
+                </button>
+              </div>
+            )}
           </div>
         </div>
       ) : (fitnessMode === 'create' || fitnessMode === 'edit') ? (

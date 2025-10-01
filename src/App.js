@@ -76,6 +76,7 @@ function App() {
 
       if (owner && !ownerError) {
         console.log('Found owner profile:', owner);
+        console.log('Owner keys:', Object.keys(owner));
         setUserProfile({ ...owner, role: 'partner' });
         return;
       }
