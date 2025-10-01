@@ -19,6 +19,7 @@ const FitnessManagement = ({
     fit_address: '',
     fit_contact: '',
     fit_location: '',
+    fit_user: ownerData?.owner_id || '',
     created_by: ownerData?.owner_uid || '',
     fit_phone: '',
     fit_dateopen: '',
@@ -44,7 +45,7 @@ const FitnessManagement = ({
       const { data: loadedData, error } = await supabase
         .from('tbl_fitness')
         .select('*')
-        .eq('created_by', ownerData.owner_uid)
+        .eq('fit_user', ownerData.owner_id)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -88,11 +89,11 @@ const FitnessManagement = ({
   useEffect(() => {
     const fetchFitnessData = async () => {
       const user = await supabase.auth.getUser();
-      if (user?.data?.user?.id) {
+      if (user?.data?.user?.id && ownerData?.owner_id) {
         const { data } = await supabase
           .from('tbl_fitness')
           .select('*')
-          .eq('created_by', user.data.user.id)
+          .eq('fit_user', ownerData.owner_id)
           .single();
         if (data) {
           setFitnessData(data);
@@ -105,7 +106,7 @@ const FitnessManagement = ({
       }
     };
     fetchFitnessData();
-  }, []);
+  }, [ownerData]);
 
   // Auto-save form data
   useEffect(() => {
@@ -204,7 +205,7 @@ const FitnessManagement = ({
         fit_address: fitnessData.fit_address,
         fit_contact: fitnessData.fit_contact,
         fit_location: fitnessData.fit_location,
-        fit_user: fitnessData.fit_user,
+        fit_user: ownerData?.owner_id || fitnessData.fit_user,
         fit_phone: fitnessData.fit_phone,
         fit_dateopen: fitnessData.fit_dateopen,
         fit_dateclose: fitnessData.fit_dateclose,
@@ -224,9 +225,9 @@ const FitnessManagement = ({
         // Update existing fitness
         console.log('Updating fitness with ownerData:', ownerData);
         
-        if (!ownerData?.owner_uid) {
-          console.error('Error: ownerData.owner_uid is undefined');
-          alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_uid');
+        if (!ownerData?.owner_id) {
+          console.error('Error: ownerData.owner_id is undefined');
+          alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_id');
           setSaving(false);
           return;
         }
@@ -234,7 +235,7 @@ const FitnessManagement = ({
         result = await supabase
           .from('tbl_fitness')
           .update(saveData)
-          .eq('created_by', ownerData.owner_uid)
+          .eq('fit_user', ownerData.owner_id)
           .select()
           .single();
       }
