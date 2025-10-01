@@ -7,6 +7,9 @@ const FitnessManagement = ({
   onUpdate,
   initialFitnessData = null 
 }) => {
+  console.log('🔍 FitnessManagement - ownerData received:', ownerData);
+  console.log('🔍 FitnessManagement - ownerData keys:', ownerData ? Object.keys(ownerData) : 'null');
+  
   // State สำหรับจัดการโหมดการทำงาน
   const [fitnessMode, setFitnessMode] = useState('view'); // 'create', 'edit', 'view'
   const [hasFitnessData, setHasFitnessData] = useState(false);
@@ -19,7 +22,7 @@ const FitnessManagement = ({
     fit_address: '',
     fit_contact: '',
     fit_location: '',
-    fit_user: ownerData?.owner_id || '',
+    fit_user: ownerData?.owner_name || '',
     created_by: ownerData?.owner_uid || '',
     fit_phone: '',
     fit_dateopen: '',
@@ -34,10 +37,10 @@ const FitnessManagement = ({
 
   // Load existing fitness data
   const loadExistingFitnessData = useCallback(async () => {
-    console.log('loadExistingFitnessData called with ownerData:', ownerData);
+    console.log('🔍 loadExistingFitnessData called with ownerData:', ownerData);
     
-    if (!ownerData?.owner_uid) {
-      console.log('No ownerData.owner_uid available for loading fitness data');
+    if (!ownerData?.owner_name) {
+      console.log('❌ No ownerData.owner_name available for loading fitness data');
       return;
     }
 
@@ -45,7 +48,7 @@ const FitnessManagement = ({
       const { data: loadedData, error } = await supabase
         .from('tbl_fitness')
         .select('*')
-        .eq('fit_user', ownerData.owner_id)
+        .eq('fit_user', ownerData.owner_name)
         .single();
 
       if (error && error.code !== 'PGRST116') {
@@ -80,7 +83,8 @@ const FitnessManagement = ({
       setCoordinates({ lat: initialFitnessData.fit_lat || 0, lng: initialFitnessData.fit_lng || 0 });
       setHasFitnessData(true);
       setFitnessMode('view');
-    } else if (ownerData?.owner_id) {
+    } else if (ownerData?.owner_name) {
+      console.log('🚀 กำลังโหลดข้อมูลฟิตเนสสำหรับ:', ownerData.owner_name);
       loadExistingFitnessData();
     }
   }, [initialFitnessData, ownerData, loadExistingFitnessData]);
@@ -89,11 +93,11 @@ const FitnessManagement = ({
   useEffect(() => {
     const fetchFitnessData = async () => {
       const user = await supabase.auth.getUser();
-      if (user?.data?.user?.id && ownerData?.owner_id) {
+      if (user?.data?.user?.id && ownerData?.owner_name) {
         const { data } = await supabase
           .from('tbl_fitness')
           .select('*')
-          .eq('fit_user', ownerData.owner_id)
+          .eq('fit_user', ownerData.owner_name)
           .single();
         if (data) {
           setFitnessData(data);
@@ -205,7 +209,7 @@ const FitnessManagement = ({
         fit_address: fitnessData.fit_address,
         fit_contact: fitnessData.fit_contact,
         fit_location: fitnessData.fit_location,
-        fit_user: ownerData?.owner_id || fitnessData.fit_user,
+        fit_user: ownerData?.owner_name || fitnessData.fit_user,
         fit_phone: fitnessData.fit_phone,
         fit_dateopen: fitnessData.fit_dateopen,
         fit_dateclose: fitnessData.fit_dateclose,
@@ -225,9 +229,9 @@ const FitnessManagement = ({
         // Update existing fitness
         console.log('Updating fitness with ownerData:', ownerData);
         
-        if (!ownerData?.owner_id) {
-          console.error('Error: ownerData.owner_id is undefined');
-          alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_id');
+        if (!ownerData?.owner_name) {
+          console.error('Error: ownerData.owner_name is undefined');
+          alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_name');
           setSaving(false);
           return;
         }
@@ -235,7 +239,7 @@ const FitnessManagement = ({
         result = await supabase
           .from('tbl_fitness')
           .update(saveData)
-          .eq('fit_user', ownerData.owner_id)
+          .eq('fit_user', ownerData.owner_name)
           .select()
           .single();
       }

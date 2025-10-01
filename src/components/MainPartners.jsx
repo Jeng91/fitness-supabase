@@ -16,6 +16,9 @@ const MainPartners = (props) => {
   const [currentMenu, setCurrentMenu] = useState('overview');
   // รับ ownerData จาก props (App.js)
   const ownerData = props.ownerData || null;
+  
+  console.log('🔍 MainPartners - ownerData received:', ownerData);
+  console.log('🔍 MainPartners - ownerData keys:', ownerData ? Object.keys(ownerData) : 'null');
 
   // Callback functions for components
   const handleFitnessUpdate = (data) => {

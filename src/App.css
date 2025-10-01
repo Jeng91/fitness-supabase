@@ -525,10 +525,13 @@ body.dark-mode .form-group input::placeholder {
 }
 
 .fitness-count {
-  color: #666;
+  color: #000000 !important;
   font-size: 0.9rem;
   margin: 0.5rem 0 0 0;
+
 }
+
+
 
 .guest-notice {
   color: #667eea;
@@ -776,7 +779,7 @@ body.dark-mode .form-group input::placeholder {
 }
 
 .fitness-location {
-  color: #6b7280;
+  color: #6b7280 !important;
   font-size: 0.9rem;
   margin-bottom: 0.5rem;
   display: -webkit-box;
@@ -787,13 +790,13 @@ body.dark-mode .form-group input::placeholder {
 }
 
 .fitness-phone {
-  color: #6b7280;
+  color: #6b7280 !important;
   font-size: 0.85rem;
   margin-bottom: 0.5rem;
 }
 
 .fitness-owner {
-  color: #667eea;
+  color: #667eea !important;
   font-size: 0.85rem;
   margin-bottom: 1rem;
   font-weight: 500;
@@ -839,7 +842,7 @@ body.dark-mode .form-group input::placeholder {
   grid-column: 1 / -1;
   text-align: center;
   padding: 3rem;
-  color: #6b7280;
+  color: #3b82f6;
 }
 
 .no-fitness p {

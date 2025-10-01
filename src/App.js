@@ -140,7 +140,7 @@ function App() {
       // ดึงข้อมูลเจ้าของทั้งหมด
       const { data: ownerData, error: ownerError } = await supabase
         .from('tbl_owner')
-        .select('owner_id, owner_name, owner_email, auth_user_id');
+        .select('owner_uid, owner_name, owner_email, auth_user_id');
 
       if (ownerError) {
         console.error('Error loading owner data:', ownerError);
@@ -153,8 +153,10 @@ function App() {
       const ownerMap = {};
       if (ownerData) {
         ownerData.forEach(owner => {
-          // Map ทั้ง owner_id และ auth_user_id
-          ownerMap[owner.owner_id] = owner;
+          // Map ทั้ง owner_uid, owner_name และ auth_user_id
+          ownerMap[owner.owner_uid] = owner;
+          ownerMap[owner.owner_uid.toString()] = owner; // เผื่อเป็น string
+          ownerMap[owner.owner_name] = owner; // Map by name
           if (owner.auth_user_id) {
             ownerMap[owner.auth_user_id] = owner;
           }
@@ -552,13 +554,7 @@ function App() {
       case 'หน้าหลัก':
         return (
           <div className="home-content">
-            <div className="search-section">
-              <h1>ค้นหา</h1>
-              <div className="search-bar">
-                <input type="text" placeholder="ค้นหา..." className="search-input" />
-                <button className="search-btn">ค้นหา</button>
-              </div>
-            </div>
+            
             
             <div className="fitness-section">
               <div className="fitness-header">
@@ -859,6 +855,7 @@ function App() {
         );
       case 'mainpartners':
         // ดึงข้อมูล ownerData จาก userProfile ที่เป็น partner
+        console.log('🔍 MainPartners - userProfile:', userProfile);
         if (userProfile?.role === 'partner') {
           return (
             <MainPartners 
