@@ -19,6 +19,9 @@ const FitnessManagement = ({
     fit_name: '',
     fit_price: '',
     fit_image: '',
+    fit_image2: '',
+    fit_image3: '',
+    fit_image4: '',
     fit_address: '',
     fit_contact: '',
     fit_location: '',
@@ -31,6 +34,9 @@ const FitnessManagement = ({
 
   // State สำหรับ UI และ Loading
   const [mainUploading, setMainUploading] = useState(false);
+  const [image2Uploading, setImage2Uploading] = useState(false);
+  const [image3Uploading, setImage3Uploading] = useState(false);
+  const [image4Uploading, setImage4Uploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [coordinates, setCoordinates] = useState({ lat: 0, lng: 0 });
   const [autoSaveStatus, setAutoSaveStatus] = useState('');
@@ -206,6 +212,9 @@ const FitnessManagement = ({
         fit_name: fitnessData.fit_name,
         fit_price: fitnessData.fit_price,
         fit_image: fitnessData.fit_image,
+        fit_image2: fitnessData.fit_image2 || '',
+        fit_image3: fitnessData.fit_image3 || '',
+        fit_image4: fitnessData.fit_image4 || '',
         fit_address: fitnessData.fit_address,
         fit_contact: fitnessData.fit_contact,
         fit_location: fitnessData.fit_location,
@@ -338,6 +347,56 @@ const FitnessManagement = ({
 
         .fitness-image-gallery {
           margin-bottom: 30px;
+        }
+
+        .secondary-images {
+          margin-top: 25px;
+        }
+
+        .secondary-images h4 {
+          color: #333;
+          margin-bottom: 15px;
+          font-size: 18px;
+          font-weight: 600;
+        }
+
+        .secondary-images-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 15px;
+        }
+
+        .secondary-image-item {
+          position: relative;
+          border-radius: 12px;
+          overflow: hidden;
+          height: 150px;
+          background: #f8f9fa;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+          transition: transform 0.3s ease;
+        }
+
+        .secondary-image-item:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .secondary-image-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .secondary-label {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(transparent, rgba(0,0,0,0.7));
+          color: white;
+          padding: 10px;
+          font-size: 12px;
+          font-weight: 500;
         }
 
         .main-image-container {
@@ -586,8 +645,9 @@ const FitnessManagement = ({
           </div>
 
           <div className="fitness-display-card">
-            {/* รูปภาพหลัก */}
+            {/* รูปภาพหลักและรูปเสริม */}
             <div className="fitness-image-gallery">
+              {/* รูปหลัก */}
               {fitnessData.fit_image ? (
                 <div className="main-image-container">
                   <img 
@@ -603,6 +663,33 @@ const FitnessManagement = ({
                 <div className="no-image-placeholder">
                   🏢
                   <p>ยังไม่มีรูปภาพ</p>
+                </div>
+              )}
+
+              {/* รูปเสริม */}
+              {(fitnessData.fit_image2 || fitnessData.fit_image3 || fitnessData.fit_image4) && (
+                <div className="secondary-images">
+                  <h4>รูปภาพเพิ่มเติม</h4>
+                  <div className="secondary-images-grid">
+                    {fitnessData.fit_image2 && (
+                      <div className="secondary-image-item">
+                        <img src={fitnessData.fit_image2} alt="รูปเสริม 1" />
+                        <span className="secondary-label">รูปเสริม 1</span>
+                      </div>
+                    )}
+                    {fitnessData.fit_image3 && (
+                      <div className="secondary-image-item">
+                        <img src={fitnessData.fit_image3} alt="รูปเสริม 2" />
+                        <span className="secondary-label">รูปเสริม 2</span>
+                      </div>
+                    )}
+                    {fitnessData.fit_image4 && (
+                      <div className="secondary-image-item">
+                        <img src={fitnessData.fit_image4} alt="รูปเสริม 3" />
+                        <span className="secondary-label">รูปเสริม 3</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -719,11 +806,82 @@ const FitnessManagement = ({
                 disabled={mainUploading}
               />
               {mainUploading && <p className="uploading">กำลังอัพโหลด...</p>}
-              {/* สามารถเพิ่ม progress bar ได้ที่นี่ */}
               {fitnessData.fit_image && (
                 <div className="image-preview-main">
                   <img src={fitnessData.fit_image} alt="รูปภาพหลัก" className="image-preview" />
                   <button type="button" className="remove-image-btn" onClick={() => handleInputChange('fit_image', '')}>ลบ</button>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>รูปภาพเสริม 1</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const imageUrl = await uploadImage(file, true, setImage2Uploading);
+                  if (imageUrl) {
+                    handleInputChange('fit_image2', imageUrl);
+                  }
+                }}
+                disabled={image2Uploading}
+              />
+              {image2Uploading && <p className="uploading">กำลังอัพโหลด...</p>}
+              {fitnessData.fit_image2 && (
+                <div className="image-preview-main">
+                  <img src={fitnessData.fit_image2} alt="รูปภาพเสริม 1" className="image-preview" />
+                  <button type="button" className="remove-image-btn" onClick={() => handleInputChange('fit_image2', '')}>ลบ</button>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>รูปภาพเสริม 2</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const imageUrl = await uploadImage(file, true, setImage3Uploading);
+                  if (imageUrl) {
+                    handleInputChange('fit_image3', imageUrl);
+                  }
+                }}
+                disabled={image3Uploading}
+              />
+              {image3Uploading && <p className="uploading">กำลังอัพโหลด...</p>}
+              {fitnessData.fit_image3 && (
+                <div className="image-preview-main">
+                  <img src={fitnessData.fit_image3} alt="รูปภาพเสริม 2" className="image-preview" />
+                  <button type="button" className="remove-image-btn" onClick={() => handleInputChange('fit_image3', '')}>ลบ</button>
+                </div>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label>รูปภาพเสริม 3</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const imageUrl = await uploadImage(file, true, setImage4Uploading);
+                  if (imageUrl) {
+                    handleInputChange('fit_image4', imageUrl);
+                  }
+                }}
+                disabled={image4Uploading}
+              />
+              {image4Uploading && <p className="uploading">กำลังอัพโหลด...</p>}
+              {fitnessData.fit_image4 && (
+                <div className="image-preview-main">
+                  <img src={fitnessData.fit_image4} alt="รูปภาพเสริม 3" className="image-preview" />
+                  <button type="button" className="remove-image-btn" onClick={() => handleInputChange('fit_image4', '')}>ลบ</button>
                 </div>
               )}
             </div>
