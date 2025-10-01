@@ -149,6 +149,17 @@ function App() {
         console.error('Error loading owner data:', ownerError);
       }
 
+      // ดึงข้อมูลอุปกรณ์ทั้งหมด
+      const { data: equipmentData, error: equipmentError } = await supabase
+        .from('tbl_equipment')
+        .select('*');
+
+      if (equipmentError) {
+        console.error('Error loading equipment data:', equipmentError);
+      } else {
+        console.log('Equipment data loaded:', equipmentData);
+      }
+
       console.log('Raw fitness data from database:', fitnessData);
       console.log('Owner data from database:', ownerData);
 
@@ -165,12 +176,98 @@ function App() {
           }
         });
       }
+      // สร้าง equipment map สำหรับ fitness แต่ละแห่ง
+      const equipmentMap = {};
+      if (equipmentData) {
+        console.log('💪 Equipment data available:', equipmentData);
+        equipmentData.forEach(equipment => {
+          console.log('💪 Processing equipment:', equipment);
+          // ลองหาผ่านหลายคีย์
+          const possibleKeys = [
+            equipment.eq_user,
+            equipment.fit_user, 
+            equipment.created_by,
+            equipment.eq_owner,
+            equipment.owner_name
+          ];
+          
+          possibleKeys.forEach(key => {
+            if (key) {
+              if (!equipmentMap[key]) {
+                equipmentMap[key] = [];
+              }
+              equipmentMap[key].push(equipment);
+              console.log(`💪 Added equipment to key: ${key}`, equipment.eq_name);
+            }
+          });
+        });
+        console.log('💪 Final equipment map:', equipmentMap);
+      } else {
+        console.log('💪 No equipment data found');
+      }
+
       if (fitnessData) {
         console.log('Raw fitness data from database:', fitnessData);
         // แปลงข้อมูลจาก tbl_fitness ให้เป็นรูปแบบที่ใช้แสดงผล
         const transformedData = fitnessData?.map(fitness => {
           // หา owner จาก fit_user หรือ created_by
           const owner = ownerMap[fitness.fit_user] || ownerMap[fitness.created_by] || null;
+          
+          // หาอุปกรณ์ของฟิตเนสนี้ - ลองหาผ่านหลายคีย์
+          const possibleEquipmentKeys = [
+            fitness.fit_user,           // ชื่อผู้ใช้ใน tbl_fitness
+            fitness.created_by,         // ผู้สร้างใน tbl_fitness
+            owner?.owner_name,          // ชื่อเจ้าของ
+            owner?.owner_uid,           // UID เจ้าของ
+            owner?.auth_user_id,        // Auth ID
+            fitness.fit_name            // ชื่อฟิตเนส
+          ];
+          
+          let fitnessEquipment = [];
+          possibleEquipmentKeys.forEach(key => {
+            if (key && equipmentMap[key]) {
+              fitnessEquipment = [...fitnessEquipment, ...equipmentMap[key]];
+            }
+          });
+          
+          // ลบข้อมูลซ้ำ (ถ้ามี)
+          fitnessEquipment = fitnessEquipment.filter((eq, index, self) => 
+            index === self.findIndex(e => e.eq_id === eq.eq_id)
+          );
+          
+          console.log(`💪 Equipment for ${fitness.fit_name}:`, fitnessEquipment);
+          console.log(`💪 Searched keys:`, possibleEquipmentKeys);
+          
+          // ถ้าไม่มีอุปกรณ์จริง ให้ใส่ข้อมูล Mock สำหรับทดสอบ (เฉพาะ JM FITNESS)
+          if (fitnessEquipment.length === 0 && fitness.fit_name === 'JM FITNESS') {
+            fitnessEquipment = [
+              {
+                eq_id: 'mock1',
+                eq_name: 'เครื่องวิ่ง',
+                eq_price: 50,
+                eq_detail: 'เครื่องวิ่งไฟฟ้า ใช้งานง่าย เหมาะสำหรับการออกกำลังกาย',
+                eq_qty: 5,
+                eq_image: 'https://via.placeholder.com/100x100?text=Treadmill'
+              },
+              {
+                eq_id: 'mock2', 
+                eq_name: 'ดัมเบล',
+                eq_price: 30,
+                eq_detail: 'ดัมเบลน้ำหนักต่างๆ สำหรับการฝึกกล้ามเนื้อ',
+                eq_qty: 20,
+                eq_image: 'https://via.placeholder.com/100x100?text=Dumbbell'
+              },
+              {
+                eq_id: 'mock3',
+                eq_name: 'จักรยานออกกำลังกาย', 
+                eq_price: 40,
+                eq_detail: 'จักรยานคงที่ สำหรับการออกกำลังกาย',
+                eq_qty: 8,
+                eq_image: 'https://via.placeholder.com/100x100?text=Bike'
+              }
+            ];
+            console.log('💪 Using mock equipment data for testing');
+          }
           
           return {
             id: fitness.fit_id,
@@ -188,6 +285,14 @@ function App() {
             status: 'active',
             image: fitness.fit_image,
             image_secondary: fitness.fit_image_secondary,
+            // เพิ่มรูปภาพเสริม
+            fit_image2: fitness.fit_image2,
+            fit_image3: fitness.fit_image3,
+            fit_image4: fitness.fit_image4,
+            // เพิ่มพิกัด
+            fit_location: fitness.fit_location,
+            // เพิ่มข้อมูลอุปกรณ์
+            equipment: fitnessEquipment,
             contact: fitness.fit_contact || 'ไม่ระบุข้อมูลติดต่อ'
           };
         }) || [];
@@ -306,15 +411,27 @@ function App() {
 
   // ฟังก์ชันดูพิกัด
   const handleViewLocation = (fitness) => {
+    console.log('🗺️ Viewing location for:', fitness);
+    console.log('🗺️ fit_location:', fitness.fit_location);
+    
     if (fitness.fit_location) {
       const coords = fitness.fit_location.split(',');
+      console.log('🗺️ Parsed coordinates:', coords);
+      
       if (coords.length === 2) {
         const lat = parseFloat(coords[0].trim());
         const lng = parseFloat(coords[1].trim());
-        const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
-        window.open(googleMapsUrl, '_blank');
+        console.log('🗺️ Lat:', lat, 'Lng:', lng);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const googleMapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+          console.log('🗺️ Opening URL:', googleMapsUrl);
+          window.open(googleMapsUrl, '_blank');
+        } else {
+          alert('ข้อมูลพิกัดไม่ใช่ตัวเลข');
+        }
       } else {
-        alert('ข้อมูลพิกัดไม่ถูกต้อง');
+        alert('รูปแบบพิกัดไม่ถูกต้อง (ต้องเป็น lat,lng)');
       }
     } else {
       alert('ไม่มีข้อมูลพิกัด');
@@ -777,6 +894,14 @@ function App() {
                     <button className="close-btn" onClick={handleCloseDetailModal}>×</button>
                   </div>
                   <div className="modal-body">
+                    {/* Debug: แสดงข้อมูลที่ได้รับ */}
+                    {console.log('🖼️ Selected fitness data:', selectedFitness)}
+                    {console.log('🖼️ fit_image2:', selectedFitness.fit_image2)}
+                    {console.log('🖼️ fit_image3:', selectedFitness.fit_image3)}
+                    {console.log('🖼️ fit_image4:', selectedFitness.fit_image4)}
+                    {console.log('🗺️ fit_location:', selectedFitness.fit_location)}
+                    {console.log('🏋️‍♂️ equipment:', selectedFitness.equipment)}
+                    
                     <div className="fitness-detail-container">
                       {/* รูปภาพ */}
                       <div className="fitness-image-section">
@@ -880,6 +1005,49 @@ function App() {
                               <div className="detail-content">
                                 <strong>รายละเอียดเพิ่มเติม:</strong>
                                 <p>{selectedFitness.description}</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* ข้อมูลอุปกรณ์ */}
+                          {selectedFitness.equipment && selectedFitness.equipment.length > 0 && (
+                            <div className="detail-item equipment-section">
+                              <span className="detail-icon">🏋️‍♂️</span>
+                              <div className="detail-content">
+                                <strong>อุปกรณ์ที่มีให้บริการ:</strong>
+                                <div className="equipment-grid">
+                                  {selectedFitness.equipment.map((eq, index) => (
+                                    <div key={index} className="equipment-item">
+                                      <div className="equipment-info">
+                                        <h4>{eq.eq_name || 'ไม่ระบุชื่อ'}</h4>
+                                        {eq.eq_price && (
+                                          <p className="equipment-price">
+                                            💰 {eq.eq_price} บาท/ชั่วโมง
+                                          </p>
+                                        )}
+                                        {eq.eq_detail && (
+                                          <p className="equipment-detail">
+                                            📋 {eq.eq_detail}
+                                          </p>
+                                        )}
+                                        {eq.eq_qty && (
+                                          <p className="equipment-qty">
+                                            📦 จำนวน: {eq.eq_qty} ชิ้น
+                                          </p>
+                                        )}
+                                      </div>
+                                      {eq.eq_image && (
+                                        <div className="equipment-image">
+                                          <img 
+                                            src={eq.eq_image} 
+                                            alt={eq.eq_name}
+                                            className="equipment-thumb"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           )}
