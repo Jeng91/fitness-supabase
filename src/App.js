@@ -181,15 +181,22 @@ function App() {
       const equipmentMap = {};
       if (equipmentData) {
         console.log('💪 Equipment data available:', equipmentData);
+        console.log('💪 Equipment count:', equipmentData.length);
+        
         equipmentData.forEach(equipment => {
           console.log('💪 Processing equipment:', equipment);
+          console.log('💪 Equipment keys:', Object.keys(equipment));
+          
           // ลองหาผ่านหลายคีย์
           const possibleKeys = [
             equipment.eq_user,
             equipment.fit_user, 
             equipment.created_by,
             equipment.eq_owner,
-            equipment.owner_name
+            equipment.owner_name,
+            'jeng', // ลอง hardcode สำหรับทดสอบ
+            'JM FITNESS',
+            equipment.fitness_id
           ];
           
           possibleKeys.forEach(key => {
@@ -198,11 +205,12 @@ function App() {
                 equipmentMap[key] = [];
               }
               equipmentMap[key].push(equipment);
-              console.log(`💪 Added equipment to key: ${key}`, equipment.eq_name);
+              console.log(`💪 Added equipment "${equipment.eq_name}" to key: ${key}`);
             }
           });
         });
         console.log('💪 Final equipment map:', equipmentMap);
+        console.log('💪 Equipment map keys:', Object.keys(equipmentMap));
       } else {
         console.log('💪 No equipment data found');
       }
@@ -240,7 +248,8 @@ function App() {
           console.log(`💪 Searched keys:`, possibleEquipmentKeys);
           
           // ถ้าไม่มีอุปกรณ์จริง ให้ใส่ข้อมูล Mock สำหรับทดสอบ (เฉพาะ JM FITNESS)
-          if (fitnessEquipment.length === 0 && fitness.fit_name === 'JM FITNESS') {
+          if (fitnessEquipment.length === 0) {
+            console.log('💪 No equipment found, adding mock data for:', fitness.fit_name);
             fitnessEquipment = [
               {
                 eq_id: 'mock1',
@@ -269,6 +278,8 @@ function App() {
             ];
             console.log('💪 Using mock equipment data for testing');
           }
+          
+          console.log('💪 Final equipment for this fitness:', fitnessEquipment);
           
           return {
             id: fitness.fit_id,

@@ -135,11 +135,16 @@ const FitnessDetailModal = ({
                 )}
                 
                 {/* ข้อมูลอุปกรณ์ */}
-                {fitnessData.equipment && fitnessData.equipment.length > 0 && (
+                {console.log('🔍 Equipment check:', {
+                  hasEquipment: !!fitnessData.equipment,
+                  equipmentLength: fitnessData.equipment?.length,
+                  equipment: fitnessData.equipment
+                })}
+                {fitnessData.equipment && fitnessData.equipment.length > 0 ? (
                   <div className="detail-item equipment-section">
                     <span className="detail-icon">🏋️‍♂️</span>
                     <div className="detail-content">
-                      <strong>อุปกรณ์ที่มีให้บริการ:</strong>
+                      <strong>อุปกรณ์ที่มีให้บริการ ({fitnessData.equipment.length} รายการ):</strong>
                       <div className="equipment-grid">
                         {fitnessData.equipment.map((eq, index) => (
                           <div key={eq.eq_id || index} className="equipment-item">
@@ -173,6 +178,14 @@ const FitnessDetailModal = ({
                           </div>
                         ))}
                       </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="detail-item">
+                    <span className="detail-icon">🏋️‍♂️</span>
+                    <div className="detail-content">
+                      <strong>อุปกรณ์:</strong>
+                      <p>ยังไม่มีข้อมูลอุปกรณ์</p>
                     </div>
                   </div>
                 )}
