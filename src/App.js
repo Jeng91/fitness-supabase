@@ -19,6 +19,7 @@ function App() {
     const [priceFilter, setPriceFilter] = useState('all'); // กรองราคา
     const [sortBy, setSortBy] = useState('newest'); // การเรียง
     const [showImageModal, setShowImageModal] = useState(false); // Modal สำหรับแสดงรูป
+    const [showDetailModal, setShowDetailModal] = useState(false); // Modal สำหรับแสดงรายละเอียด
     const [selectedFitness, setSelectedFitness] = useState(null); // ฟิตเนสที่เลือกดู
     const [formData, setFormData] = useState({
       email: '',
@@ -275,6 +276,16 @@ function App() {
   // Function สำหรับปิด Modal
   const handleCloseModal = () => {
     setShowImageModal(false);
+    setSelectedFitness(null);
+  };
+
+  const handleShowDetail = (fitness) => {
+    setSelectedFitness(fitness);
+    setShowDetailModal(true);
+  };
+
+  const handleCloseDetailModal = () => {
+    setShowDetailModal(false);
     setSelectedFitness(null);
   };
 
@@ -651,6 +662,12 @@ function App() {
                           <span>{fitness.price_per_day || 100}</span>
                           <span className="price-unit">บาท/วัน</span>
                         </div>
+                        <button 
+                          className="detail-btn"
+                          onClick={() => handleShowDetail(fitness)}
+                        >
+                          📋 ดูรายละเอียด
+                        </button>
                       </div>
                     </div>
                   ))
@@ -713,6 +730,115 @@ function App() {
                       {selectedFitness.description && (
                         <p><strong>รายละเอียด:</strong> {selectedFitness.description}</p>
                       )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Detail Modal */}
+            {showDetailModal && selectedFitness && (
+              <div className="detail-modal-overlay" onClick={handleCloseDetailModal}>
+                <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h2>{selectedFitness.fitness_name}</h2>
+                    <button className="close-btn" onClick={handleCloseDetailModal}>×</button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="fitness-detail-container">
+                      {/* รูปภาพ */}
+                      <div className="fitness-image-section">
+                        <div className="main-image-container">
+                          <img 
+                            src={selectedFitness.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
+                            alt={selectedFitness.fitness_name}
+                            className="detail-main-image"
+                            onError={(e) => {
+                              e.target.src = "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E";
+                            }}
+                          />
+                        </div>
+                        {selectedFitness.image_secondary && (
+                          <div className="secondary-image-container">
+                            <img 
+                              src={selectedFitness.image_secondary} 
+                              alt="รูปรอง" 
+                              className="detail-secondary-image"
+                            />
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* ข้อมูลรายละเอียด */}
+                      <div className="fitness-info-section">
+                        <div className="info-header">
+                          <div className="rating-section">
+                            <span className="stars">⭐⭐⭐⭐⭐</span>
+                            <span className="rating-score">{selectedFitness.rating || '4.5'}</span>
+                            <span className="rating-count">(25 รีวิว)</span>
+                          </div>
+                          <div className="price-section">
+                            <span className="price-amount">{selectedFitness.price_per_day || 100}</span>
+                            <span className="price-unit">บาท/วัน</span>
+                          </div>
+                        </div>
+                        
+                        <div className="info-details">
+                          <div className="detail-item">
+                            <span className="detail-icon">📍</span>
+                            <div className="detail-content">
+                              <strong>ที่อยู่:</strong>
+                              <p>{selectedFitness.location}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="detail-item">
+                            <span className="detail-icon">📞</span>
+                            <div className="detail-content">
+                              <strong>เบอร์โทร:</strong>
+                              <p>{selectedFitness.phone}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="detail-item">
+                            <span className="detail-icon">🕒</span>
+                            <div className="detail-content">
+                              <strong>เวลาทำการ:</strong>
+                              <p>{selectedFitness.hours}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="detail-item">
+                            <span className="detail-icon">👤</span>
+                            <div className="detail-content">
+                              <strong>เจ้าของ:</strong>
+                              <p>{selectedFitness.owner_name}</p>
+                            </div>
+                          </div>
+                          
+                          {selectedFitness.description && (
+                            <div className="detail-item">
+                              <span className="detail-icon">📝</span>
+                              <div className="detail-content">
+                                <strong>รายละเอียดเพิ่มเติม:</strong>
+                                <p>{selectedFitness.description}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="action-buttons">
+                          <button className="contact-btn">
+                            📞 ติดต่อ
+                          </button>
+                          <button className="favorite-btn-large">
+                            ❤️ บันทึก
+                          </button>
+                          <button className="book-btn">
+                            📅 จองเลย
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
