@@ -10,7 +10,57 @@
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  
+}
+
+/* Fitness Detail Page Styles */
+.fitness-detail-page {
+  min-height: 100vh;
+  background: #f5f7fa;
+  padding: 20px 0;
+}
+
+.fitness-detail-page .detail-modal-overlay {
+  position: static;
+  background: none;
+  display: block;
+  z-index: auto;
+}
+
+.fitness-detail-page .detail-modal-content {
+  width: 100%;
+  max-width: 1200px;
+  max-height: none;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.detail-header {
+  background: white;
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.back-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .detail-modal-content {
@@ -361,6 +411,25 @@
   .detail-modal-content {
     width: 95%;
     margin: 20px;
+  }
+  
+  .fitness-detail-page {
+    padding: 10px 0;
+  }
+  
+  .fitness-detail-page .detail-modal-content {
+    margin: 0 10px;
+    border-radius: 8px;
+  }
+  
+  .detail-header {
+    padding: 10px 15px;
+    margin-bottom: 10px;
+  }
+  
+  .back-btn {
+    width: 100%;
+    justify-content: center;
   }
   
   .fitness-detail-container {

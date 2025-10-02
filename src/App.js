@@ -20,9 +20,9 @@ function App() {
     const [priceFilter, setPriceFilter] = useState('all'); // กรองราคา
     const [sortBy, setSortBy] = useState('newest'); // การเรียง
     const [showImageModal, setShowImageModal] = useState(false); // Modal สำหรับแสดงรูป
-    const [showDetailModal, setShowDetailModal] = useState(false); // Modal สำหรับแสดงรายละเอียด
     const [showImageGallery, setShowImageGallery] = useState(false); // Modal สำหรับแสดง Gallery
     const [selectedFitness, setSelectedFitness] = useState(null); // ฟิตเนสที่เลือกดู
+    const [selectedFitnessId, setSelectedFitnessId] = useState(null); // ID ของฟิตเนสที่เลือกดูรายละเอียด
     const [selectedImageIndex, setSelectedImageIndex] = useState(0); // รูปที่เลือกดู
     const [formData, setFormData] = useState({
       email: '',
@@ -400,13 +400,11 @@ function App() {
 
   const handleShowDetail = (fitness) => {
     setSelectedFitness(fitness);
-    setShowDetailModal(true);
+    setSelectedFitnessId(fitness.id);
+    setCurrentPage('fitness-detail');
   };
 
-  const handleCloseDetailModal = () => {
-    setShowDetailModal(false);
-    setSelectedFitness(null);
-  };
+
 
   // ฟังก์ชันสำหรับ Image Gallery
   const handleOpenImageGallery = (fitness, imageIndex = 0) => {
@@ -897,15 +895,6 @@ function App() {
               </div>
             )}
             
-            {/* Detail Modal - ใช้ Component ใหม่ */}
-            <FitnessDetailModal
-              isOpen={showDetailModal}
-              onClose={handleCloseDetailModal}
-              fitnessData={selectedFitness}
-              onViewLocation={handleViewLocation}
-              onOpenImageGallery={handleOpenImageGallery}
-            />
-
             {/* Image Gallery Modal */}
             {showImageGallery && selectedFitness && (
               <div className="image-gallery-overlay" onClick={handleCloseImageGallery}>
@@ -1142,6 +1131,29 @@ function App() {
         }
         // fallback ถ้าไม่ใช่ partner
         return <div>ไม่พบข้อมูลแดชบอร์ดพาร์ทเนอร์</div>;
+      case 'fitness-detail':
+        return (
+          <div className="fitness-detail-page">
+            <div className="detail-header">
+              <button 
+                className="back-btn"
+                onClick={() => setCurrentPage('หน้าหลัก')}
+              >
+                ← กลับ
+              </button>
+            </div>
+            {selectedFitness && (
+              <FitnessDetailModal
+                isOpen={true}
+                onClose={() => setCurrentPage('หน้าหลัก')}
+                fitnessData={selectedFitness}
+                onViewLocation={handleViewLocation}
+                onOpenImageGallery={handleOpenImageGallery}
+                isFullPage={true}
+              />
+            )}
+          </div>
+        );
       default:
         return <div>ไม่พบหน้าที่ต้องการ</div>;
     }

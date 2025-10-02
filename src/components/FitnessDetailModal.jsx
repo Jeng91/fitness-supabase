@@ -6,7 +6,8 @@ const FitnessDetailModal = ({
   onClose, 
   fitnessData,
   onViewLocation,
-  onOpenImageGallery 
+  onOpenImageGallery,
+  isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
 }) => {
   if (!isOpen || !fitnessData) return null;
 
@@ -33,7 +34,7 @@ const FitnessDetailModal = ({
   console.log('🏋️‍♂️ equipment:', fitnessData.equipment);
 
   return (
-    <div className="detail-modal-overlay" onClick={onClose}>
+    <div className={`detail-modal-overlay ${isFullPage ? 'fitness-detail-page' : ''}`} onClick={isFullPage ? undefined : onClose}>
       <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{fitnessData.fitness_name}</h2>
