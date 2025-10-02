@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../supabaseClient';
 import imageCompression from 'browser-image-compression';
+import './EquipmentManagement.css';
 
 const EquipmentManagement = ({ ownerData, onUpdate }) => {
   const [equipmentData, setEquipmentData] = useState([]);
