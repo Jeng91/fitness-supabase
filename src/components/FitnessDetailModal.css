@@ -103,11 +103,28 @@
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
-.favorite-btn:hover, .share-btn:hover {
-  border-color: #667eea;
-  background: #f8f9ff;
+.favorite-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.share-btn {
+  border-color: #4ecdc4;
+  color: #4ecdc4;
+}
+
+.favorite-btn:hover {
+  border-color: #ff5252;
+  background: #fff5f5;
+  transform: scale(1.05);
+}
+
+.share-btn:hover {
+  border-color: #26a69a;
+  background: #f0fffe;
   transform: scale(1.05);
 }
 

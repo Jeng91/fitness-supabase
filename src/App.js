@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import supabase from './supabaseClient';
 import ProfilePage from './components/ProfilePage';
@@ -32,7 +32,6 @@ function App() {
     const [showImageModal, setShowImageModal] = useState(false); // Modal สำหรับแสดงรูป
     const [showImageGallery, setShowImageGallery] = useState(false); // Modal สำหรับแสดง Gallery
     const [selectedFitness, setSelectedFitness] = useState(null); // ฟิตเนสที่เลือกดู
-    const [selectedFitnessId, setSelectedFitnessId] = useState(null); // ID ของฟิตเนสที่เลือกดูรายละเอียด
     const [selectedImageIndex, setSelectedImageIndex] = useState(0); // รูปที่เลือกดู
     const [formData, setFormData] = useState({
       email: '',
@@ -134,7 +133,7 @@ function App() {
   };
 
   // Function สำหรับโหลดข้อมูลฟิตเนส
-  const loadFitnessData = async () => {
+  const loadFitnessData = useCallback(async () => {
     try {
       console.log('Loading fitness data from database...');
       
@@ -269,7 +268,7 @@ function App() {
       setFitnessData([]);
       setFilteredFitnessData([]);
     }
-  };
+  }, []); // empty dependency array เพราะไม่ dependency ใดๆ
 
   // useEffect สำหรับอัปเดตการกรองเมื่อมีการเปลี่ยนแปลง
   useEffect(() => {
@@ -348,7 +347,6 @@ function App() {
 
   const handleShowDetail = (fitness) => {
     setSelectedFitness(fitness);
-    setSelectedFitnessId(fitness.id);
     setCurrentPage('fitness-detail');
   };
 
@@ -417,7 +415,7 @@ function App() {
     return () => {
       supabase.removeChannel(fitnessSubscription);
     };
-  }, []);
+  }, [loadFitnessData]);
 
   // ในหน้าแสดงฟิตเนส (เช่น App.js หรือหน้าค้นหา)
   // ดึงข้อมูลฟิตเนสทั้งหมดที่มีใน database มาแสดงทันที ไม่ต้องรอ login

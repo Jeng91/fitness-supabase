@@ -46,8 +46,7 @@ const FitnessDetailModal = ({
             </div>
           </div>
           <div className="fitness-actions">
-            <button className="favorite-btn">♡</button>
-            <button className="share-btn">🔗</button>
+            <button className="share-btn">📤</button>
           </div>
         </div>
 
