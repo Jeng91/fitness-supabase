@@ -1,5 +1,6 @@
 import React from 'react';
 import './FitnessDetailModal.css';
+import PaymentPage from './PaymentPage';
 
 const FitnessDetailModal = ({ 
   isOpen, 
@@ -12,6 +13,7 @@ const FitnessDetailModal = ({
   const [shareNotification, setShareNotification] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState('');
   const [isBookingMode, setIsBookingMode] = React.useState(false);
+  const [showPayment, setShowPayment] = React.useState(false);
 
   if (!isOpen || !fitnessData) return null;
 
@@ -78,12 +80,9 @@ const FitnessDetailModal = ({
       return;
     }
     
-    // ที่นี่สามารถเพิ่มโค้ดสำหรับส่งข้อมูลการจองไปยัง API
-    alert(`จองเรียบร้อยแล้ว!\nฟิตเนส: ${fitnessData.fitness_name}\nวันที่: ${selectedDate}\nราคา: ${fitnessData.price_per_day || 60} บาท`);
-    
-    // รีเซ็ตสถานะ
+    // เปิดหน้าชำระเงิน
+    setShowPayment(true);
     setIsBookingMode(false);
-    setSelectedDate('');
   };
 
   // ฟังก์ชันสำหรับยกเลิกการจอง
@@ -103,6 +102,41 @@ const FitnessDetailModal = ({
     const maxDate = new Date();
     maxDate.setDate(maxDate.getDate() + 30);
     return maxDate.toISOString().split('T')[0];
+  };
+
+  // ฟังก์ชันสำหรับจัดการผลลัพธ์การชำระเงิน
+  const handlePaymentSuccess = (paymentResult) => {
+    // แสดงข้อความสำเร็จ
+    alert(`🎉 ชำระเงินสำเร็จ!\n\nรหัสการจอง: ${paymentResult.booking.booking_id}\nรหัสธุรกรรม: ${paymentResult.transaction_id}\n\nขอบคุณที่ใช้บริการ PJ Fitness!`);
+    
+    // ปิดหน้าต่างทั้งหมด
+    setShowPayment(false);
+    setSelectedDate('');
+    setIsBookingMode(false);
+    
+    // เรียก callback หากมี
+    if (onClose) {
+      onClose();
+    }
+  };
+
+  // ฟังก์ชันสำหรับยกเลิกการชำระเงิน
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    setIsBookingMode(true); // กลับไปหน้าเลือกวันที่
+  };
+
+  // สร้างข้อมูลสำหรับหน้าชำระเงิน
+  const getBookingData = () => {
+    return {
+      fitness_id: fitnessData.fit_id,        // ใช้ fit_id แทน fitnessId
+      fitnessName: fitnessData.fitness_name,
+      owner_uid: fitnessData.owner_uid,      // ใช้ owner_uid จากตาราง tbl_owner
+      booking_date: selectedDate,
+      total_amount: fitnessData.price_per_day || 60,
+      location: fitnessData.location,
+      rating: fitnessData.rating || '4.5'
+    };
   };
 
   // Debug logs
@@ -313,67 +347,77 @@ const FitnessDetailModal = ({
 
   // Original Modal Layout (สำหรับ backward compatibility)
   return (
-    <div className={`detail-modal-overlay ${isFullPage ? 'fitness-detail-page' : ''}`} onClick={isFullPage ? undefined : onClose}>
-      <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>{fitnessData.fitness_name}</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
-        </div>
-        
-        <div className="modal-body">
-          <div className="fitness-detail-container">
-            {/* รูปภาพ */}
-            <div className="fitness-image-section">
-              <div className="main-image-container">
-                <img 
-                  src={fitnessData.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
-                  alt={fitnessData.fitness_name}
-                  className="detail-main-image"
-                  onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 0)}
-                  style={{ cursor: 'pointer' }}
-                  onError={(e) => {
-                    e.target.src = "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E";
-                  }}
-                />
-              </div>
-              
-              {/* รูปภาพเสริม */}
-              {(fitnessData.fit_image2 || fitnessData.fit_image3 || fitnessData.fit_image4) && (
-                <div className="additional-images">
-                  <h4>รูปภาพเพิ่มเติม</h4>
-                  <div className="additional-images-grid">
-                    {fitnessData.fit_image2 && (
-                      <img 
-                        src={fitnessData.fit_image2} 
-                        alt="รูปเสริม 1" 
-                        className="detail-additional-image"
-                        onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 1)}
-                      />
-                    )}
-                    {fitnessData.fit_image3 && (
-                      <img 
-                        src={fitnessData.fit_image3} 
-                        alt="รูปเสริม 2" 
-                        className="detail-additional-image"
-                        onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 2)}
-                      />
-                    )}
-                    {fitnessData.fit_image4 && (
-                      <img 
-                        src={fitnessData.fit_image4} 
-                        alt="รูปเสริม 3" 
-                        className="detail-additional-image"
-                        onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 3)}
-                      />
-                    )}
-                  </div>
+    <>
+      <div className={`detail-modal-overlay ${isFullPage ? 'fitness-detail-page' : ''}`} onClick={isFullPage ? undefined : onClose}>
+        <div className="detail-modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h2>{fitnessData.fitness_name}</h2>
+            <button className="close-btn" onClick={onClose}>×</button>
+          </div>
+          
+          <div className="modal-body">
+            <div className="fitness-detail-container">
+              {/* รูปภาพ */}
+              <div className="fitness-image-section">
+                <div className="main-image-container">
+                  <img 
+                    src={fitnessData.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
+                    alt={fitnessData.fitness_name}
+                    className="detail-main-image"
+                    onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 0)}
+                    style={{ cursor: 'pointer' }}
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E";
+                    }}
+                  />
                 </div>
-              )}
+                
+                {/* รูปภาพเสริม */}
+                {(fitnessData.fit_image2 || fitnessData.fit_image3 || fitnessData.fit_image4) && (
+                  <div className="additional-images">
+                    <h4>รูปภาพเพิ่มเติม</h4>
+                    <div className="additional-images-grid">
+                      {fitnessData.fit_image2 && (
+                        <img 
+                          src={fitnessData.fit_image2} 
+                          alt="รูปเสริม 1" 
+                          className="detail-additional-image"
+                          onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 1)}
+                        />
+                      )}
+                      {fitnessData.fit_image3 && (
+                        <img 
+                          src={fitnessData.fit_image3} 
+                          alt="รูปเสริม 2" 
+                          className="detail-additional-image"
+                          onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 2)}
+                        />
+                      )}
+                      {fitnessData.fit_image4 && (
+                        <img 
+                          src={fitnessData.fit_image4} 
+                          alt="รูปเสริม 3" 
+                          className="detail-additional-image"
+                          onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 3)}
+                        />
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Payment Page */}
+      <PaymentPage
+        isOpen={showPayment}
+        bookingData={getBookingData()}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentCancel={handlePaymentCancel}
+      />
+    </>
       
   );
 };
