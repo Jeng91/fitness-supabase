@@ -879,13 +879,13 @@ body.dark-mode .form-group input::placeholder {
   display: flex;
   align-items: baseline;
   gap: 0.25rem;
-  color: #1f2937;
+  color: #667eea !important;
   font-weight: 700;
   font-size: 1.1rem;
 }
 
 .price-unit {
-  color: #6b7280;
+  color: #667eea !important;
   font-size: 0.8rem;
   font-weight: 500;
 }

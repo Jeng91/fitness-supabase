@@ -82,77 +82,43 @@ const FitnessDetailModal = ({
             {/* Equipment Section */}
             <div className="equipment-showcase">
               <h3>อุปกรณ์ที่มีให้บริการ</h3>
-              {(() => {
-                const equipmentData = fitnessData.equipment || [];
-                const hasEquipment = Array.isArray(equipmentData) && equipmentData.length > 0;
-                
-                if (hasEquipment) {
-                  return (
-                    <div className="equipment-grid-showcase">
-                      {equipmentData.slice(0, 4).map((eq, index) => (
-                        <div key={eq.em_id || eq.eq_id || index} className="equipment-showcase-item">
-                          <div className="equipment-image-container">
-                            {(eq.eq_image || eq.em_image) ? (
-                              <img 
-                                src={eq.eq_image || eq.em_image} 
-                                alt={eq.eq_name || eq.em_name}
-                                className="equipment-showcase-image"
-                              />
-                            ) : (
-                              <div className="equipment-placeholder">🏋️‍♂️</div>
-                            )}
-                          </div>
-                          <div className="equipment-showcase-info">
-                            <h4>{eq.em_name || eq.eq_name || 'ไม่ระบุชื่อ'}</h4>
-                            <p>จำนวน: {eq.eq_qty || eq.em_qty || 10}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  );
-                } else {
-                  return (
-                    <div className="equipment-grid-showcase">
-                      <div className="equipment-showcase-item">
+              <div className="equipment-grid-showcase">
+                {(() => {
+                  console.log('🏋️‍♂️ Equipment data:', fitnessData.equipment);
+                  const equipmentList = fitnessData.equipment || [];
+                  
+                  if (equipmentList.length > 0) {
+                    return equipmentList.slice(0, 4).map((equipment, index) => (
+                      <div key={equipment.eq_id || equipment.em_id || index} className="equipment-showcase-item">
                         <div className="equipment-image-container">
-                          <div className="equipment-placeholder">🏃‍♂️</div>
+                          {equipment.eq_image || equipment.em_image ? (
+                            <img 
+                              src={equipment.eq_image || equipment.em_image} 
+                              alt={equipment.eq_name || equipment.em_name}
+                              className="equipment-showcase-image"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          
                         </div>
                         <div className="equipment-showcase-info">
-                          <h4>เครื่องวิ่ง</h4>
-                          <p>จำนวน: 10</p>
+                          <h4>{equipment.eq_name || equipment.em_name || 'ไม่ระบุชื่อ'}</h4>
+                          <p>จำนวน: {equipment.eq_qty || equipment.em_qty || 1}</p>
                         </div>
                       </div>
-                      <div className="equipment-showcase-item">
-                        <div className="equipment-image-container">
-                          <div className="equipment-placeholder">🚴‍♂️</div>
-                        </div>
-                        <div className="equipment-showcase-info">
-                          <h4>จักรยาน</h4>
-                          <p>จำนวน: 10</p>
-                        </div>
+                    ));
+                  } else {
+                    return (
+                      <div className="no-equipment">
+                        <p>ไม่มีข้อมูลอุปกรณ์</p>
                       </div>
-                      <div className="equipment-showcase-item">
-                        <div className="equipment-image-container">
-                          <div className="equipment-placeholder">🏋️‍♂️</div>
-                        </div>
-                        <div className="equipment-showcase-info">
-                          <h4>เครื่องยก</h4>
-                          <p>จำนวน: 10</p>
-                        </div>
-                      </div>
-                      <div className="equipment-showcase-item">
-                        <div className="equipment-image-container">
-                          <div className="equipment-placeholder">💪</div>
-                        </div>
-                        <div className="equipment-showcase-info">
-                          <h4>ดัมเบล</h4>
-                          <p>จำนวน: 5</p>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-              })()}
+                    );
+                  }
+                })()}
+              </div>
             </div>
           </div>
 
@@ -185,11 +151,12 @@ const FitnessDetailModal = ({
             {/* Map Section */}
             <div className="map-section">
               <div className="map-placeholder">
-                <button className="map-btn" onClick={onViewLocation}>
-                  📍 แสดงแผนที่
+                <button className="map-btn" onClick={() => onViewLocation && onViewLocation(fitnessData)}>
+                  📍 แสดงพิกัด
                 </button>
               </div>
             </div>
+            
 
             {/* Schedule & Booking */}
             <div className="schedule-booking">
@@ -290,168 +257,11 @@ const FitnessDetailModal = ({
                 </div>
               )}
             </div>
-            
-            {/* ข้อมูลรายละเอียด */}
-            <div className="fitness-info-section">
-              <div className="info-header">
-                <div className="rating-section">
-                  <span className="stars">⭐⭐⭐⭐⭐</span>
-                  <span className="rating-score">{fitnessData.rating || '4.5'}</span>
-                  <span className="rating-count">(25 รีวิว)</span>
-                </div>
-                <div className="price-section">
-                  <span className="price-amount">{fitnessData.price_per_day || 100}</span>
-                  <span className="price-unit">บาท/วัน</span>
-                </div>
-              </div>
-              
-              <div className="info-details">
-                <div className="detail-item">
-                  <span className="detail-icon">📍</span>
-                  <div className="detail-content">
-                    <strong>ที่อยู่:</strong>
-                    <p>{fitnessData.location}</p>
-                  </div>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-icon">📞</span>
-                  <div className="detail-content">
-                    <strong>เบอร์โทร:</strong>
-                    <p>{fitnessData.phone}</p>
-                  </div>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-icon">🕒</span>
-                  <div className="detail-content">
-                    <strong>เวลาทำการ:</strong>
-                    <p>{formatTime(fitnessData.hours)}</p>
-                  </div>
-                </div>
-                
-                <div className="detail-item">
-                  <span className="detail-icon">👤</span>
-                  <div className="detail-content">
-                    <strong>เจ้าของ:</strong>
-                    <p>{fitnessData.owner_name}</p>
-                  </div>
-                </div>
-                
-                {fitnessData.description && (
-                  <div className="detail-item">
-                    <span className="detail-icon">📝</span>
-                    <div className="detail-content">
-                      <strong>รายละเอียดเพิ่มเติม:</strong>
-                      <p>{fitnessData.description}</p>
-                    </div>
-                  </div>
-                )}
-                
-                {/* ข้อมูลอุปกรณ์ */}
-                {(() => {
-                  // ตรวจสอบข้อมูลอุปกรณ์จากหลายแหล่ง
-                  const equipmentData = fitnessData.equipment || fitnessData.equipments || [];
-                  const hasEquipment = Array.isArray(equipmentData) && equipmentData.length > 0;
-                  
-                  console.log('🔍 Equipment check:', {
-                    hasEquipment,
-                    equipmentLength: equipmentData?.length,
-                    equipment: equipmentData,
-                    allFitnessData: fitnessData
-                  });
-
-                  if (hasEquipment) {
-                    return (
-                      <div className="detail-item equipment-section">
-                        <span className="detail-icon">🏋️‍♂️</span>
-                        <div className="detail-content">
-                          <strong>อุปกรณ์ที่มีให้บริการ ({equipmentData.length} รายการ):</strong>
-                          <div className="equipment-grid">
-                            {equipmentData.map((eq, index) => (
-                              <div key={eq.em_id || eq.eq_id || index} className="equipment-item">
-                                <div className="equipment-info">
-                                  <h4>{eq.em_name || eq.eq_name || 'ไม่ระบุชื่อ'}</h4>
-                                  {(eq.eq_price || eq.em_price) && (
-                                    <p className="equipment-price">
-                                      💰 {eq.eq_price || eq.em_price} บาท/ชั่วโมง
-                                    </p>
-                                  )}
-                                  {(eq.eq_detail || eq.em_detail) && (
-                                    <p className="equipment-detail">
-                                      📋 {eq.eq_detail || eq.em_detail}
-                                    </p>
-                                  )}
-                                  {(eq.eq_qty || eq.em_qty) && (
-                                    <p className="equipment-qty">
-                                      📦 จำนวน: {eq.eq_qty || eq.em_qty} ชิ้น
-                                    </p>
-                                  )}
-                                </div>
-                                {(eq.eq_image || eq.em_image) && (
-                                  <div className="equipment-image">
-                                    <img 
-                                      src={eq.eq_image || eq.em_image} 
-                                      alt={eq.eq_name || eq.em_name}
-                                      className="equipment-thumb"
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  } else {
-                    // แสดงข้อมูลสำรองหากไม่มีอุปกรณ์
-                    const mockEquipment = [
-                      { name: 'เครื่องวิ่ง', price: '50 บาท/ชั่วโมง' },
-                      { name: 'ดัมเบล', price: '30 บาท/ชั่วโมง' },
-                      { name: 'จักรยานออกกำลังกาย', price: '40 บาท/ชั่วโมง' }
-                    ];
-                    
-                    return (
-                      <div className="detail-item">
-                        <span className="detail-icon">🏋️‍♂️</span>
-                        <div className="detail-content">
-                          <strong>อุปกรณ์ที่ให้บริการ:</strong>
-                          <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
-                            {mockEquipment.map((eq, index) => (
-                              <li key={index} style={{ marginBottom: '0.25rem' }}>
-                                {eq.name} - {eq.price}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    );
-                  }
-                })()}
-              </div>
-              
-              <div className="action-buttons">
-                <button className="contact-btn">
-                  📞 ติดต่อ
-                </button>
-                <button 
-                  className="location-btn"
-                  onClick={() => onViewLocation && onViewLocation(fitnessData)}
-                >
-                  📍 ดูพิกัด
-                </button>
-                <button className="favorite-btn-large">
-                  ❤️ บันทึก
-                </button>
-                <button className="book-btn">
-                  📅 จองเลย
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
+      
   );
 };
 

@@ -356,7 +356,7 @@
   text-align: center;
   margin-bottom: 20px;
   padding: 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12px;
   color: white;
 }
@@ -369,6 +369,7 @@
 
 .price-unit {
   font-size: 1rem;
+  color: white !important;
   opacity: 0.9;
 }
 

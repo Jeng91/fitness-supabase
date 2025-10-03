@@ -187,7 +187,7 @@ function App() {
           }
         });
       }
-      // สร้าง equipment map สำหรับ fitness แต่ละแห่ง
+      // สร้าง equipment map สำหรับ fitness แต่ละแห่ง โดยใช้ fitness_id
       const equipmentMap = {};
       if (equipmentData) {
         console.log('💪 Equipment data available:', equipmentData);
@@ -195,29 +195,19 @@ function App() {
         
         equipmentData.forEach(equipment => {
           console.log('💪 Processing equipment:', equipment);
-          console.log('💪 Equipment keys:', Object.keys(equipment));
+          console.log('💪 Equipment fitness_id:', equipment.fitness_id);
           
-          // ลองหาผ่านหลายคีย์
-          const possibleKeys = [
-            equipment.eq_user,
-            equipment.fit_user, 
-            equipment.created_by,
-            equipment.eq_owner,
-            equipment.owner_name,
-            'jeng', // ลอง hardcode สำหรับทดสอบ
-            'JM FITNESS',
-            equipment.fitness_id
-          ];
-          
-          possibleKeys.forEach(key => {
-            if (key) {
-              if (!equipmentMap[key]) {
-                equipmentMap[key] = [];
-              }
-              equipmentMap[key].push(equipment);
-              console.log(`💪 Added equipment "${equipment.eq_name}" to key: ${key}`);
+          // ใช้ fitness_id เป็นหลักในการจับคู่
+          const fitnessId = equipment.fitness_id;
+          if (fitnessId) {
+            if (!equipmentMap[fitnessId]) {
+              equipmentMap[fitnessId] = [];
             }
-          });
+            equipmentMap[fitnessId].push(equipment);
+            console.log(`💪 Added equipment "${equipment.em_name || equipment.eq_name}" to fitness_id: ${fitnessId}`);
+          } else {
+            console.log('💪 Equipment has no fitness_id:', equipment);
+          }
         });
         console.log('💪 Final equipment map:', equipmentMap);
         console.log('💪 Equipment map keys:', Object.keys(equipmentMap));
@@ -232,64 +222,12 @@ function App() {
           // หา owner จาก fit_user หรือ created_by
           const owner = ownerMap[fitness.fit_user] || ownerMap[fitness.created_by] || null;
           
-          // หาอุปกรณ์ของฟิตเนสนี้ - ลองหาผ่านหลายคีย์
-          const possibleEquipmentKeys = [
-            fitness.fit_user,           // ชื่อผู้ใช้ใน tbl_fitness
-            fitness.created_by,         // ผู้สร้างใน tbl_fitness
-            owner?.owner_name,          // ชื่อเจ้าของ
-            owner?.owner_uid,           // UID เจ้าของ
-            owner?.auth_user_id,        // Auth ID
-            fitness.fit_name            // ชื่อฟิตเนส
-          ];
+          // หาอุปกรณ์ของฟิตเนสนี้โดยใช้ fit_id
+          let fitnessEquipment = equipmentMap[fitness.fit_id] || [];
           
-          let fitnessEquipment = [];
-          possibleEquipmentKeys.forEach(key => {
-            if (key && equipmentMap[key]) {
-              fitnessEquipment = [...fitnessEquipment, ...equipmentMap[key]];
-            }
-          });
-          
-          // ลบข้อมูลซ้ำ (ถ้ามี)
-          fitnessEquipment = fitnessEquipment.filter((eq, index, self) => 
-            index === self.findIndex(e => e.eq_id === eq.eq_id)
-          );
-          
-          console.log(`💪 Equipment for ${fitness.fit_name}:`, fitnessEquipment);
-          console.log(`💪 Searched keys:`, possibleEquipmentKeys);
-          
-          // ถ้าไม่มีอุปกรณ์จริง ให้ใส่ข้อมูล Mock สำหรับทดสอบ (เฉพาะ JM FITNESS)
-          if (fitnessEquipment.length === 0) {
-            console.log('💪 No equipment found, adding mock data for:', fitness.fit_name);
-            fitnessEquipment = [
-              {
-                eq_id: 'mock1',
-                eq_name: 'เครื่องวิ่ง',
-                eq_price: 50,
-                eq_detail: 'เครื่องวิ่งไฟฟ้า ใช้งานง่าย เหมาะสำหรับการออกกำลังกาย',
-                eq_qty: 5,
-                eq_image: 'https://via.placeholder.com/100x100?text=Treadmill'
-              },
-              {
-                eq_id: 'mock2', 
-                eq_name: 'ดัมเบล',
-                eq_price: 30,
-                eq_detail: 'ดัมเบลน้ำหนักต่างๆ สำหรับการฝึกกล้ามเนื้อ',
-                eq_qty: 20,
-                eq_image: 'https://via.placeholder.com/100x100?text=Dumbbell'
-              },
-              {
-                eq_id: 'mock3',
-                eq_name: 'จักรยานออกกำลังกาย', 
-                eq_price: 40,
-                eq_detail: 'จักรยานคงที่ สำหรับการออกกำลังกาย',
-                eq_qty: 8,
-                eq_image: 'https://via.placeholder.com/100x100?text=Bike'
-              }
-            ];
-            console.log('💪 Using mock equipment data for testing');
-          }
-          
-          console.log('💪 Final equipment for this fitness:', fitnessEquipment);
+          console.log(`💪 Looking for equipment with fitness_id: ${fitness.fit_id}`);
+          console.log(`💪 Found equipment for ${fitness.fit_name}:`, fitnessEquipment);
+          console.log(`💪 Equipment count: ${fitnessEquipment.length}`);
           
           return {
             id: fitness.fit_id,
@@ -829,7 +767,7 @@ function App() {
                         </div>
                         <div className="fitness-price">
                           <span>{fitness.price_per_day || 100}</span>
-                          <span className="price-unit">บาท/วัน</span>
+                          <span>บาท/วัน</span>
                         </div>
                         <button 
                           className="detail-btn"
