@@ -9,6 +9,10 @@ const FitnessDetailModal = ({
   onOpenImageGallery,
   isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
 }) => {
+  const [shareNotification, setShareNotification] = React.useState('');
+  const [selectedDate, setSelectedDate] = React.useState('');
+  const [isBookingMode, setIsBookingMode] = React.useState(false);
+
   if (!isOpen || !fitnessData) return null;
 
   // ฟังก์ชันจัดรูปแบบเวลา - ตัด .00 ออก
@@ -25,6 +29,82 @@ const FitnessDetailModal = ({
       .replace(/(\d+)\.00/g, '$1');         // ตัด .00 ทั้งหมด
   };
 
+  // ฟังก์ชันสำหรับแชร์ฟิตเนส
+  const handleShare = async () => {
+    const shareData = {
+      title: `${fitnessData.fitness_name} - PJ Fitness`,
+      text: `🏋️‍♂️ ${fitnessData.fitness_name}\n📍 ${fitnessData.location}\n💰 ${fitnessData.price_per_day || 60} บาท/วัน\n⭐ ${fitnessData.rating || '4.5'} คะแนน`,
+      url: window.location.href
+    };
+
+    try {
+      // ตรวจสอบว่าเบราว์เซอร์รองรับ Web Share API หรือไม่
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareNotification('✅ แชร์สำเร็จ!');
+      } else {
+        // ถ้าไม่รองรับให้คัดลอกลิงค์แทน
+        await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`);
+        setShareNotification('📋 คัดลอกข้อมูลฟิตเนสไปยังคลิปบอร์ดแล้ว!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // ถ้า error ให้ลองคัดลอกลิงค์อย่างง่าย
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        setShareNotification('📋 คัดลอกลิงค์ไปยังคลิปบอร์ดแล้ว!');
+      } catch (clipboardError) {
+        // ถ้าคัดลอกไม่ได้ให้แสดง prompt
+        prompt('คัดลอกลิงค์นี้:', window.location.href);
+        setShareNotification('📋 กรุณาคัดลอกลิงค์ด้วยตนเอง');
+      }
+    }
+
+    // ซ่อนข้อความหลัง 3 วินาที
+    setTimeout(() => {
+      setShareNotification('');
+    }, 3000);
+  };
+
+  // ฟังก์ชันสำหรับจัดการการจอง
+  const handleBookingClick = () => {
+    setIsBookingMode(true);
+  };
+
+  // ฟังก์ชันสำหรับยืนยันการจอง
+  const handleConfirmBooking = () => {
+    if (!selectedDate) {
+      alert('กรุณาเลือกวันที่ที่ต้องการจอง');
+      return;
+    }
+    
+    // ที่นี่สามารถเพิ่มโค้ดสำหรับส่งข้อมูลการจองไปยัง API
+    alert(`จองเรียบร้อยแล้ว!\nฟิตเนส: ${fitnessData.fitness_name}\nวันที่: ${selectedDate}\nราคา: ${fitnessData.price_per_day || 60} บาท`);
+    
+    // รีเซ็ตสถานะ
+    setIsBookingMode(false);
+    setSelectedDate('');
+  };
+
+  // ฟังก์ชันสำหรับยกเลิกการจอง
+  const handleCancelBooking = () => {
+    setIsBookingMode(false);
+    setSelectedDate('');
+  };
+
+  // ฟังก์ชันสำหรับกำหนดวันที่ขั้นต่ำ (วันนี้)
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
+  // ฟังก์ชันสำหรับกำหนดวันที่สูงสุด (30 วันข้างหน้า)
+  const getMaxDate = () => {
+    const maxDate = new Date();
+    maxDate.setDate(maxDate.getDate() + 30);
+    return maxDate.toISOString().split('T')[0];
+  };
+
   // Debug logs
   console.log('🖼️ Selected fitness data:', fitnessData);
   console.log('🖼️ fit_image2:', fitnessData.fit_image2);
@@ -37,6 +117,13 @@ const FitnessDetailModal = ({
   if (isFullPage) {
     return (
       <div className="fitness-detail-content">
+        {/* Share Notification */}
+        {shareNotification && (
+          <div className="share-notification">
+            {shareNotification}
+          </div>
+        )}
+        
         {/* Header Section */}
         <div className="fitness-header">
           <div className="fitness-title-section">
@@ -46,7 +133,8 @@ const FitnessDetailModal = ({
             </div>
           </div>
           <div className="fitness-actions">
-            <button className="share-btn">📤</button>
+            <button className="favorite-btn" title="บันทึกรายการโปรด">❤️</button>
+            <button className="share-btn" onClick={handleShare} title="แชร์ฟิตเนส">📤</button>
           </div>
         </div>
 
@@ -175,9 +263,35 @@ const FitnessDetailModal = ({
                 <span className="price-unit">บาท/วัน</span>
               </div>
               
-              <button className="booking-btn">
-                📋 จองบริการ
-              </button>
+              {/* Booking Section */}
+              {!isBookingMode ? (
+                <button className="booking-btn" onClick={handleBookingClick}>
+                  📋 จองบริการ
+                </button>
+              ) : (
+                <div className="booking-form">
+                  <div className="date-selection">
+                    <label htmlFor="booking-date">เลือกวันที่:</label>
+                    <input
+                      type="date"
+                      id="booking-date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      min={getTodayDate()}
+                      max={getMaxDate()}
+                      className="date-input"
+                    />
+                  </div>
+                  <div className="booking-actions">
+                    <button className="confirm-booking-btn" onClick={handleConfirmBooking}>
+                      ✅ ยืนยันการจอง
+                    </button>
+                    <button className="cancel-booking-btn" onClick={handleCancelBooking}>
+                      ❌ ยกเลิก
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Contact Info */}
