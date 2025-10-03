@@ -10,6 +10,18 @@ const FitnessManagement = ({
   console.log('🔍 FitnessManagement - ownerData received:', ownerData);
   console.log('🔍 FitnessManagement - ownerData keys:', ownerData ? Object.keys(ownerData) : 'null');
   
+  // ฟังก์ชันปรับฟอร์แมตเวลา
+  const formatTime = (timeString) => {
+    if (!timeString) return timeString;
+    return timeString
+      .replace(/(\d+):00\.00/g, '$1:00')     // 10:00.00 -> 10:00
+      .replace(/(\d+)\.00\.00/g, '$1.00')   // 10.00.00 -> 10.00  
+      .replace(/(\d+)\.00$/g, '$1')         // 10.00 -> 10
+      .replace(/(\d+):00:00/g, '$1:00')     // 10:00:00 -> 10:00
+      .replace(/\.00\s*-\s*(\d+)\.00/g, ' - $1')  // 10.00 - 23.00 -> 10 - 23
+      .replace(/(\d+)\.00/g, '$1');         // ตัด .00 ทั้งหมด
+  };
+  
   // State สำหรับจัดการโหมดการทำงาน
   const [fitnessMode, setFitnessMode] = useState('view'); // 'create', 'edit', 'view'
   const [hasFitnessData, setHasFitnessData] = useState(false);
@@ -732,7 +744,7 @@ const FitnessManagement = ({
                 <div className="info-icon">🕑</div>
                 <div className="info-content">
                   <h4>
-                    {fitnessData.fit_dateopen || '00:00'} - {fitnessData.fit_dateclose || '00:00'}
+                    {formatTime(fitnessData.fit_dateopen) || '08:00'} - {formatTime(fitnessData.fit_dateclose) || '22:00'}
                   </h4>
                   <p className="info-label">เวลาเปิด-ปิด</p>
                 </div>

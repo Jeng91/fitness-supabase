@@ -7,7 +7,17 @@ import FitnessDetailModal from './components/FitnessDetailModal';
 
 
 function App() {
-
+  // ฟังก์ชันปรับฟอร์แมตเวลา
+  const formatTime = (timeString) => {
+    if (!timeString) return timeString;
+    return timeString
+      .replace(/(\d+):00\.00/g, '$1:00')     // 10:00.00 -> 10:00
+      .replace(/(\d+)\.00\.00/g, '$1.00')   // 10.00.00 -> 10.00  
+      .replace(/(\d+)\.00$/g, '$1')         // 10.00 -> 10
+      .replace(/(\d+):00:00/g, '$1:00')     // 10:00:00 -> 10:00
+      .replace(/\.00\s*-\s*(\d+)\.00/g, ' - $1')  // 10.00 - 23.00 -> 10 - 23
+      .replace(/(\d+)\.00/g, '$1');         // ตัด .00 ทั้งหมด
+  };
 
     const [currentPage, setCurrentPage] = useState('หน้าหลัก');
     const [isLoading, setIsLoading] = useState(false);
@@ -292,7 +302,7 @@ function App() {
             rating: 4.5, // ค่าเริ่มต้น
             price_per_day: fitness.fit_price || 100,
             hours: fitness.fit_dateopen && fitness.fit_dateclose 
-              ? `${fitness.fit_dateopen} - ${fitness.fit_dateclose}`
+              ? formatTime(`${fitness.fit_dateopen} - ${fitness.fit_dateclose}`)
               : 'จ-ส: 06.00 - 22.00',
             status: 'active',
             image: fitness.fit_image,
@@ -811,7 +821,7 @@ function App() {
                         <p className="fitness-phone">📞 {fitness.phone}</p>
                         <p className="fitness-owner">👤 {fitness.owner_name}</p>
                         <div className="fitness-details">
-                          <span className="fitness-hours">🕒 {fitness.hours}</span>
+                          <span className="fitness-hours">🕒 {formatTime(fitness.hours)}</span>
                           <div className="fitness-rating">
                             <span className="stars">⭐</span>
                             <span>{fitness.rating || '4.5'}</span>
@@ -883,7 +893,7 @@ function App() {
                     </div>
                     <div className="fitness-details-modal">
                       <p><strong>ที่อยู่:</strong> {selectedFitness.location}</p>
-                      <p><strong>เวลาทำการ:</strong> {selectedFitness.hours}</p>
+                      <p><strong>เวลาทำการ:</strong> {formatTime(selectedFitness.hours)}</p>
                       <p><strong>ราคา:</strong> {selectedFitness.price_per_day} บาท/วัน</p>
                       <p><strong>เบอร์โทร:</strong> {selectedFitness.phone}</p>
                       {selectedFitness.description && (
@@ -1159,7 +1169,7 @@ function App() {
     }
   };
 
-  return (
+    return (
     <div className="App">
       {/* Navbar */}
       <nav className="navbar">
@@ -1191,17 +1201,17 @@ function App() {
           ) : (
             <>
               {userProfile?.role === 'partner' ? (
-                <li 
+              <li 
                   className={currentPage === 'mainpartners' ? 'active' : ''}
                   onClick={() => setCurrentPage('mainpartners')}
-                >
+              >
                   แดชบอร์ดพาร์ทเนอร์
-                </li>
+              </li>
               ) : (
-                <li 
+              <li 
                   className={currentPage === 'โปรไฟล์' ? 'active' : ''}
                   onClick={() => setCurrentPage('โปรไฟล์')}
-                >
+              >
                   โปรไฟล์
                 </li>
               )}

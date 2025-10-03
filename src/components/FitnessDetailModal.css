@@ -12,41 +12,38 @@
   z-index: 1000;
 }
 
-/* Fitness Detail Page Styles */
-.fitness-detail-page {
+/* Full Page Layout */
+.fitness-detail-fullpage {
   min-height: 100vh;
-  background: #f5f7fa;
-  padding: 20px 0;
-}
-
-.fitness-detail-page .detail-modal-overlay {
-  position: static;
-  background: none;
-  display: block;
-  z-index: auto;
-}
-
-.fitness-detail-page .detail-modal-content {
-  width: 100%;
+  background: #f8f9fa;
+  padding: 20px;
   max-width: 1200px;
-  max-height: none;
   margin: 0 auto;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Content for Full Page (without background) */
+.fitness-detail-content {
+  background: #f8f9fa;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Detail Header (for back button) */
 .detail-header {
   background: white;
   padding: 15px 20px;
   border-bottom: 1px solid #e9ecef;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
+  border-radius: 12px 12px 0 0;
 }
 
 .back-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 12px 20px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -61,6 +58,413 @@
   background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+/* Header Section */
+.fitness-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.fitness-title-section h1.fitness-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.fitness-location {
+  font-size: 1rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.fitness-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.favorite-btn, .share-btn {
+  width: 50px;
+  height: 50px;
+  border: 2px solid #e9ecef;
+  background: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.favorite-btn:hover, .share-btn:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+  transform: scale(1.05);
+}
+
+/* Main Content Layout */
+.fitness-main-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Left Section - Images */
+.fitness-images-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.main-image-container {
+  width: 100%;
+  height: 400px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.main-fitness-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.main-fitness-image:hover {
+  transform: scale(1.02);
+}
+
+.thumbnail-images {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.thumbnail-image {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 3px solid transparent;
+}
+
+.thumbnail-image:hover {
+  border-color: #667eea;
+  transform: scale(1.05);
+}
+
+/* Equipment Showcase */
+.equipment-showcase {
+  margin-top: 30px;
+}
+
+.equipment-showcase h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 20px;
+}
+
+.equipment-grid-showcase {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.equipment-showcase-item {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease;
+}
+
+.equipment-showcase-item:hover {
+  transform: translateY(-2px);
+}
+
+.equipment-image-container {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 12px;
+}
+
+.equipment-showcase-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.equipment-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f3f4;
+  border-radius: 8px;
+  font-size: 1.5rem;
+}
+
+.equipment-showcase-info h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #2d3748;
+  margin: 0 0 4px 0;
+}
+
+.equipment-showcase-info p {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+}
+
+/* Right Sidebar */
+.fitness-info-sidebar {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  position: sticky;
+  top: 20px;
+  height: fit-content;
+}
+
+/* Rating Section */
+.rating-price-section {
+  margin-bottom: 24px;
+}
+
+.rating-display {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.rating-score {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.rating-details {
+  flex: 1;
+}
+
+.stars {
+  font-size: 1.2rem;
+  margin-bottom: 4px;
+}
+
+.rating-count {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Info Cards */
+.info-cards {
+  margin-bottom: 24px;
+}
+
+.info-card {
+  padding: 12px 16px;
+  background: #f8f9ff;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Map Section */
+.map-section {
+  margin-bottom: 24px;
+}
+
+.map-placeholder {
+  height: 120px;
+  background: #f1f3f4;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s ease;
+}
+
+.map-btn:hover {
+  background: #5a67d8;
+}
+
+/* Schedule & Booking */
+.schedule-booking {
+  margin-bottom: 24px;
+}
+
+.schedule-info {
+  margin-bottom: 16px;
+}
+
+.schedule-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.schedule-label {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.schedule-value {
+  color: #2d3748;
+}
+
+.price-display {
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.price-number {
+  font-size: 2.5rem;
+  font-weight: 700;
+  display: block;
+}
+
+.price-unit {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.booking-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 16px 24px;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.booking-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+}
+
+/* Contact Section */
+.contact-section {
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.contact-icon {
+  font-size: 1.2rem;
+}
+
+.contact-text {
+  color: #4a5568;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .fitness-main-content {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .fitness-info-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .fitness-detail-fullpage {
+    padding: 15px;
+  }
+  
+  .fitness-header {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .fitness-title-section h1.fitness-title {
+    font-size: 2rem;
+  }
+  
+  .main-image-container {
+    height: 250px;
+  }
+  
+  .thumbnail-images {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+  
+  .equipment-grid-showcase {
+    grid-template-columns: 1fr;
+  }
+  
+  .rating-display {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .price-display {
+    padding: 12px;
+  }
+  
+  .price-number {
+    font-size: 2rem;
+  }
 }
 
 .detail-modal-content {
