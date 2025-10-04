@@ -398,6 +398,7 @@ body.dark-mode .form-group input::placeholder {
 
 .role-select {
   padding: 0.8rem;
+  color: #764ba2 !important;
   border: 2px solid #e1e1e1;
   border-radius: 8px;
   font-size: 1rem;

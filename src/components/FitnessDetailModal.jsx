@@ -1,6 +1,6 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import './FitnessDetailModal.css';
-import PaymentPage from './PaymentPage';
 
 const FitnessDetailModal = ({ 
   isOpen, 
@@ -10,10 +10,10 @@ const FitnessDetailModal = ({
   onOpenImageGallery,
   isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
 }) => {
+  const navigate = useNavigate();
   const [shareNotification, setShareNotification] = React.useState('');
   const [selectedDate, setSelectedDate] = React.useState('');
   const [isBookingMode, setIsBookingMode] = React.useState(false);
-  const [showPayment, setShowPayment] = React.useState(false);
 
   if (!isOpen || !fitnessData) return null;
 
@@ -78,8 +78,6 @@ const FitnessDetailModal = ({
     console.log('🔥 BUTTON CLICKED - handleConfirmBooking START');
     
     try {
-      alert('🎯 ปุ่มถูกคลิก!'); // Test alert
-      
       console.log('🎯 handleConfirmBooking called');
       console.log('📅 selectedDate:', selectedDate);
       console.log('🏋️ fitnessData:', fitnessData);
@@ -90,23 +88,29 @@ const FitnessDetailModal = ({
         return;
       }
       
-      const bookingData = getBookingData();
-      console.log('📋 bookingData:', bookingData);
+      // สร้างข้อมูลการจองเพื่อส่งไปหน้าชำระเงิน
+      const bookingData = {
+        fitness_id: fitnessData?.fit_id || 22,
+        fitnessName: fitnessData?.fit_name || 'JM FITNESS',
+        owner_uid: fitnessData?.owner_uid || 1,
+        booking_date: selectedDate,
+        total_amount: fitnessData?.fit_price || 60,
+        location: fitnessData?.fit_location || 'ขาวเนียง มหาสารคาม',
+        rating: fitnessData?.rating || '4.5',
+        images: {
+          main: fitnessData?.fit_image1,
+          secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
+        }
+      };
       
-      // เปิดหน้าชำระเงิน - force update state
-      console.log('🔄 Setting showPayment to true...');
-      console.log('🔄 Before setState - showPayment:', showPayment);
+      console.log('📦 Booking data prepared:', bookingData);
       
-      // ปิด booking mode ก่อน
-      setIsBookingMode(false);
+      // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูล
+      navigate('/payment', { 
+        state: { bookingData } 
+      });
       
-      // รอแล้วค่อยเปิด payment
-      setTimeout(() => {
-        setShowPayment(true);
-        console.log('✅ showPayment set to true after timeout');
-      }, 100);
-      
-      console.log('✅ handleConfirmBooking completed');
+      console.log('✅ Navigated to payment page');
       
     } catch (error) {
       console.error('❌ Error in handleConfirmBooking:', error);
@@ -133,47 +137,7 @@ const FitnessDetailModal = ({
     return maxDate.toISOString().split('T')[0];
   };
 
-  // ฟังก์ชันสำหรับจัดการผลลัพธ์การชำระเงิน
-  const handlePaymentSuccess = (paymentResult) => {
-    // แสดงข้อความสำเร็จ
-    alert(`🎉 ชำระเงินสำเร็จ!\n\nรหัสการจอง: ${paymentResult.booking.booking_id}\nรหัสธุรกรรม: ${paymentResult.transaction_id}\n\nขอบคุณที่ใช้บริการ PJ Fitness!`);
-    
-    // ปิดหน้าต่างทั้งหมด
-    setShowPayment(false);
-    setSelectedDate('');
-    setIsBookingMode(false);
-    
-    // เรียก callback หากมี
-    if (onClose) {
-      onClose();
-    }
-  };
 
-  // ฟังก์ชันสำหรับยกเลิกการชำระเงิน
-  const handlePaymentCancel = () => {
-    setShowPayment(false);
-    setIsBookingMode(true); // กลับไปหน้าเลือกวันที่
-  };
-
-  // สร้างข้อมูลสำหรับหน้าชำระเงิน
-  const getBookingData = () => {
-    console.log('📋 getBookingData called');
-    console.log('📋 fitnessData:', fitnessData);
-    console.log('📋 selectedDate:', selectedDate);
-    
-    const bookingData = {
-      fitness_id: fitnessData?.fit_id || 22,        
-      fitnessName: fitnessData?.fit_name || 'JM FITNESS',
-      owner_uid: fitnessData?.owner_uid || 1,      
-      booking_date: selectedDate || '2025-10-06',
-      total_amount: fitnessData?.fit_price || 60,
-      location: fitnessData?.fit_location || 'ขาวเนียง มหาสารคาม',
-      rating: fitnessData?.rating || '4.5'
-    };
-    
-    console.log('📋 Generated bookingData:', bookingData);
-    return bookingData;
-  };
 
   // Debug logs
   console.log('🖼️ Selected fitness data:', fitnessData);
@@ -457,15 +421,6 @@ const FitnessDetailModal = ({
         </div>
       </div>
 
-      {/* Payment Page */}
-      {console.log('🎯 Render check - showPayment:', showPayment, 'bookingData:', getBookingData())}
-      {showPayment && console.log('✅ PaymentPage SHOULD render now!')}
-      <PaymentPage
-        isOpen={showPayment}
-        bookingData={getBookingData()}
-        onPaymentSuccess={handlePaymentSuccess}
-        onPaymentCancel={handlePaymentCancel}
-      />
     </>
       
   );
