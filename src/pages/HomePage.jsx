@@ -34,7 +34,7 @@ const HomePage = () => {
   const [selectedFitness, setSelectedFitness] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // Check authentication และ redirect partners
+  // Check authentication แต่ไม่ redirect (ให้ user ทั่วไปเข้าได้)
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -47,13 +47,6 @@ const HomePage = () => {
     
     checkAuth();
   }, []);
-
-  // Auto redirect partners
-  useEffect(() => {
-    if (userProfile?.role === 'partner') {
-      navigate('/partner');
-    }
-  }, [userProfile, navigate]);
 
   const loadUserProfile = async (userId) => {
     try {

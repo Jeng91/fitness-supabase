@@ -1,17 +1,63 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import supabase from '../supabaseClient';
 
-const PartnerDashboard = ({ 
-  partnerData, 
-  fitnessData, 
-  equipmentList 
-}) => {
+const PartnerDashboard = ({ ownerData }) => {
+  const [fitnessData, setFitnessData] = useState(null);
+  const [equipmentList, setEquipmentList] = useState([]);
+  const [bookingStats, setBookingStats] = useState({ total: 0, thisMonth: 0 });
+  const [loading, setLoading] = useState(true);
+
+  // โหลดข้อมูลฟิตเนสของ partner นี้
+  useEffect(() => {
+    const loadPartnerData = async () => {
+      if (!ownerData?.owner_uid) return;
+
+      try {
+        // ดึงข้อมูลฟิตเนสของ partner นี้
+        const { data: fitness, error: fitnessError } = await supabase
+          .from('tbl_fitness')
+          .select('*')
+          .eq('owner_uid', ownerData.owner_uid)
+          .single();
+
+        if (fitness && !fitnessError) {
+          setFitnessData(fitness);
+          
+          // ดึงข้อมูลอุปกรณ์ของฟิตเนสนี้
+          const { data: equipment, error: equipError } = await supabase
+            .from('tbl_equipment')
+            .select('*')
+            .eq('fitness_id', fitness.fit_id);
+
+          if (!equipError) {
+            setEquipmentList(equipment || []);
+          }
+        }
+
+        // ดึงสถิติการจอง (ถ้ามีระบบจอง)
+        // TODO: เพิ่มการดึงข้อมูลการจองเมื่อมีตารางการจอง
+
+      } catch (error) {
+        console.error('Error loading partner dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPartnerData();
+  }, [ownerData]);
+
+  if (loading) {
+    return <div className="dashboard-loading">กำลังโหลดข้อมูล...</div>;
+  }
+
   const dashboardStats = {
-    hasProfile: !!partnerData,
-    hasFitness: !!fitnessData?.id,
+    hasProfile: !!ownerData,
+    hasFitness: !!fitnessData?.fit_id,
     equipmentCount: equipmentList?.length || 0,
-    profileComplete: partnerData ? 
-      (partnerData.owner_name && partnerData.owner_email && partnerData.owner_phone ? 100 : 
-       (partnerData.owner_name || partnerData.owner_email || partnerData.owner_phone ? 60 : 30)) : 0,
+    profileComplete: ownerData ? 
+      (ownerData.owner_name && ownerData.owner_email && ownerData.owner_phone ? 100 : 
+       (ownerData.owner_name || ownerData.owner_email || ownerData.owner_phone ? 60 : 30)) : 0,
     fitnessComplete: fitnessData ? 
       (fitnessData.fit_name && fitnessData.fit_address && fitnessData.fit_phone ? 100 :
        (fitnessData.fit_name || fitnessData.fit_address || fitnessData.fit_phone ? 60 : 30)) : 0
@@ -50,10 +96,10 @@ const PartnerDashboard = ({
                 ></div>
               </div>
               <p>{dashboardStats.profileComplete}% เสร็จสมบูรณ์</p>
-              {partnerData && (
+              {ownerData && (
                 <div className="card-details">
-                  <p>📧 {partnerData.owner_email || 'ยังไม่ได้กรอก'}</p>
-                  <p>📱 {partnerData.owner_phone || 'ยังไม่ได้กรอก'}</p>
+                  <p>📧 {ownerData.owner_email || 'ยังไม่ได้กรอก'}</p>
+                  <p>📱 {ownerData.owner_phone || 'ยังไม่ได้กรอก'}</p>
                 </div>
               )}
             </div>

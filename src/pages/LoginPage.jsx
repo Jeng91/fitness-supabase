@@ -73,29 +73,42 @@ const LoginPage = () => {
       console.log('Auth successful, user:', data.user);
       setMessage('เข้าสู่ระบบสำเร็จ!');
 
-      // รอสักครู่เพื่อให้ state update
-      setTimeout(async () => {
-        // ตรวจสอบ role ก่อน redirect
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', data.user.id)
-          .single();
-
-        const { data: owner } = await supabase
+      // ตรวจสอบ role และ redirect ทันที
+      try {
+        // ตรวจสอบใน tbl_owner ก่อน (partner)
+        const { data: owner, error: ownerError } = await supabase
           .from('tbl_owner')
           .select('*')
           .eq('owner_uid', data.user.id)
           .single();
 
-        if (owner) {
+        if (owner && !ownerError) {
+          console.log('Partner found:', owner);
           navigate('/partner');
-        } else if (profile) {
-          navigate('/');
-        } else {
-          navigate('/profile');
+          return;
         }
-      }, 1000);
+
+        // ตรวจสอบใน profiles (user ทั่วไป)
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', data.user.id)
+          .single();
+
+        if (profile && !profileError) {
+          console.log('Regular user found:', profile);
+          navigate('/'); // หน้าหลักสำหรับ user ทั่วไป
+          return;
+        }
+
+        // ถ้าไม่เจอในทั้งสองตาราง ให้ไปหน้าหลัก
+        console.log('No profile found, redirecting to home');
+        navigate('/');
+
+      } catch (profileCheckError) {
+        console.error('Error checking user profile:', profileCheckError);
+        navigate('/'); // fallback ไปหน้าหลัก
+      }
 
     } catch (error) {
       console.error('Login error:', error);
