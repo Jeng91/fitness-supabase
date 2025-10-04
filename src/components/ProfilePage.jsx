@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import './ProfilePage.css';
 
-const ProfilePage = ({ user, onLogout }) => {
+const ProfilePage = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +21,22 @@ const ProfilePage = ({ user, onLogout }) => {
     full_name: ''
   });
   const [activeTab, setActiveTab] = useState('profile');
+
+  // ตรวจสอบ authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        navigate('/login');
+        return;
+      }
+
+      setUser(user);
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -248,6 +267,23 @@ const ProfilePage = ({ user, onLogout }) => {
     );
   }
 
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="profile-container">
+        <div className="loading">กำลังโหลดข้อมูล...</div>
+      </div>
+    );
+  }
+
   return (
     <div className={`profile-container ${darkMode ? 'dark-mode' : ''}`}>
       {/* Header */}
@@ -256,7 +292,7 @@ const ProfilePage = ({ user, onLogout }) => {
           <h1>โปรไฟล์ของฉัน</h1>
           <div className="user-info">
             <span>สวัสดี, {profile?.full_name || profile?.username || user?.email?.split('@')[0] || 'ผู้ใช้'}</span>
-            <button onClick={onLogout} className="logout-btn">
+            <button onClick={handleLogout} className="logout-btn">
               ออกจากระบบ
             </button>
           </div>

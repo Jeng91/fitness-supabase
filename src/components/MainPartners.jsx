@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import supabase from '../supabaseClient';
 import './MainPartners.css';
 import PartnerDashboard from './PartnerDashboard';
 import FitnessManagement from './FitnessManagement';
@@ -12,13 +14,62 @@ import RevenueReports from './RevenueReports';
 import MarketingTools from './MarketingTools';
 import QRGenerator from './QRGenerator';
 
-const MainPartners = (props) => {
+const MainPartners = () => {
+  const navigate = useNavigate();
   const [currentMenu, setCurrentMenu] = useState('overview');
-  // รับ ownerData จาก props (App.js)
-  const ownerData = props.ownerData || null;
-  
-  console.log('🔍 MainPartners - ownerData received:', ownerData);
-  console.log('🔍 MainPartners - ownerData keys:', ownerData ? Object.keys(ownerData) : 'null');
+  const [ownerData, setOwnerData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ตรวจสอบ authentication และโหลดข้อมูล partner
+  useEffect(() => {
+    const loadPartnerData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          navigate('/login');
+          return;
+        }
+
+        // โหลดข้อมูล owner
+        const { data: owner, error } = await supabase
+          .from('tbl_owner')
+          .select('*')
+          .eq('owner_uid', user.id)
+          .single();
+
+        if (error || !owner) {
+          console.error('Error loading owner data:', error);
+          navigate('/');
+          return;
+        }
+
+        setOwnerData({
+          id: owner.owner_uid,
+          full_name: owner.owner_name,
+          email: owner.owner_email,
+          role: 'partner',
+          ...owner
+        });
+      } catch (error) {
+        console.error('Error in loadPartnerData:', error);
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPartnerData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  };
 
   // Callback functions for components
   const handleFitnessUpdate = (data) => {
@@ -27,6 +78,14 @@ const MainPartners = (props) => {
   const handleEquipmentUpdate = (data) => {
     console.log('Equipment updated:', data);
   };
+
+  if (loading) {
+    return (
+      <div className="partner-container">
+        <div className="loading">กำลังโหลดข้อมูล...</div>
+      </div>
+    );
+  }
 
   if (!ownerData) {
     return (
@@ -121,6 +180,9 @@ const MainPartners = (props) => {
         <h1>ระบบจัดการฟิตเนส - {ownerData.owner_name}</h1>
         <div className="owner-info">
           <span>อีเมล: {ownerData.owner_email}</span>
+          <button onClick={handleLogout} className="logout-btn">
+            ออกจากระบบ
+          </button>
         </div>
       </div>
 
