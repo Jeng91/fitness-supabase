@@ -251,10 +251,43 @@ const PaymentPage = ({
     return paymentData.email; // สำหรับ payment method อื่นๆ
   };
 
-  if (!isOpen || !bookingData) return null;
+  console.log('🔍 PaymentPage props:', { isOpen, hasBookingData: !!bookingData });
+  console.log('🔍 PaymentPage bookingData:', bookingData);
+  
+  if (!isOpen) {
+    console.log('❌ PaymentPage not showing - isOpen is false');
+    return null;
+  }
+
+  console.log('✅ PaymentPage WILL render - isOpen is true');
+
+  // Force render สำหรับ testing
+  const displayBookingData = bookingData || {
+    fitness_id: 22,
+    fitnessName: 'JM FITNESS',
+    total_amount: 60,
+    booking_date: '2025-10-06',
+    location: 'ขาวเนียง มหาสารคาม'
+  };
+
+  console.log('✅ Using displayBookingData:', displayBookingData);
 
   return (
-    <div className="payment-overlay">
+    <div 
+      className="payment-overlay"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 10001,
+        background: 'rgba(0, 0, 0, 0.8)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center'
+      }}
+    >
       <div className="payment-container">
         {/* Header */}
         <div className="payment-header">
@@ -274,11 +307,11 @@ const PaymentPage = ({
           <div className="booking-details">
             <div className="booking-item">
               <span>🏋️‍♂️ ฟิตเนส:</span>
-              <span>{bookingData.fitnessName}</span>
+              <span>{displayBookingData.fitnessName}</span>
             </div>
             <div className="booking-item">
               <span>📅 วันที่:</span>
-              <span>{new Date(bookingData.booking_date).toLocaleDateString('th-TH')}</span>
+              <span>{new Date(displayBookingData.booking_date).toLocaleDateString('th-TH')}</span>
             </div>
             <div className="booking-item">
               <span>💰 ราคา:</span>

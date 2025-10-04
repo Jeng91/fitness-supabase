@@ -75,14 +75,43 @@ const FitnessDetailModal = ({
 
   // ฟังก์ชันสำหรับยืนยันการจอง
   const handleConfirmBooking = () => {
-    if (!selectedDate) {
-      alert('กรุณาเลือกวันที่ที่ต้องการจอง');
-      return;
-    }
+    console.log('🔥 BUTTON CLICKED - handleConfirmBooking START');
     
-    // เปิดหน้าชำระเงิน
-    setShowPayment(true);
-    setIsBookingMode(false);
+    try {
+      alert('🎯 ปุ่มถูกคลิก!'); // Test alert
+      
+      console.log('🎯 handleConfirmBooking called');
+      console.log('📅 selectedDate:', selectedDate);
+      console.log('🏋️ fitnessData:', fitnessData);
+      
+      if (!selectedDate) {
+        alert('กรุณาเลือกวันที่ที่ต้องการจอง');
+        console.log('❌ No selectedDate');
+        return;
+      }
+      
+      const bookingData = getBookingData();
+      console.log('📋 bookingData:', bookingData);
+      
+      // เปิดหน้าชำระเงิน - force update state
+      console.log('🔄 Setting showPayment to true...');
+      console.log('🔄 Before setState - showPayment:', showPayment);
+      
+      // ปิด booking mode ก่อน
+      setIsBookingMode(false);
+      
+      // รอแล้วค่อยเปิด payment
+      setTimeout(() => {
+        setShowPayment(true);
+        console.log('✅ showPayment set to true after timeout');
+      }, 100);
+      
+      console.log('✅ handleConfirmBooking completed');
+      
+    } catch (error) {
+      console.error('❌ Error in handleConfirmBooking:', error);
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
   };
 
   // ฟังก์ชันสำหรับยกเลิกการจอง
@@ -128,15 +157,22 @@ const FitnessDetailModal = ({
 
   // สร้างข้อมูลสำหรับหน้าชำระเงิน
   const getBookingData = () => {
-    return {
-      fitness_id: fitnessData.fit_id,        // ใช้ fit_id แทน fitnessId
-      fitnessName: fitnessData.fitness_name,
-      owner_uid: fitnessData.owner_uid,      // ใช้ owner_uid จากตาราง tbl_owner
-      booking_date: selectedDate,
-      total_amount: fitnessData.price_per_day || 60,
-      location: fitnessData.location,
-      rating: fitnessData.rating || '4.5'
+    console.log('📋 getBookingData called');
+    console.log('📋 fitnessData:', fitnessData);
+    console.log('📋 selectedDate:', selectedDate);
+    
+    const bookingData = {
+      fitness_id: fitnessData?.fit_id || 22,        
+      fitnessName: fitnessData?.fit_name || 'JM FITNESS',
+      owner_uid: fitnessData?.owner_uid || 1,      
+      booking_date: selectedDate || '2025-10-06',
+      total_amount: fitnessData?.fit_price || 60,
+      location: fitnessData?.fit_location || 'ขาวเนียง มหาสารคาม',
+      rating: fitnessData?.rating || '4.5'
     };
+    
+    console.log('📋 Generated bookingData:', bookingData);
+    return bookingData;
   };
 
   // Debug logs
@@ -317,7 +353,18 @@ const FitnessDetailModal = ({
                     />
                   </div>
                   <div className="booking-actions">
-                    <button className="confirm-booking-btn" onClick={handleConfirmBooking}>
+                    <button 
+                      className="confirm-booking-btn" 
+                      onClick={(e) => {
+                        console.log('🔥 Raw button click event:', e);
+                        handleConfirmBooking();
+                      }}
+                      style={{
+                        pointerEvents: 'auto',
+                        cursor: 'pointer',
+                        zIndex: 999
+                      }}
+                    >
                       ✅ ยืนยันการจอง
                     </button>
                     <button className="cancel-booking-btn" onClick={handleCancelBooking}>
@@ -411,6 +458,8 @@ const FitnessDetailModal = ({
       </div>
 
       {/* Payment Page */}
+      {console.log('🎯 Render check - showPayment:', showPayment, 'bookingData:', getBookingData())}
+      {showPayment && console.log('✅ PaymentPage SHOULD render now!')}
       <PaymentPage
         isOpen={showPayment}
         bookingData={getBookingData()}

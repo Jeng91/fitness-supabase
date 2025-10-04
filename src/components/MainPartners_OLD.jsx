@@ -76,7 +76,7 @@ const MainPartners = ({ user, onLogout, onNavigateToHome }) => {
       const { data, error } = await supabase
         .from('tbl_owner')
         .select('*')
-        .eq('auth_user_id', user.id)
+        .eq('owner_uid', user.id)
         .single();
 
       if (error) {
