@@ -343,15 +343,34 @@ const ProfilePage = () => {
 
   return (
     <div className={`profile-container ${darkMode ? 'dark-mode' : ''}`}>
-      {/* Header */}
-      <header className="profile-header">
-        <div className="header-content">
-          <h1>โปรไฟล์ของฉัน</h1>
-          <div className="user-info">
-            <span>สวัสดี, {profile?.full_name || profile?.username || user?.email?.split('@')[0] || 'ผู้ใช้'}</span>
+      {/* Top Navigation Bar */}
+      <nav className="top-navbar">
+        <div className="navbar-content">
+          <div className="navbar-left">
+            <button 
+              onClick={() => navigate('/')} 
+              className="home-btn"
+              title="กลับไปหน้าหลัก"
+            >
+              ← PJ Fitness
+            </button>
+          </div>
+          <div className="navbar-center">
+            <h2>โปรไฟล์ของฉัน</h2>
+          </div>
+          <div className="navbar-right">
             <button onClick={handleLogout} className="logout-btn">
               ออกจากระบบ
             </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Header */}
+      <header className="profile-header">
+        <div className="header-content">
+          <div className="user-info">
+            <span>สวัสดี, {profile?.full_name || profile?.username || user?.email?.split('@')[0] || 'ผู้ใช้'}</span>
           </div>
         </div>
       </header>
