@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import supabase from '../supabaseClient';
 import './FitnessDetailModal.css';
 
 const FitnessDetailModal = ({ 
@@ -11,9 +12,50 @@ const FitnessDetailModal = ({
   isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
 }) => {
   const navigate = useNavigate();
-  const [shareNotification, setShareNotification] = React.useState('');
-  const [selectedDate, setSelectedDate] = React.useState('');
-  const [isBookingMode, setIsBookingMode] = React.useState(false);
+  const [shareNotification, setShareNotification] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [isBookingMode, setIsBookingMode] = useState(false);
+  const [equipmentData, setEquipmentData] = useState([]);
+  const [ownerData, setOwnerData] = useState(null);
+
+  // โหลดข้อมูลอุปกรณ์และเจ้าของ
+  useEffect(() => {
+    const loadAdditionalData = async () => {
+      if (!fitnessData?.fit_id) return;
+      
+      try {
+        // โหลดข้อมูลอุปกรณ์
+        const { data: equipment, error: equipmentError } = await supabase
+          .from('tbl_equipment')
+          .select('*')
+          .eq('fitness_id', fitnessData.fit_id);
+
+        if (equipmentError && equipmentError.code !== 'PGRST116') {
+          console.error('Error loading equipment:', equipmentError);
+        } else {
+          setEquipmentData(equipment || []);
+        }
+
+        // โหลดข้อมูลเจ้าของ
+        const { data: owner, error: ownerError } = await supabase
+          .from('tbl_owner')
+          .select('*')
+          .eq('owner_name', fitnessData.fit_user)
+          .single();
+
+        if (ownerError && ownerError.code !== 'PGRST116') {
+          console.error('Error loading owner:', ownerError);
+        } else {
+          setOwnerData(owner);
+        }
+
+      } catch (error) {
+        console.error('Error loading additional data:', error);
+      }
+    };
+
+    loadAdditionalData();
+  }, [fitnessData?.fit_id, fitnessData?.fit_user]);
 
   if (!isOpen || !fitnessData) return null;
 
@@ -34,8 +76,8 @@ const FitnessDetailModal = ({
   // ฟังก์ชันสำหรับแชร์ฟิตเนส
   const handleShare = async () => {
     const shareData = {
-      title: `${fitnessData.fitness_name} - PJ Fitness`,
-      text: `🏋️‍♂️ ${fitnessData.fitness_name}\n📍 ${fitnessData.location}\n💰 ${fitnessData.price_per_day || 60} บาท/วัน\n⭐ ${fitnessData.rating || '4.5'} คะแนน`,
+      title: `${fitnessData.fit_name || fitnessData.name} - PJ Fitness`,
+      text: `🏋️‍♂️ ${fitnessData.fit_name || fitnessData.name}\n📍 ${fitnessData.fit_address || fitnessData.location}\n💰 ${fitnessData.fit_price || fitnessData.price || 60} บาท/วัน\n⭐ ${fitnessData.rating || '4.5'} คะแนน`,
       url: window.location.href
     };
 
@@ -75,45 +117,39 @@ const FitnessDetailModal = ({
 
   // ฟังก์ชันสำหรับยืนยันการจอง
   const handleConfirmBooking = () => {
-    console.log('🔥 BUTTON CLICKED - handleConfirmBooking START');
-    
     try {
-      console.log('🎯 handleConfirmBooking called');
-      console.log('📅 selectedDate:', selectedDate);
-      console.log('🏋️ fitnessData:', fitnessData);
-      
       if (!selectedDate) {
         alert('กรุณาเลือกวันที่ที่ต้องการจอง');
-        console.log('❌ No selectedDate');
         return;
       }
       
       // สร้างข้อมูลการจองเพื่อส่งไปหน้าชำระเงิน
       const bookingData = {
         fitness_id: fitnessData?.fit_id || 22,
-        fitnessName: fitnessData?.fit_name || 'JM FITNESS',
+        fitnessName: fitnessData?.fit_name || fitnessData?.name || 'JM FITNESS',
         owner_uid: fitnessData?.owner_uid || 1,
         booking_date: selectedDate,
-        total_amount: fitnessData?.fit_price || 60,
-        location: fitnessData?.fit_location || 'ขาวเนียง มหาสารคาม',
+        total_amount: fitnessData?.fit_price || fitnessData?.price || 60,
+        location: fitnessData?.fit_location || fitnessData?.location || 'ขาวเนียง มหาสารคาม',
         rating: fitnessData?.rating || '4.5',
+        contact: fitnessData?.fit_contact || fitnessData?.contact,
+        phone: fitnessData?.fit_phone || fitnessData?.phone,
+        owner_name: fitnessData?.fit_user || ownerData?.owner_name,
+        description: fitnessData?.fit_description || fitnessData?.description,
         images: {
-          main: fitnessData?.fit_image1,
+          main: fitnessData?.fit_image || fitnessData?.image,
           secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
         }
       };
       
-      console.log('📦 Booking data prepared:', bookingData);
       
       // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูล
       navigate('/payment', { 
         state: { bookingData } 
       });
       
-      console.log('✅ Navigated to payment page');
-      
     } catch (error) {
-      console.error('❌ Error in handleConfirmBooking:', error);
+      console.error('Error in handleConfirmBooking:', error);
       alert('เกิดข้อผิดพลาด: ' + error.message);
     }
   };
@@ -140,13 +176,6 @@ const FitnessDetailModal = ({
 
 
   // Debug logs
-  console.log('🖼️ Selected fitness data:', fitnessData);
-  console.log('🖼️ fit_image2:', fitnessData.fit_image2);
-  console.log('🖼️ fit_image3:', fitnessData.fit_image3);
-  console.log('🖼️ fit_image4:', fitnessData.fit_image4);
-  console.log('🗺️ fit_location:', fitnessData.fit_location);
-  console.log('🏋️‍♂️ equipment:', fitnessData.equipment);
-
   // เมื่อเป็น Full Page ให้ใช้ layout แบบใหม่
   if (isFullPage) {
     return (
@@ -161,9 +190,12 @@ const FitnessDetailModal = ({
         {/* Header Section */}
         <div className="fitness-header">
           <div className="fitness-title-section">
-            <h1 className="fitness-title">{fitnessData.fitness_name}</h1>
+            <h1 className="fitness-title">{fitnessData.fit_name || fitnessData.name}</h1>
             <div className="fitness-location">
-              📍 {fitnessData.location}
+              📍 {fitnessData.fit_address || fitnessData.location}
+            </div>
+            <div className="fitness-owner">
+              👤 เจ้าของ: {fitnessData.fit_user || ownerData?.owner_name || 'ไม่ระบุเจ้าของ'}
             </div>
           </div>
           <div className="fitness-actions">
@@ -178,8 +210,8 @@ const FitnessDetailModal = ({
           <div className="fitness-images-section">
             <div className="main-image-container">
               <img 
-                src={fitnessData.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
-                alt={fitnessData.fitness_name}
+                src={fitnessData.fit_image || fitnessData.image || "data:image/svg+xml,%3Csvg width='400' height='300' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
+                alt={fitnessData.fit_name || fitnessData.name}
                 className="main-fitness-image"
                 onClick={() => onOpenImageGallery && onOpenImageGallery(fitnessData, 0)}
               />
@@ -202,44 +234,43 @@ const FitnessDetailModal = ({
 
             {/* Equipment Section */}
             <div className="equipment-showcase">
-              <h3>อุปกรณ์ที่มีให้บริการ</h3>
+              <h3>🏋️‍♂️ อุปกรณ์ที่มีให้บริการ</h3>
               <div className="equipment-grid-showcase">
-                {(() => {
-                  console.log('🏋️‍♂️ Equipment data:', fitnessData.equipment);
-                  const equipmentList = fitnessData.equipment || [];
-                  
-                  if (equipmentList.length > 0) {
-                    return equipmentList.slice(0, 4).map((equipment, index) => (
-                      <div key={equipment.eq_id || equipment.em_id || index} className="equipment-showcase-item">
+                {equipmentData.length > 0 ? (
+                  equipmentData.slice(0, 6).map((equipment, index) => (
+                      <div key={equipment.em_id || index} className="equipment-showcase-item">
                         <div className="equipment-image-container">
-                          {equipment.eq_image || equipment.em_image ? (
+                          {equipment.em_image ? (
                             <img 
-                              src={equipment.eq_image || equipment.em_image} 
-                              alt={equipment.eq_name || equipment.em_name}
+                              src={equipment.em_image} 
+                              alt={equipment.em_name}
                               className="equipment-showcase-image"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                                 e.target.nextSibling.style.display = 'flex';
                               }}
                             />
-                          ) : null}
-                          
+                          ) : (
+                            <div className="equipment-placeholder">
+                              🏋️
+                            </div>
+                          )}
                         </div>
                         <div className="equipment-showcase-info">
-                          <h4>{equipment.eq_name || equipment.em_name || 'ไม่ระบุชื่อ'}</h4>
-                          <p>จำนวน: {equipment.eq_qty || equipment.em_qty || 1}</p>
+                          <h4>{equipment.em_name || 'ไม่ระบุชื่อ'}</h4>
+                          <p>จำนวน: {equipment.em_qty || 1} ชิ้น</p>
+                          {equipment.em_detail && (
+                            <p className="equipment-detail">{equipment.em_detail}</p>
+                          )}
                         </div>
                       </div>
-                    ));
-                  } else {
-                    return (
-                      <div className="no-equipment">
-                        <p>ไม่มีข้อมูลอุปกรณ์</p>
-                      </div>
-                    );
-                  }
-                })()}
-              </div>
+                    ))
+                  ) : (
+                    <div className="no-equipment">
+                      <p>🚧 ไม่มีข้อมูลอุปกรณ์</p>
+                    </div>
+                  )}
+                </div>
             </div>
           </div>
 
@@ -288,14 +319,27 @@ const FitnessDetailModal = ({
                 </div>
                 <div className="schedule-item">
                   <span className="schedule-label">เวลา:</span>
-                  <span className="schedule-value">{formatTime(fitnessData.hours) || '08.00 - 22.00'}</span>
+                  <span className="schedule-value">
+                    {fitnessData.fit_open_time && fitnessData.fit_close_time 
+                      ? `${formatTime(fitnessData.fit_open_time)} - ${formatTime(fitnessData.fit_close_time)}`
+                      : formatTime(fitnessData.hours) || '08.00 - 22.00'
+                    }
+                  </span>
                 </div>
               </div>
               
               <div className="price-display">
-                <span className="price-number">{fitnessData.price_per_day || 69}</span>
+                <span className="price-number">{fitnessData.fit_price || fitnessData.price || 69}</span>
                 <span className="price-unit">บาท/วัน</span>
               </div>
+              
+              {/* Description Section */}
+              {(fitnessData.fit_description || fitnessData.description) && (
+                <div className="description-section">
+                  <h4>📝 รายละเอียดเพิ่มเติม</h4>
+                  <p>{fitnessData.fit_description || fitnessData.description}</p>
+                </div>
+              )}
               
               {/* Booking Section */}
               {!isBookingMode ? (
@@ -319,10 +363,7 @@ const FitnessDetailModal = ({
                   <div className="booking-actions">
                     <button 
                       className="confirm-booking-btn" 
-                      onClick={(e) => {
-                        console.log('🔥 Raw button click event:', e);
-                        handleConfirmBooking();
-                      }}
+                      onClick={handleConfirmBooking}
                       style={{
                         pointerEvents: 'auto',
                         cursor: 'pointer',
@@ -341,14 +382,27 @@ const FitnessDetailModal = ({
 
             {/* Contact Info */}
             <div className="contact-section">
-              <div className="contact-item">
-                <span className="contact-icon">📞</span>
-                <span className="contact-text">{fitnessData.phone || 'ไม่ระบุเบอร์โทร'}</span>
-              </div>
+              <h4>ข้อมูลการติดต่อ</h4>
               <div className="contact-item">
                 <span className="contact-icon">👤</span>
-                <span className="contact-text">{fitnessData.owner_name || 'ไม่ระบุเจ้าของ'}</span>
+                <span className="contact-text">เจ้าของ: {fitnessData.fit_user || ownerData?.owner_name || 'ไม่ระบุเจ้าของ'}</span>
               </div>
+              <div className="contact-item">
+                <span className="contact-icon">📞</span>
+                <span className="contact-text">{fitnessData.fit_phone || fitnessData.phone || ownerData?.owner_phone || 'ไม่ระบุเบอร์โทร'}</span>
+              </div>
+              {(fitnessData.fit_contact || fitnessData.contact) && (
+                <div className="contact-item">
+                  <span className="contact-icon">✉️</span>
+                  <span className="contact-text">{fitnessData.fit_contact || fitnessData.contact}</span>
+                </div>
+              )}
+              {ownerData?.owner_email && (
+                <div className="contact-item">
+                  <span className="contact-icon">📧</span>
+                  <span className="contact-text">{ownerData.owner_email}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

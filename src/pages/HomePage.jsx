@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import Layout from '../components/Layout';
-import FitnessDetailModal from '../components/FitnessDetailModal';
 import '../App.css';
 
 const HomePage = () => {
@@ -20,10 +19,6 @@ const HomePage = () => {
       .replace(/(\d+)\.00/g, '$1');
   };
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [message, setMessage] = useState('');
-  const [user, setUser] = useState(null);
-  const [userProfile, setUserProfile] = useState(null);
   const [fitnessData, setFitnessData] = useState([]);
   const [filteredFitnessData, setFilteredFitnessData] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,71 +29,18 @@ const HomePage = () => {
   const [selectedFitness, setSelectedFitness] = useState(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  // Check authentication แต่ไม่ redirect (ให้ user ทั่วไปเข้าได้)
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      
-      if (user) {
-        await loadUserProfile(user.id);
-      }
-    };
-    
-    checkAuth();
-  }, []);
-
-  const loadUserProfile = async (userId) => {
-    try {
-      // ตรวจสอบใน profiles ก่อน
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profile) {
-        setUserProfile(profile);
-        return;
-      }
-
-      // ถ้าไม่เจอใน profiles ตรวจสอบใน tbl_owner
-      const { data: owner } = await supabase
-        .from('tbl_owner')
-        .select('*')
-        .eq('owner_uid', userId)
-        .single();
-
-      if (owner) {
-        setUserProfile({
-          id: owner.owner_uid,
-          full_name: owner.owner_name,
-          email: owner.owner_email,
-          role: 'partner',
-          ...owner
-        });
-      }
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  };
-
   // Function สำหรับโหลดข้อมูลฟิตเนส
   const loadFitnessData = useCallback(async () => {
     try {
-      console.log('Loading fitness data from database...');
-      
       const { data: fitnessData, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (fitnessError) {
-        console.error('Error loading fitness data from tbl_fitness:', fitnessError);
+        console.error('Error loading fitness data:', fitnessError);
         return;
       }
-
-      console.log('Fitness data loaded:', fitnessData);
       
       // แปลงข้อมูลให้ตรงกับ format เดิม
       const transformedData = fitnessData.map(item => ({
@@ -129,7 +71,7 @@ const HomePage = () => {
     }
   }, []);
 
-  // โหลดข้อมูลครั้งแรก
+  // โหลดข้อมูลฟิตเนสเมื่อ component mount
   useEffect(() => {
     loadFitnessData();
   }, [loadFitnessData]);
@@ -197,20 +139,6 @@ const HomePage = () => {
     setSelectedFitness(fitness);
     setSelectedImageIndex(imageIndex);
     setShowImageModal(true);
-  };
-
-  const handleOpenImageGallery = (fitness) => {
-    setSelectedFitness(fitness);
-    setSelectedImageIndex(0);
-    setShowImageGallery(true);
-  };
-
-  const handleViewLocation = (fitness) => {
-    if (fitness.fit_location) {
-      window.open(`https://www.google.com/maps?q=${fitness.fit_location}`, '_blank');
-    } else {
-      alert('ไม่พบข้อมูลตำแหน่งสำหรับฟิตเนสนี้');
-    }
   };
 
   return (
@@ -325,13 +253,6 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div className={`message ${message.includes('สำเร็จ') ? 'success' : 'error'}`}>
-          {message}
-        </div>
-      )}
 
       {/* Image Modal */}
       {showImageModal && selectedFitness && (

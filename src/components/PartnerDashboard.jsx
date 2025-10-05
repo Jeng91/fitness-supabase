@@ -4,7 +4,7 @@ import supabase from '../supabaseClient';
 const PartnerDashboard = ({ ownerData }) => {
   const [fitnessData, setFitnessData] = useState(null);
   const [equipmentList, setEquipmentList] = useState([]);
-  const [bookingStats, setBookingStats] = useState({ total: 0, thisMonth: 0 });
+  // eslint-disable-next-line no-unused-vars
   const [loading, setLoading] = useState(true);
 
   // โหลดข้อมูลฟิตเนสของ partner นี้
