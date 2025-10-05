@@ -351,7 +351,7 @@ const HomePage = () => {
         <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
           <div className="login-required-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>🔐 จำเป็นต้องเข้าสู่ระบบ</h3>
+              <h3>🔐 กรุณาเข้าสู่ระบบ</h3>
               <button className="close-btn" onClick={() => setShowLoginModal(false)}>×</button>
             </div>
             <div className="modal-body">
