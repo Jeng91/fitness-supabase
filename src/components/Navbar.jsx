@@ -39,7 +39,7 @@ const Navbar = () => {
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', userId)
+        .eq('user_uid', userId)
         .single();
 
       if (profile) {
@@ -51,7 +51,7 @@ const Navbar = () => {
       const { data: owner } = await supabase
         .from('tbl_owner')
         .select('*')
-        .eq('owner_uid', userId)
+        .eq('auth_user_id', userId)
         .single();
 
       if (owner) {

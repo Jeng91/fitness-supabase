@@ -35,7 +35,7 @@ const MainPartners = () => {
         const { data: owner, error } = await supabase
           .from('tbl_owner')
           .select('*')
-          .eq('owner_uid', user.id)
+          .eq('auth_user_id', user.id)
           .single();
 
         if (error || !owner) {

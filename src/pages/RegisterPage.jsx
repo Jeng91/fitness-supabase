@@ -84,11 +84,10 @@ const RegisterPage = () => {
             .from('tbl_owner')
             .insert([
               {
-                owner_uid: data.user.id,
+                auth_user_id: data.user.id,
                 owner_name: formData.fullName,
                 owner_email: formData.email,
-                owner_phone: '',
-                owner_address: ''
+                owner_password: formData.password
               }
             ]);
 
