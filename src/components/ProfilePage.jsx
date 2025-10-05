@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import './ProfilePage.css';
@@ -22,6 +22,37 @@ const ProfilePage = () => {
   });
   const [activeTab, setActiveTab] = useState('profile');
   const [favorites, setFavorites] = useState([]);
+
+  // โหลดรายการโปรด
+  const loadFavorites = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tbl_favorites')
+        .select(`
+          fitness_id,
+          tbl_fitness:fitness_id (
+            fit_id,
+            fit_name,
+            fit_address,
+            fit_price,
+            fit_image
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (!error && data) {
+        const favoritesWithDetails = data.map(item => ({
+          id: item.fitness_id,
+          ...item.tbl_fitness
+        }));
+        setFavorites(favoritesWithDetails);
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  }, [user?.id]);
 
   // ตรวจสอบ authentication
   useEffect(() => {
@@ -110,40 +141,15 @@ const ProfilePage = () => {
 
     if (user) {
       fetchProfile();
-      loadFavorites();
     }
   }, [user]);
 
-  // โหลดรายการโปรด
-  const loadFavorites = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('tbl_favorites')
-        .select(`
-          fitness_id,
-          tbl_fitness:fitness_id (
-            fit_id,
-            fit_name,
-            fit_address,
-            fit_price,
-            fit_image
-          )
-        `)
-        .eq('user_id', user.id);
-
-      if (!error && data) {
-        const favoritesWithDetails = data.map(item => ({
-          id: item.fitness_id,
-          ...item.tbl_fitness
-        }));
-        setFavorites(favoritesWithDetails);
-      }
-    } catch (error) {
-      console.error('Error loading favorites:', error);
+  // useEffect สำหรับโหลด favorites
+  useEffect(() => {
+    if (user?.id) {
+      loadFavorites();
     }
-  };
+  }, [user?.id, loadFavorites]);
 
   // ลบรายการโปรด
   const removeFavorite = async (fitnessId) => {
