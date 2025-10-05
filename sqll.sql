@@ -335,3 +335,67 @@ create index IF not exists idx_tbl_favorites_fitness_id on public.tbl_favorites 
 
 create trigger trg_set_favorite_user BEFORE INSERT on tbl_favorites for EACH row
 execute FUNCTION set_favorite_user ();
+
+create table public.payments (
+  payment_id uuid not null default gen_random_uuid (),
+  booking_id uuid null,
+  user_id uuid null,
+  total_amount numeric(10, 2) not null,
+  system_fee numeric(10, 2) not null,
+  fitness_amount numeric(10, 2) not null,
+  payment_method character varying(50) null default 'credit_card'::character varying,
+  payment_status character varying(20) null default 'pending'::character varying,
+  transaction_id character varying(255) null,
+  gateway_response jsonb null,
+  gateway_reference character varying(255) null,
+  paid_at timestamp with time zone null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint payments_pkey primary key (payment_id),
+  constraint payments_transaction_id_key unique (transaction_id),
+  constraint payments_booking_id_fkey foreign KEY (booking_id) references bookings (booking_id) on delete CASCADE,
+  constraint payments_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint payments_payment_method_check check (
+    (
+      (payment_method)::text = any (
+        (
+          array[
+            'credit_card'::character varying,
+            'debit_card'::character varying,
+            'promptpay'::character varying,
+            'bank_transfer'::character varying,
+            'wallet'::character varying
+          ]
+        )::text[]
+      )
+    )
+  ),
+  constraint payments_payment_status_check check (
+    (
+      (payment_status)::text = any (
+        (
+          array[
+            'pending'::character varying,
+            'processing'::character varying,
+            'completed'::character varying,
+            'failed'::character varying,
+            'refunded'::character varying,
+            'cancelled'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_payments_booking_id on public.payments using btree (booking_id) TABLESPACE pg_default;
+
+create index IF not exists idx_payments_user_id on public.payments using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_payments_status on public.payments using btree (payment_status) TABLESPACE pg_default;
+
+create index IF not exists idx_payments_transaction_id on public.payments using btree (transaction_id) TABLESPACE pg_default;
+
+create trigger update_payments_updated_at BEFORE
+update on payments for EACH row
+execute FUNCTION update_updated_at_column ();

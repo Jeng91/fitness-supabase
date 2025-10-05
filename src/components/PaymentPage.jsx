@@ -79,40 +79,53 @@ const PaymentPage = () => {
     setIsProcessing(true);
     
     try {
-      // จำลองการประมวลผลการชำระเงิน (2-3 วินาที)
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      console.log('🔄 Processing payment for booking:', bookingData);
       
-      // สร้าง Booking ID ถ้ายังไม่มี
-      const finalBookingId = bookingData.booking_id || `BK_${Date.now()}`;
-      
-      // สร้างข้อมูลการชำระเงิน (จำลอง)
+      // สร้างข้อมูลการชำระเงิน
       const paymentData = {
-        booking_id: finalBookingId,
+        booking_id: bookingData.booking_id,
         total_amount: bookingData.total_amount,
         payment_method: 'credit_card',
         payment_status: 'completed',
         transaction_id: `TXN_${Date.now()}`,
-        gateway_response: JSON.stringify({
+        gateway_response: {
           card_last_four: paymentForm.cardNumber.slice(-4),
           email: paymentForm.email,
-          processed_at: new Date().toISOString()
-        }),
+          processed_at: new Date().toISOString(),
+          payment_method: 'credit_card',
+          status: 'success'
+        },
         gateway_reference: `REF_${Date.now()}`
       };
 
-      console.log('🎉 Payment Simulation - Success:', paymentData);
+      console.log('💳 Creating payment record:', paymentData);
 
-      // จำลองการบันทึกข้อมูลลง Database
-      console.log('💾 Saving to Database:');
-      console.log('📋 Booking ID:', finalBookingId);
-      console.log('💳 Payment Data:', paymentData);
-      console.log('🏋️ Fitness:', bookingData.fitnessName);
-      console.log('📅 Date:', bookingData.booking_date);
+      // บันทึกข้อมูลการชำระเงินลง Database
+      const paymentResult = await createPayment(paymentData);
+      
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินได้');
+      }
+
+      console.log('✅ Payment created successfully:', paymentResult.data);
+
+      // อัพเดทสถานะการจองเป็น confirmed
+      const bookingUpdateResult = await updateBookingStatus(
+        bookingData.booking_id, 
+        'confirmed',
+        'ชำระเงินสำเร็จ - อัพเดทจาก PaymentPage'
+      );
+
+      if (!bookingUpdateResult.success) {
+        console.warn('⚠️ Warning: Payment saved but failed to update booking status:', bookingUpdateResult.error);
+      } else {
+        console.log('✅ Booking status updated to confirmed:', bookingUpdateResult.data);
+      }
 
       // แสดงผลสำเร็จ
       alert(`🎉 ชำระเงินสำเร็จ!
       
-📋 ID การจอง: ${finalBookingId}
+📋 ID การจอง: ${bookingData.booking_id}
 💰 จำนวนเงิน: ${bookingData.total_amount} บาท
 💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
 📧 ใบเสร็จส่งไปที่: ${paymentForm.email}
@@ -130,7 +143,7 @@ const PaymentPage = () => {
       }, 1000);
       
     } catch (error) {
-      console.error('Payment simulation error:', error);
+      console.error('❌ Payment processing error:', error);
       alert(`❌ เกิดข้อผิดพลาดในการชำระเงิน: ${error.message || 'ระบบขัดข้อง'}`);
     } finally {
       setIsProcessing(false);
@@ -165,17 +178,10 @@ const PaymentPage = () => {
               <span className="label">วันที่:</span>
               <span className="value">{bookingData.booking_date}</span>
             </div>
-            {bookingData.booking_id ? (
-              <div className="summary-item">
-                <span className="label">ID การจอง:</span>
-                <span className="value">{bookingData.booking_id}</span>
-              </div>
-            ) : (
-              <div className="summary-item">
-                <span className="label">ID การจอง:</span>
-                <span className="value">จะสร้างหลังชำระเงิน</span>
-              </div>
-            )}
+            <div className="summary-item">
+              <span className="label">ID การจอง:</span>
+              <span className="value">{bookingData.booking_id}</span>
+            </div>
             <div className="summary-item total">
               <span className="label">ราคาทั้งหมด:</span>
               <span className="value price">{bookingData.total_amount} บาท</span>

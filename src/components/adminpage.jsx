@@ -290,6 +290,12 @@ const AdminPage = () => {
             🏢 จัดการพาร์ทเนอร์
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'fitness' ? 'active' : ''}`}
+            onClick={() => setActiveTab('fitness')}
+          >
+            🏋️ จัดการฟิตเนส
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
             onClick={() => setActiveTab('bookings')}
           >
@@ -300,12 +306,6 @@ const AdminPage = () => {
             onClick={() => setActiveTab('payments')}
           >
             💳 การชำระเงิน
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'fitness' ? 'active' : ''}`}
-            onClick={() => setActiveTab('fitness')}
-          >
-            🏋️ จัดการฟิตเนส
           </button>
           <button 
             className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
