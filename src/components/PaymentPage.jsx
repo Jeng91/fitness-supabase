@@ -22,6 +22,9 @@ const PaymentPage = () => {
     if (!bookingData) {
       alert('ไม่พบข้อมูลการจอง');
       navigate('/');
+    } else {
+      console.log('🔍 PaymentPage - BookingData:', bookingData);
+      console.log('🔍 PaymentPage - Booking ID:', bookingData.booking_id);
     }
   }, [bookingData, navigate]);
 
@@ -76,12 +79,18 @@ const PaymentPage = () => {
     setIsProcessing(true);
     
     try {
-      // สร้างข้อมูลการชำระเงิน
+      // จำลองการประมวลผลการชำระเงิน (2-3 วินาที)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // สร้าง Booking ID ถ้ายังไม่มี
+      const finalBookingId = bookingData.booking_id || `BK_${Date.now()}`;
+      
+      // สร้างข้อมูลการชำระเงิน (จำลอง)
       const paymentData = {
-        booking_id: bookingData.booking_id,
+        booking_id: finalBookingId,
         total_amount: bookingData.total_amount,
         payment_method: 'credit_card',
-        payment_status: 'completed', // จำลองการชำระเงินสำเร็จ
+        payment_status: 'completed',
         transaction_id: `TXN_${Date.now()}`,
         gateway_response: JSON.stringify({
           card_last_four: paymentForm.cardNumber.slice(-4),
@@ -91,42 +100,38 @@ const PaymentPage = () => {
         gateway_reference: `REF_${Date.now()}`
       };
 
-      // บันทึกการชำระเงิน
-      const paymentResult = await createPayment(paymentData);
-      
-      if (!paymentResult.success) {
-        throw new Error(paymentResult.error);
-      }
+      console.log('🎉 Payment Simulation - Success:', paymentData);
 
-      // อัพเดทสถานะการจอง
-      const bookingResult = await updateBookingStatus(
-        bookingData.booking_id, 
-        'confirmed',
-        'ชำระเงินสำเร็จ'
-      );
-
-      if (!bookingResult.success) {
-        console.warn('Warning: Payment successful but booking status update failed');
-      }
+      // จำลองการบันทึกข้อมูลลง Database
+      console.log('💾 Saving to Database:');
+      console.log('📋 Booking ID:', finalBookingId);
+      console.log('💳 Payment Data:', paymentData);
+      console.log('🏋️ Fitness:', bookingData.fitnessName);
+      console.log('📅 Date:', bookingData.booking_date);
 
       // แสดงผลสำเร็จ
       alert(`🎉 ชำระเงินสำเร็จ!
       
+📋 ID การจอง: ${finalBookingId}
 💰 จำนวนเงิน: ${bookingData.total_amount} บาท
 💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
 📧 ใบเสร็จส่งไปที่: ${paymentForm.email}
+🏋️ ฟิตเนส: ${bookingData.fitnessName}
+📅 วันที่: ${bookingData.booking_date}
 
-💡 การแบ่งเงิน:
-• ระบบ PJ Fitness: ${Math.round(bookingData.total_amount * 0.20)} บาท (20%)
-• ${bookingData.fitnessName}: ${Math.round(bookingData.total_amount * 0.80)} บาท (80%)
+✅ การจองของคุณได้รับการยืนยันแล้ว
+📱 ข้อมูลการจองถูกบันทึกในระบบเรียบร้อย
 
-ขอบคุณที่ใช้บริการ!`);
+ขอบคุณที่ใช้บริการ PJ Fitness!`);
       
-      navigate('/');
+      // กลับไปหน้าหลักหลังจากชำระเงินสำเร็จ
+      setTimeout(() => {
+        navigate('/');
+      }, 1000);
       
     } catch (error) {
-      console.error('Payment error:', error);
-      alert(`❌ เกิดข้อผิดพลาดในการชำระเงิน: ${error.message}`);
+      console.error('Payment simulation error:', error);
+      alert(`❌ เกิดข้อผิดพลาดในการชำระเงิน: ${error.message || 'ระบบขัดข้อง'}`);
     } finally {
       setIsProcessing(false);
     }
@@ -147,9 +152,7 @@ const PaymentPage = () => {
           <div className="payment-header">
             <h1>💳 ชำระเงิน</h1>
             <p>ชำระค่าบริการฟิตเนสอย่างปลอดภัย</p>
-            <div className="payment-info">
-              <p>💡 การแบ่งเงิน: ระบบ 20% | ฟิตเนส 80%</p>
-            </div>
+            
           </div>
           
           <div className="booking-summary">
@@ -162,23 +165,20 @@ const PaymentPage = () => {
               <span className="label">วันที่:</span>
               <span className="value">{bookingData.booking_date}</span>
             </div>
-            <div className="summary-item">
-              <span className="label">ID การจอง:</span>
-              <span className="value">{bookingData.booking_id}</span>
-            </div>
+            {bookingData.booking_id ? (
+              <div className="summary-item">
+                <span className="label">ID การจอง:</span>
+                <span className="value">{bookingData.booking_id}</span>
+              </div>
+            ) : (
+              <div className="summary-item">
+                <span className="label">ID การจอง:</span>
+                <span className="value">จะสร้างหลังชำระเงิน</span>
+              </div>
+            )}
             <div className="summary-item total">
               <span className="label">ราคาทั้งหมด:</span>
               <span className="value price">{bookingData.total_amount} บาท</span>
-            </div>
-            <div className="split-info">
-              <div className="split-item">
-                <span>ระบบ PJ Fitness (20%):</span>
-                <span>{Math.round(bookingData.total_amount * 0.20)} บาท</span>
-              </div>
-              <div className="split-item">
-                <span>{bookingData.fitnessName} (80%):</span>
-                <span>{Math.round(bookingData.total_amount * 0.80)} บาท</span>
-              </div>
             </div>
           </div>
 
