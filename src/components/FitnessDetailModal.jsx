@@ -383,10 +383,7 @@ const FitnessDetailModal = ({
             {/* Contact Info */}
             <div className="contact-section">
               <h4>ข้อมูลการติดต่อ</h4>
-              <div className="contact-item">
-                <span className="contact-icon">👤</span>
-                <span className="contact-text">เจ้าของ: {fitnessData.fit_user || ownerData?.owner_name || 'ไม่ระบุเจ้าของ'}</span>
-              </div>
+              
               <div className="contact-item">
                 <span className="contact-icon">📞</span>
                 <span className="contact-text">{fitnessData.fit_phone || fitnessData.phone || ownerData?.owner_phone || 'ไม่ระบุเบอร์โทร'}</span>

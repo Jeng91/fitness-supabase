@@ -236,21 +236,13 @@ const HomePage = () => {
                       className="fitness-image"
                       onClick={() => handleImageClick(fitness, 0)}
                     />
-                    {[fitness.fit_image2, fitness.fit_image3, fitness.fit_image4].filter(img => img).length > 0 && (
-                      <div className="image-gallery-indicator">
-                        <span className="gallery-icon">🖼️</span>
-                        <span className="image-count">
-                          +{[fitness.fit_image2, fitness.fit_image3, fitness.fit_image4].filter(img => img).length}
-                        </span>
-                      </div>
-                    )}
                   </div>
                   
                   <div className="fitness-info">
                     <h3 className="fitness-name">{fitness.name}</h3>
-                    <p className="fitness-price">💰 {fitness.price} บาท/วัน</p>
                     <p className="fitness-location">📍 {fitness.location}</p>
                     <p className="fitness-owner">👤 {fitness.user}</p>
+                    <p className="fitness-price">💰 {fitness.price} บาท/วัน</p>
                     
                     {fitness.openTime && fitness.closeTime && (
                       <p className="fitness-hours">
