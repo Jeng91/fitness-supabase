@@ -6,6 +6,8 @@ import '../App.css';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   
   // ฟังก์ชันปรับฟอร์แมตเวลา
   const formatTime = (timeString) => {
@@ -71,6 +73,23 @@ const HomePage = () => {
     }
   }, []);
 
+  // ตรวจสอบ authentication
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // โหลดข้อมูลฟิตเนสเมื่อ component mount
   useEffect(() => {
     loadFitnessData();
@@ -131,6 +150,12 @@ const HomePage = () => {
   }, [fitnessData, searchTerm, priceFilter, sortBy]);
 
   const handleFitnessClick = (fitness) => {
+    // ตรวจสอบว่า user login แล้วหรือยัง
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+    
     setSelectedFitness(fitness);
     navigate(`/fitness/${fitness.fit_id}`);
   };
@@ -314,6 +339,41 @@ const HomePage = () => {
                   }}
                 >
                   ถัดไป ›
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
+          <div className="login-required-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🔐 จำเป็นต้องเข้าสู่ระบบ</h3>
+              <button className="close-btn" onClick={() => setShowLoginModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>กรุณาเข้าสู่ระบบหรือสมัครสมาชิกเพื่อดูรายละเอียดฟิตเนส</p>
+              <div className="modal-actions">
+                <button 
+                  className="login-btn-modal"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/login');
+                  }}
+                >
+                  เข้าสู่ระบบ
+                </button>
+                <button 
+                  className="register-btn-modal"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/register');
+                  }}
+                >
+                  สมัครสมาชิก
                 </button>
               </div>
             </div>

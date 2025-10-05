@@ -10,16 +10,6 @@ const FitnessDetailPage = () => {
   const navigate = useNavigate();
   const [fitnessData, setFitnessData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-    };
-    
-    checkAuth();
-  }, []);
 
   useEffect(() => {
     const loadFitnessDetail = async () => {

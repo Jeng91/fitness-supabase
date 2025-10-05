@@ -556,7 +556,7 @@ body.dark-mode .form-group input::placeholder {
 
 .fitness-section {
   background: white;
-  padding: 2rem;
+  padding: 2.5rem;
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
@@ -565,7 +565,7 @@ body.dark-mode .form-group input::placeholder {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .fitness-title h2 {
@@ -613,8 +613,8 @@ body.dark-mode .form-group input::placeholder {
 
 /* ระบบค้นหาและกรอง */
 .search-filter-section {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: 2.5rem;
+  padding: 2rem;
   background: #f8f9fa;
   border-radius: 12px;
   border: 1px solid #e9ecef;
@@ -622,7 +622,7 @@ body.dark-mode .form-group input::placeholder {
 
 .search-box {
   position: relative;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   background-color: #667eea;
 }
 
@@ -653,12 +653,14 @@ body.dark-mode .form-group input::placeholder {
 
 .filter-section {
   display: flex;
-  gap: 1rem;
+  gap: 2.5rem;
   flex-wrap: wrap;
+  align-items: center;
+  margin-top: 1rem;
 }
 
 .filter-select {
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.25rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   background: white;
@@ -666,6 +668,8 @@ body.dark-mode .form-group input::placeholder {
   outline: none;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 150px;
+  margin-right: 1rem;
 }
 
 .filter-select:focus {
@@ -693,10 +697,15 @@ body.dark-mode .form-group input::placeholder {
 @media (max-width: 768px) {
   .filter-section {
     flex-direction: column;
+    gap: 1.5rem;
+    align-items: stretch;
   }
   
   .filter-select {
     width: 100%;
+    min-width: unset;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -710,7 +719,7 @@ body.dark-mode .form-group input::placeholder {
 .fitness-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .fitness-card {
@@ -1677,5 +1686,106 @@ body.dark-mode .form-group input::placeholder {
   
   .equipment-section {
     padding: 15px;
+  }
+}
+
+/* Login Required Modal */
+.login-required-modal {
+  background: white;
+  border-radius: 20px;
+  max-width: 450px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.login-required-modal .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem 2rem;
+  border-bottom: none;
+}
+
+.login-required-modal .modal-header h3 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.login-required-modal .close-btn {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.login-required-modal .close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: white;
+}
+
+.login-required-modal .modal-body {
+  padding: 2rem;
+  text-align: center;
+}
+
+.login-required-modal .modal-body p {
+  font-size: 1.1rem;
+  color: #666;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.login-btn-modal,
+.register-btn-modal {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  min-width: 120px;
+}
+
+.login-btn-modal {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.login-btn-modal:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.register-btn-modal {
+  background: #28a745;
+  color: white;
+}
+
+.register-btn-modal:hover {
+  background: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.4);
+}
+
+/* Mobile Responsive for Login Modal */
+@media (max-width: 768px) {
+  .login-required-modal {
+    max-width: 350px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .login-btn-modal,
+  .register-btn-modal {
+    width: 100%;
   }
 }
