@@ -8,6 +8,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [favorites, setFavorites] = useState([]);
   
   // ฟังก์ชันปรับฟอร์แมตเวลา
   const formatTime = (timeString) => {
@@ -93,7 +94,69 @@ const HomePage = () => {
   // โหลดข้อมูลฟิตเนสเมื่อ component mount
   useEffect(() => {
     loadFitnessData();
-  }, [loadFitnessData]);
+    if (user) {
+      loadFavorites();
+    }
+  }, [loadFitnessData, user]);
+
+  // โหลดรายการโปรด
+  const loadFavorites = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tbl_favorites')
+        .select('fitness_id')
+        .eq('user_id', user.id);
+
+      if (!error && data) {
+        setFavorites(data.map(item => item.fitness_id));
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  };
+
+  // เพิ่ม/ลบ รายการโปรด
+  const toggleFavorite = async (fitnessId) => {
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    try {
+      const isFavorite = favorites.includes(fitnessId);
+      
+      if (isFavorite) {
+        // ลบออกจากรายการโปรด
+        const { error } = await supabase
+          .from('tbl_favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('fitness_id', fitnessId);
+
+        if (!error) {
+          setFavorites(favorites.filter(id => id !== fitnessId));
+        }
+      } else {
+        // เพิ่มเข้ารายการโปรด
+        const { error } = await supabase
+          .from('tbl_favorites')
+          .insert([
+            {
+              user_id: user.id,
+              fitness_id: fitnessId
+            }
+          ]);
+
+        if (!error) {
+          setFavorites([...favorites, fitnessId]);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+    }
+  };
 
   // Filter และ Search
   useEffect(() => {
@@ -236,19 +299,43 @@ const HomePage = () => {
                       className="fitness-image"
                       onClick={() => handleImageClick(fitness, 0)}
                     />
+                    
+                    {/* Favorite Button */}
+                    <button
+                      className={`favorite-btn ${favorites.includes(fitness.fit_id) ? 'favorited' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(fitness.fit_id);
+                      }}
+                      title={favorites.includes(fitness.fit_id) ? 'ลบออกจากรายการโปรด' : 'เพิ่มในรายการโปรด'}
+                    >
+                      {favorites.includes(fitness.fit_id) ? '❤️' : '🤍'}
+                    </button>
                   </div>
                   
                   <div className="fitness-info">
                     <h3 className="fitness-name">{fitness.name}</h3>
-                    <p className="fitness-location">📍 {fitness.location}</p>
-                    <p className="fitness-owner">👤 {fitness.user}</p>
-                    <p className="fitness-price">💰 {fitness.price} บาท/วัน</p>
+                    <p className="fitness-location">
+                      <span className="location-icon">📍</span>
+                      {fitness.location}
+                    </p>
                     
-                    {fitness.openTime && fitness.closeTime && (
-                      <p className="fitness-hours">
-                        🕐 เวลาทำการ: {fitness.openTime} - {fitness.closeTime} น.
-                      </p>
-                    )}
+                    <div className="fitness-price-section">
+                      <span className="price-label">เริ่มต้นที่</span>
+                      <div className="fitness-price">
+                        <span className="amount">{fitness.price}</span>
+                        <span className="currency"> บาท/คน</span>
+                      </div>
+                    </div>
+
+                    {/* Rating Badge - ย้ายมาไว้ข้างล่างของราคา */}
+                    <div className="rating-badge-inline">
+                      <span className="rating-score">9.6</span>
+                      <div className="rating-text">
+                        <span>แสนงี่เซ</span>
+                        <small>138 ความคิดเห็นจากผู้มักที่</small>
+                      </div>
+                    </div>
                     
                     <div className="fitness-actions">
                       <button 

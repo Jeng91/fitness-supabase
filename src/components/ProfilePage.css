@@ -48,6 +48,213 @@ body.dark-mode .section-header {
   border-bottom: 2px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Favorites Section */
+.favorites-section {
+  padding: 1rem 0;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.favorite-card {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid #f1f5f9;
+}
+
+.favorite-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.favorite-image {
+  position: relative;
+  height: 160px;
+  overflow: hidden;
+}
+
+.favorite-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.favorite-card:hover .favorite-image img {
+  transform: scale(1.05);
+}
+
+.remove-favorite-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  
+}
+
+.remove-favorite-btn:hover {
+  background: white;
+  transform: scale(1.1);
+}
+
+.favorite-info {
+  padding: 1.2rem;
+}
+
+.favorite-info h3 {
+  color: #1f2937;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  line-height: 1.3;
+}
+
+.favorite-location {
+  display: flex;
+  align-items: center;
+  color: #6b7280;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+}
+
+.location-icon {
+  color: #ef4444;
+  font-size: 1rem;
+}
+
+.favorite-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.favorite-price .currency {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.favorite-price .amount {
+  color: #1f2937;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.view-fitness-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.view-fitness-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.no-favorites {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #6b7280;
+}
+
+.no-favorites-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.no-favorites h3 {
+  color: #374151;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-favorites p {
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.browse-fitness-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.browse-fitness-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Dark Mode for Favorites */
+body.dark-mode .favorite-card {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .favorite-info h3 {
+  color: #ffffff;
+}
+
+body.dark-mode .favorite-location {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+body.dark-mode .favorite-price .currency,
+body.dark-mode .favorite-price .amount {
+  color: #ffffff;
+}
+
+body.dark-mode .no-favorites h3 {
+  color: #ffffff;
+}
+
+body.dark-mode .no-favorites p {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .favorites-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .favorite-image {
+    height: 180px;
+  }
+}
+
 body.dark-mode .form-group label {
   color: #ffffff;
 }

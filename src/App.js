@@ -564,10 +564,10 @@ function App() {
         // Handle specific error types
         let errorMessage = '';
         switch (error.message) {
-          case 'Invalid login credentials':
+          case 'ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง':
             errorMessage = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
             break;
-          case 'Email not confirmed':
+          case 'อีเมลไม่ได้รับการยืนยัน':
             errorMessage = 'กรุณายืนยันอีเมลก่อนเข้าสู่ระบบ ตรวจสอบในกล่องจดหมาย';
             break;
           case 'Too many requests':

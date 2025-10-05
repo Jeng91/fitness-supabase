@@ -21,6 +21,7 @@ const ProfilePage = () => {
     full_name: ''
   });
   const [activeTab, setActiveTab] = useState('profile');
+  const [favorites, setFavorites] = useState([]);
 
   // ตรวจสอบ authentication
   useEffect(() => {
@@ -109,8 +110,57 @@ const ProfilePage = () => {
 
     if (user) {
       fetchProfile();
+      loadFavorites();
     }
   }, [user]);
+
+  // โหลดรายการโปรด
+  const loadFavorites = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('tbl_favorites')
+        .select(`
+          fitness_id,
+          tbl_fitness:fitness_id (
+            fit_id,
+            fit_name,
+            fit_address,
+            fit_price,
+            fit_image
+          )
+        `)
+        .eq('user_id', user.id);
+
+      if (!error && data) {
+        const favoritesWithDetails = data.map(item => ({
+          id: item.fitness_id,
+          ...item.tbl_fitness
+        }));
+        setFavorites(favoritesWithDetails);
+      }
+    } catch (error) {
+      console.error('Error loading favorites:', error);
+    }
+  };
+
+  // ลบรายการโปรด
+  const removeFavorite = async (fitnessId) => {
+    try {
+      const { error } = await supabase
+        .from('tbl_favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('fitness_id', fitnessId);
+
+      if (!error) {
+        setFavorites(favorites.filter(item => item.id !== fitnessId));
+      }
+    } catch (error) {
+      console.error('Error removing favorite:', error);
+    }
+  };
 
   // Load settings from localStorage
   useEffect(() => {
@@ -235,6 +285,7 @@ const ProfilePage = () => {
 
   const menuItems = [
     { id: 'profile', name: 'ข้อมูลส่วนตัว', icon: '👤' },
+    { id: 'favorites', name: 'รายการโปรด', icon: '❤️' },
     { id: 'booking', name: 'สถานะการจอง', icon: '📅' },
     { id: 'history', name: 'ประวัติการเข้าใช้บริการ', icon: '📋' },
     { id: 'reviews', name: 'การรีวิว', icon: '⭐' },
@@ -504,6 +555,76 @@ const ProfilePage = () => {
                   )}
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'favorites' && (
+          <div className="tab-content">
+            <div className="section-header">
+              <h2>รายการโปรด</h2>
+              <button
+                onClick={loadFavorites}
+                className="refresh-btn"
+                title="รีเฟรชรายการโปรด"
+              >
+                🔄 รีเฟรช
+              </button>
+            </div>
+            
+            <div className="favorites-section">
+              {favorites.length > 0 ? (
+                <div className="favorites-grid">
+                  {favorites.map((fitness) => (
+                    <div key={fitness.id} className="favorite-card">
+                      <div className="favorite-image">
+                        <img 
+                          src={fitness.fit_image || '/placeholder-gym.jpg'} 
+                          alt={fitness.fit_name}
+                        />
+                        <button
+                          className="remove-favorite-btn"
+                          onClick={() => removeFavorite(fitness.id)}
+                          title="ลบออกจากรายการโปรด"
+                        >
+                          ❤️
+                        </button>
+                      </div>
+                      
+                      <div className="favorite-info">
+                        <h3>{fitness.fit_name}</h3>
+                        <p className="favorite-location">
+                          <span className="location-icon">📍</span>
+                          {fitness.fit_address}
+                        </p>
+                        <div className="favorite-price">
+                          <span className="currency">THB</span>
+                          <span className="amount">{fitness.fit_price}</span>
+                        </div>
+                        
+                        <button 
+                          className="view-fitness-btn"
+                          onClick={() => navigate(`/fitness/${fitness.fit_id}`)}
+                        >
+                          ดูรายละเอียด
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-favorites">
+                  <div className="no-favorites-icon">💔</div>
+                  <h3>ยังไม่มีรายการโปรด</h3>
+                  <p>เพิ่มฟิตเนสที่คุณชอบเข้าสู่รายการโปรด</p>
+                  <button 
+                    className="browse-fitness-btn"
+                    onClick={() => navigate('/')}
+                  >
+                    เลือกดูฟิตเนส
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
