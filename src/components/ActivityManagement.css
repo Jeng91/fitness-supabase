@@ -1,7 +1,7 @@
 .class-management {
-  padding: 20px;
-  max-width: 1200px;
-  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
 }
 
 .section-header {
@@ -9,8 +9,13 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  max-width: 1200px;
+  margin: 0 auto 30px auto;
 }
 
 .section-header h2 {
@@ -41,8 +46,10 @@
   padding: 60px 20px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 16px;
-    -webkit-backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .empty-icon {
@@ -52,8 +59,8 @@
 
 .empty-state h3 {
   color: white;
+  margin: 0 0 10px 0;
   font-size: 1.5rem;
-  margin-bottom: 10px;
 }
 
 .empty-state p {
@@ -64,7 +71,9 @@
 .classes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  gap: 25px;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .class-card {
@@ -79,7 +88,8 @@
 
 .class-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .class-image {
@@ -100,13 +110,13 @@
 .class-content h3 {
   color: white;
   margin: 0 0 10px 0;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
 }
 
-.description {
-  color: rgba(255, 255, 255, 0.8);
-  margin-bottom: 20px;
-  line-height: 1.5;
+.class-content .description {
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 15px;
+  line-height: 1.4;
 }
 
 .class-details {
@@ -117,34 +127,36 @@
   display: flex;
   align-items: center;
   margin-bottom: 8px;
-  color: rgba(255, 255, 255, 0.9);
+  gap: 8px;
 }
 
 .detail-item .icon {
-  margin-right: 8px;
-  font-size: 1.1rem;
+  font-size: 16px;
+  width: 20px;
 }
 
 .detail-item .label {
-  margin-right: 8px;
-  font-weight: 500;
+  color: rgba(0, 0, 0, 0.8);
+  font-size: 14px;
+  min-width: 60px;
 }
 
 .detail-item .value {
-  color: white;
+  color: rgb(0, 0, 0) !important;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .detail-item .value.price {
-  font-weight: 600;
-  color: #ffd700;
+  color: #4ade80 !important;
 }
 
 .detail-item .value.status.active {
-  color: #4ade80;
+  color: #4ade80 !important;
 }
 
 .detail-item .value.status.inactive {
-  color: #ef4444;
+  color: #ef4444 !important;
 }
 
 .class-actions {
@@ -154,30 +166,33 @@
 
 .btn-edit, .btn-delete {
   flex: 1;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 6px;
+  border-radius: 20px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
 .btn-edit {
-  background: #3b82f6;
+  background: linear-gradient(45deg, #3b82f6, #1d4ed8);
   color: white;
 }
 
 .btn-edit:hover {
-  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
 }
 
 .btn-delete {
-  background: #ef4444;
+  background: linear-gradient(45deg, #ef4444, #dc2626);
   color: white;
 }
 
 .btn-delete:hover {
-  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
 
 .modal-overlay {
@@ -186,20 +201,24 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
 }
 
 .modal-content {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 16px;
+  border-radius: 20px;
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+  color: white;
 }
 
 .modal-header {
@@ -216,11 +235,22 @@
 }
 
 .btn-close {
-  background: none;
+  background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
   font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.btn-close:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .form-content {
@@ -239,26 +269,42 @@
 
 .form-group label {
   display: block;
-  color: white;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
   font-weight: 500;
+  color: white;
 }
 
 .form-group input,
 .form-group textarea,
 .form-group select {
   width: 100%;
-  padding: 10px;
+  padding: 12px 15px;
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 6px;
+  border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
-  color: rgb(0, 0, 0);
+  color: white;
   font-size: 14px;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
 .image-preview {
@@ -269,7 +315,7 @@
   width: 120px;
   height: 120px;
   object-fit: cover;
-  border-radius: 6px;
+  border-radius: 10px;
 }
 
 .upload-status {
@@ -282,16 +328,18 @@
   display: flex;
   gap: 15px;
   margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .btn-cancel, .btn-save {
   flex: 1;
-  padding: 12px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 6px;
+  border-radius: 25px;
   cursor: pointer;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   transition: all 0.3s ease;
 }
 
@@ -323,4 +371,37 @@
   padding: 40px;
   color: white;
   font-size: 18px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .class-management {
+    padding: 20px 15px;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .classes-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  
+  .modal-content {
+    margin: 20px;
+    width: calc(100% - 40px);
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
 }

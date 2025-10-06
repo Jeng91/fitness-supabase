@@ -452,7 +452,7 @@
 }
 
 .form-group label {
-  color: white;
+  color: white !important;
   font-weight: 500;
   font-size: 1rem;
   font-family: 'Kanit', sans-serif;
