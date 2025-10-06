@@ -31,13 +31,13 @@ const LoginPage = () => {
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
-          .eq('id', user.id)
+          .eq('user_uid', user.id)
           .single();
 
         const { data: owner } = await supabase
           .from('tbl_owner')
           .select('*')
-          .eq('owner_uid', user.id)
+          .eq('auth_user_id', user.id)
           .single();
 
         if (owner) {
@@ -84,12 +84,16 @@ const LoginPage = () => {
 
       // ตรวจสอบ role และ redirect ทันที
       try {
+        console.log('🔍 Checking user role for:', data.user.id);
+        
         // ตรวจสอบใน tbl_owner ก่อน (partner)
         const { data: owner, error: ownerError } = await supabase
           .from('tbl_owner')
           .select('*')
-          .eq('owner_uid', data.user.id)
+          .eq('auth_user_id', data.user.id)
           .single();
+
+        console.log('👥 Owner query result:', { owner, ownerError });
 
         if (owner && !ownerError) {
           console.log('Partner found:', owner);
@@ -101,8 +105,10 @@ const LoginPage = () => {
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', data.user.id)
+          .eq('user_uid', data.user.id)
           .single();
+
+        console.log('👤 Profile query result:', { profile, profileError });
 
         if (profile && !profileError) {
           console.log('Regular user found:', profile);

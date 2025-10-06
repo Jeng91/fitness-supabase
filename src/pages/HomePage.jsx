@@ -91,16 +91,8 @@ const HomePage = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  // โหลดข้อมูลฟิตเนสเมื่อ component mount
-  useEffect(() => {
-    loadFitnessData();
-    if (user) {
-      loadFavorites();
-    }
-  }, [loadFitnessData, user]);
-
   // โหลดรายการโปรด
-  const loadFavorites = async () => {
+  const loadFavorites = useCallback(async () => {
     if (!user) return;
     
     try {
@@ -115,7 +107,15 @@ const HomePage = () => {
     } catch (error) {
       console.error('Error loading favorites:', error);
     }
-  };
+  }, [user]);
+
+  // โหลดข้อมูลฟิตเนสเมื่อ component mount
+  useEffect(() => {
+    loadFitnessData();
+    if (user) {
+      loadFavorites();
+    }
+  }, [loadFitnessData, user, loadFavorites]);
 
   // เพิ่ม/ลบ รายการโปรด
   const toggleFavorite = async (fitnessId) => {
