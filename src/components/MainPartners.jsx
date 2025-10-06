@@ -176,13 +176,30 @@ const MainPartners = () => {
 
   return (
     <div className="partner-container">
-      <div className="partner-header">
-        <h1>ระบบจัดการฟิตเนส - {ownerData.owner_name}</h1>
-        <div className="owner-info">
-          <span>อีเมล: {ownerData.owner_email}</span>
-          <button onClick={handleLogout} className="logout-btn">
-            ออกจากระบบ
+      {/* Top Navigation Bar */}
+      <nav className="top-navbar">
+        <div className="navbar-left">
+          <button 
+            onClick={() => navigate('/')} 
+            className="home-btn"
+            title="กลับสู่หน้าหลัก"
+          >
+            🏠 หน้าหลัก
           </button>
+          <span className="separator">|</span>
+          <span className="current-page">ระบบพาร์ทเนอร์</span>
+        </div>
+        <div className="navbar-right">
+          <button onClick={handleLogout} className="logout-btn">
+            🚪 ออกจากระบบ
+          </button>
+        </div>
+      </nav>
+
+      <div className="partner-header">
+        <h1>ระบบจัดการฟิตเนส</h1>
+        <div className="owner-info">
+          <span>ID : {ownerData.owner_name} / {ownerData.owner_email}</span>
         </div>
       </div>
 
@@ -227,7 +244,7 @@ const MainPartners = () => {
           className={currentMenu === 'activities' ? 'active' : ''}
           onClick={() => setCurrentMenu('activities')}
         >
-          🎯 กิจกรรม
+          🎯 จัดการคลาส
         </button>
         <button 
           className={currentMenu === 'payments' ? 'active' : ''}

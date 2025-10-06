@@ -399,3 +399,29 @@ create index IF not exists idx_payments_transaction_id on public.payments using 
 create trigger update_payments_updated_at BEFORE
 update on payments for EACH row
 execute FUNCTION update_updated_at_column ();
+
+create table public.tbl_classes (
+  class_id serial not null,
+  fit_id integer null,
+  class_name character varying(255) not null,
+  description text null,
+  image_url text null,
+  class_time time without time zone null,
+  duration integer null default 60,
+  instructor character varying(255) null,
+  max_participants integer null default 10,
+  price numeric(10, 2) null default 0,
+  status character varying(20) null default 'active'::character varying,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint tbl_classes_pkey primary key (class_id),
+  constraint tbl_classes_fit_id_fkey foreign KEY (fit_id) references tbl_fitness (fit_id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_classes_fit_id on public.tbl_classes using btree (fit_id) TABLESPACE pg_default;
+
+create index IF not exists idx_classes_status on public.tbl_classes using btree (status) TABLESPACE pg_default;
+
+create trigger update_tbl_classes_updated_at BEFORE
+update on tbl_classes for EACH row
+execute FUNCTION update_updated_at_column ();
