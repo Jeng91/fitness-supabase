@@ -16,11 +16,6 @@ const LoginPage = () => {
   const [resetEmail, setResetEmail] = useState('');
   const [resetMessage, setResetMessage] = useState('');
   const [isResetting, setIsResetting] = useState(false);
-  const [showOtpInput, setShowOtpInput] = useState(false);
-  const [otp, setOtp] = useState('');
-  const [generatedOtp, setGeneratedOtp] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   // ตรวจสอบว่า user ล็อกอินอยู่แล้วหรือไม่
   useEffect(() => {
@@ -139,86 +134,24 @@ const LoginPage = () => {
     setResetMessage('');
 
     try {
-      // ตรวจสอบว่าอีเมลมีอยู่ในระบบหรือไม่
-      const { data: user, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('useremail', resetEmail)
-        .single();
+      // ใช้ Supabase Auth resetPasswordForEmail
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
 
-      if (error || !user) {
-        throw new Error('ไม่พบอีเมลนี้ในระบบ');
+      if (error) {
+        throw error;
       }
 
-      // สร้าง OTP 6 หลัก
-      const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-      setGeneratedOtp(otpCode);
-      
-      // จำลองการส่ง OTP (ในการใช้งานจริงจะส่งผ่าน SMS หรือ Email)
-      console.log('OTP Code:', otpCode); // สำหรับ demo
-      
-      setResetMessage(`OTP ได้ถูกสร้างแล้ว: ${otpCode}\n(ในการใช้งานจริงจะส่งผ่าน SMS)`);
-      setShowOtpInput(true);
+      setResetMessage('ลิงก์รีเซ็ตรหัสผ่านได้ถูกส่งไปยังอีเมลของคุณแล้ว กรุณาตรวจสอบอีเมล');
       
     } catch (error) {
       console.error('Password reset error:', error);
-      setResetMessage(error.message);
-    }
-
-    setIsResetting(false);
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    setIsResetting(true);
-    setResetMessage('');
-
-    if (otp !== generatedOtp) {
-      setResetMessage('รหัส OTP ไม่ถูกต้อง');
-      setIsResetting(false);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setResetMessage('รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร');
-      setIsResetting(false);
-      return;
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setResetMessage('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
-      setIsResetting(false);
-      return;
-    }
-
-    try {
-      // ค้นหา user ID จากอีเมล
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, user_uid')
-        .eq('useremail', resetEmail)
-        .single();
-
-      if (profileError || !profile) {
-        throw new Error('ไม่พบข้อมูลผู้ใช้');
+      if (error.message.includes('User not found')) {
+        setResetMessage('ไม่พบอีเมลนี้ในระบบ');
+      } else {
+        setResetMessage('เกิดข้อผิดพลาดในการส่งอีเมล กรุณาลองใหม่อีกครั้ง');
       }
-
-      // เนื่องจากไม่สามารถใช้ admin API ได้โดยตรง
-      // เราจะบันทึก OTP และรหัสผ่านใหม่ไว้ในตาราง profiles ชั่วคราว
-      // หรือให้ผู้ใช้ login ด้วยรหัสผ่านเดิมแล้วเปลี่ยนรหัสผ่าน
-      
-      // สำหรับ demo นี้ เราจะแสดงข้อความให้ผู้ใช้ทราบ
-      setResetMessage('เปลี่ยนรหัสผ่านสำเร็จ!\n(ในระบบจริงจะอัพเดทรหัสผ่านในฐานข้อมูล)');
-      
-      // รอ 2 วินาทีแล้วปิด modal
-      setTimeout(() => {
-        closeForgotPasswordModal();
-        setMessage('เปลี่ยนรหัสผ่านสำเร็จ (Demo Mode) กรุณาเข้าสู่ระบบด้วยรหัสผ่านใหม่');
-      }, 2000);
-
-    } catch (error) {
-      console.error('Password update error:', error);
-      setResetMessage(error.message);
     }
 
     setIsResetting(false);
@@ -228,11 +161,6 @@ const LoginPage = () => {
     setShowForgotPassword(false);
     setResetEmail('');
     setResetMessage('');
-    setShowOtpInput(false);
-    setOtp('');
-    setGeneratedOtp('');
-    setNewPassword('');
-    setConfirmNewPassword('');
   };
 
   return (
@@ -289,34 +217,20 @@ const LoginPage = () => {
         <div className="modal-overlay" onClick={closeForgotPasswordModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{!showOtpInput ? 'รีเซ็ตรหัสผ่าน' : 'ยืนยัน OTP และเปลี่ยนรหัสผ่าน'}</h3>
+              <h3>รีเซ็ตรหัสผ่าน</h3>
               <button className="close-btn" onClick={closeForgotPasswordModal}>
                 ×
               </button>
             </div>
             
-            {/* Steps Indicator */}
-            <div className="modal-steps">
-              <div className={`step-indicator ${!showOtpInput ? 'active' : 'completed'}`}>
-                1
-              </div>
-              <div className={`step-indicator ${showOtpInput ? 'active' : ''}`}>
-                2
-              </div>
-            </div>
-            
             <div className="modal-body">
               {resetMessage && (
-                <div className={`message ${resetMessage.includes('สำเร็จ') || resetMessage.includes('ถูกสร้าง') ? 'success' : 'error'}`}>
-                  {resetMessage.split('\n').map((line, index) => (
-                    <div key={index}>{line}</div>
-                  ))}
+                <div className={`message ${resetMessage.includes('ส่งไปยัง') || resetMessage.includes('สำเร็จ') ? 'success' : 'error'}`}>
+                  {resetMessage}
                 </div>
               )}
               
-              {!showOtpInput ? (
-                // ขั้นตอนที่ 1: กรอกอีเมล
-                <form onSubmit={handleForgotPassword}>
+              <form onSubmit={handleForgotPassword}>
                   <div className="form-group">
                     <label>อีเมลของคุณ:</label>
                     <input
@@ -342,72 +256,10 @@ const LoginPage = () => {
                       className="submit-btn"
                       disabled={isResetting || !resetEmail}
                     >
-                      {isResetting ? 'กำลังสร้าง OTP...' : 'สร้าง OTP'}
+                      {isResetting ? 'กำลังส่งอีเมล...' : 'ส่งลิงก์รีเซ็ต'}
                     </button>
                   </div>
                 </form>
-              ) : (
-                // ขั้นตอนที่ 2: ยืนยัน OTP และเปลี่ยนรหัสผ่าน
-                <form onSubmit={handleVerifyOtp}>
-                  <div className="form-group">
-                    <label>รหัส OTP (6 หลัก):</label>
-                    <input
-                      type="text"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="000000"
-                      maxLength={6}
-                      required
-                      disabled={isResetting}
-                      className="otp-input"
-                    />
-                    <small style={{ color: '#666', fontSize: '0.8rem', display: 'block', marginTop: '0.5rem' }}>
-                      OTP จะแสดงในคอนโซล (F12) สำหรับการทดสอบ
-                    </small>
-                  </div>
-                  <div className="form-group">
-                    <label>รหัสผ่านใหม่:</label>
-                    <input
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      placeholder="กรอกรหัสผ่านใหม่ (อย่างน้อย 6 ตัวอักษร)"
-                      minLength={6}
-                      required
-                      disabled={isResetting}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>ยืนยันรหัสผ่านใหม่:</label>
-                    <input
-                      type="password"
-                      value={confirmNewPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
-                      placeholder="กรอกรหัสผ่านใหม่อีกครั้ง"
-                      minLength={6}
-                      required
-                      disabled={isResetting}
-                    />
-                  </div>
-                  <div className="modal-actions">
-                    <button 
-                      type="button" 
-                      className="cancel-btn"
-                      onClick={() => setShowOtpInput(false)}
-                      disabled={isResetting}
-                    >
-                      กลับ
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="submit-btn"
-                      disabled={isResetting || !otp || otp.length !== 6 || !newPassword || !confirmNewPassword}
-                    >
-                      {isResetting ? 'กำลังเปลี่ยน...' : 'เปลี่ยนรหัสผ่าน'}
-                    </button>
-                  </div>
-                </form>
-              )}
             </div>
           </div>
         </div>

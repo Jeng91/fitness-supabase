@@ -13,19 +13,40 @@ const ResetPasswordPage = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
 
   useEffect(() => {
-    // ตรวจสอบ access token จาก URL
-    const accessToken = searchParams.get('access_token');
-    const refreshToken = searchParams.get('refresh_token');
-    
-    if (accessToken && refreshToken) {
-      // Set session ด้วย tokens ที่ได้รับ
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      });
-    } else {
-      setMessage('ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว');
-    }
+    const handlePasswordReset = async () => {
+      // ตรวจสอบ access token จาก URL
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+      const type = searchParams.get('type');
+      
+      if (accessToken && refreshToken && type === 'recovery') {
+        try {
+          // Set session ด้วย tokens ที่ได้รับ
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+
+          if (error) {
+            console.error('Session error:', error);
+            setMessage('ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว');
+          } else {
+            // ตรวจสอบ user session
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              setMessage('ไม่พบข้อมูลผู้ใช้ กรุณาลองใหม่อีกครั้ง');
+            }
+          }
+        } catch (err) {
+          console.error('Auth error:', err);
+          setMessage('เกิดข้อผิดพลาดในการยืนยันตัวตน');
+        }
+      } else {
+        setMessage('ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุแล้ว');
+      }
+    };
+
+    handlePasswordReset();
   }, [searchParams]);
 
   const handleResetPassword = async (e) => {
@@ -48,6 +69,16 @@ const ResetPasswordPage = () => {
     }
 
     try {
+      // ตรวจสอบ session ก่อนอัพเดต
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError || !user) {
+        setMessage('ไม่พบข้อมูลผู้ใช้ กรุณาคลิกลิงก์รีเซ็ตรหัสผ่านใหม่');
+        setIsLoading(false);
+        return;
+      }
+
+      // อัพเดตรหัสผ่าน
       const { error } = await supabase.auth.updateUser({
         password: password
       });
@@ -57,6 +88,9 @@ const ResetPasswordPage = () => {
       }
 
       setMessage('เปลี่ยนรหัสผ่านสำเร็จ! กำลังนำคุณไปหน้าเข้าสู่ระบบ...');
+      
+      // ออกจากระบบและไปหน้า login
+      await supabase.auth.signOut();
       
       // รอ 2 วินาทีแล้วไป login page
       setTimeout(() => {

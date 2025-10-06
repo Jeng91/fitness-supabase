@@ -87,6 +87,19 @@ const FitnessDetailPage = () => {
     }
   }, [id, navigate]);
 
+    const formatTime = (timeString) => {
+    if (!timeString) return timeString;
+    
+    // จัดการรูปแบบเวลาต่างๆ
+    return timeString
+      .replace(/(\d+):00\.00/g, '$1:00')     // 10:00.00 -> 10:00
+      .replace(/(\d+)\.00\.00/g, '$1.00')   // 10.00.00 -> 10.00  
+      .replace(/(\d+)\.00$/g, '$1')         // 10.00 -> 10
+      .replace(/(\d+):00:00/g, '$1:00')     // 10:00:00 -> 10:00
+      .replace(/\.00\s*-\s*(\d+)\.00/g, ' - $1')  // 10.00 - 23.00 -> 10 - 23
+      .replace(/(\d+)\.00/g, '$1');         // ตัด .00 ทั้งหมด
+  };
+
   const handleViewLocation = (fitness) => {
     if (fitness.fit_location) {
       window.open(`https://www.google.com/maps?q=${fitness.fit_location}`, '_blank');
@@ -170,7 +183,7 @@ const FitnessDetailPage = () => {
                         <div className="detail-item">
                           <span className="icon">⏰</span>
                           <span className="label">เวลา:</span>
-                          <span className="value">{classItem.class_time}</span>
+                          <span className="value">{formatTime(classItem.class_time)}</span>
                         </div>
                       )}
                       
@@ -204,6 +217,7 @@ const FitnessDetailPage = () => {
                     <button className="btn-book-class">
                       📝 จองคลาสนี้
                     </button>
+                    
                   </div>
                 </div>
               ))}

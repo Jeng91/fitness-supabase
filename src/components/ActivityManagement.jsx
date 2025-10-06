@@ -59,6 +59,7 @@ const ClassManagement = ({ ownerData, onUpdate }) => {
     }
   }, [ownerData]);
 
+
   useEffect(() => {
     loadClasses();
   }, [loadClasses]);
@@ -483,9 +484,6 @@ const ClassManagement = ({ ownerData, onUpdate }) => {
               </div>
 
               <div className="form-actions">
-                <button type="button" onClick={resetForm} className="btn-cancel">
-                  ยกเลิก
-                </button>
                 <button 
                   type="submit" 
                   className="btn-save"
@@ -493,6 +491,10 @@ const ClassManagement = ({ ownerData, onUpdate }) => {
                 >
                   {editing ? '💾 บันทึกการแก้ไข' : '➕ สร้างคลาส'}
                 </button>
+                <button type="button" onClick={resetForm} className="btn-cancel">
+                  ยกเลิก
+                </button>
+                
               </div>
             </form>
           </div>

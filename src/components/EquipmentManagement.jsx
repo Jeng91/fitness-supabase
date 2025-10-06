@@ -307,18 +307,19 @@ const EquipmentManagement = ({ ownerData, onUpdate }) => {
 
             <div className="modal-footer">
               <button
-                className="btn-secondary"
-                onClick={() => setEditingEquipment(null)}
-              >
-                ยกเลิก
-              </button>
-              <button
                 className="btn-primary"
                 onClick={() => saveEquipment(editingEquipment)}
                 disabled={savingEquipment || !editingEquipment.em_name?.trim()}
               >
                 {savingEquipment ? 'กำลังบันทึก...' : 'บันทึก'}
               </button>
+              <button
+                className="btn-secondary"
+                onClick={() => setEditingEquipment(null)}
+              >
+                ยกเลิก
+              </button>
+              
             </div>
           </div>
         </div>

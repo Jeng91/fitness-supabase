@@ -201,8 +201,11 @@ const RegisterPage = () => {
               onChange={handleInputChange}
               disabled={isLoading}
             >
-              <option value="user">👤 ผู้ใช้ทั่วไป</option>
-              <option value="partner">🤝 พาร์ทเนอร์</option>
+              <div className='label-option'>
+                <option value="user">👤 ผู้ใช้ทั่วไป</option>
+                <option value="partner">🤝 พาร์ทเนอร์</option>
+              </div>
+              
             </select>
           </div>
           <button 
