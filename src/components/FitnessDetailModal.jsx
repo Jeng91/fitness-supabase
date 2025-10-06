@@ -17,6 +17,14 @@ const FitnessDetailModal = ({
   const [isBookingMode, setIsBookingMode] = useState(false);
   const [equipmentData, setEquipmentData] = useState([]);
   const [ownerData, setOwnerData] = useState(null);
+  const [isMembershipBookingMode, setIsMembershipBookingMode] = useState({
+    monthly: false,
+    yearly: false
+  });
+  const [membershipStartDate, setMembershipStartDate] = useState({
+    monthly: '',
+    yearly: ''
+  });
 
   // โหลดข้อมูลอุปกรณ์และเจ้าของ
   useEffect(() => {
@@ -112,7 +120,7 @@ const FitnessDetailModal = ({
 
   // ฟังก์ชันสำหรับจัดการการจอง
   const handleBookingClick = () => {
-    setIsBookingMode(true);
+    setIsBookingMode(!isBookingMode);
   };
 
   // ฟังก์ชันสำหรับยืนยันการจอง
@@ -190,6 +198,46 @@ const FitnessDetailModal = ({
       
     } catch (error) {
       console.error('Error in handleMembershipBooking:', error);
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+  };
+
+  // ฟังก์ชันสำหรับจองสมาชิกพร้อมเลือกวันที่เริ่ม
+  const handleMembershipBookingWithDate = (membershipType, amount, startDate) => {
+    try {
+      if (!startDate) {
+        alert('กรุณาเลือกวันที่เริ่มสมาชิก');
+        return;
+      }
+
+      // สร้างข้อมูลการจองสมาชิกเพื่อส่งไปหน้าชำระเงิน
+      const membershipData = {
+        fitness_id: fitnessData?.fit_id || 22,
+        fitnessName: fitnessData?.fit_name || fitnessData?.name || 'JM FITNESS',
+        owner_uid: fitnessData?.owner_uid || 1,
+        membership_type: membershipType, // 'monthly' หรือ 'yearly'
+        total_amount: amount,
+        start_date: startDate, // วันที่เริ่มสมาชิก
+        location: fitnessData?.fit_location || fitnessData?.location || 'ขาวเนียง มหาสารคาม',
+        rating: fitnessData?.rating || '4.5',
+        contact: fitnessData?.fit_contact || fitnessData?.contact,
+        phone: fitnessData?.fit_phone || fitnessData?.phone,
+        owner_name: fitnessData?.fit_user || ownerData?.owner_name,
+        description: fitnessData?.fit_description || fitnessData?.description,
+        images: {
+          main: fitnessData?.fit_image || fitnessData?.image,
+          secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
+        },
+        booking_type: 'membership' // ระบุว่าเป็นการจองสมาชิก
+      };
+      
+      // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูลสมาชิก
+      navigate('/payment', { 
+        state: { bookingData: membershipData } 
+      });
+      
+    } catch (error) {
+      console.error('Error in handleMembershipBookingWithDate:', error);
       alert('เกิดข้อผิดพลาด: ' + error.message);
     }
   };
@@ -370,40 +418,29 @@ const FitnessDetailModal = ({
                 </div>
               </div>
               
-              <div className="price-display">
-                <span className="price-number">{fitnessData.fit_price || fitnessData.price || 69}</span>
-                <span className="price-unit">บาท/วัน</span>
-              </div>
-
-              {/* Membership Prices */}
-              {(fitnessData.fit_price_memberm || fitnessData.priceMonthly) && (
-                <button 
-                  className="membership-btn monthly" 
-                  onClick={() => handleMembershipBooking('monthly', fitnessData.fit_price_memberm || fitnessData.priceMonthly)}
-                >
-                  <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
-                  <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
-                  <span className="membership-action">📋 จองรายเดือน</span>
-                </button>
-              )}
-              
-              {(fitnessData.fit_price_membery || fitnessData.priceYearly) && (
-                <button 
-                  className="membership-btn yearly" 
-                  onClick={() => handleMembershipBooking('yearly', fitnessData.fit_price_membery || fitnessData.priceYearly)}
-                >
-                  <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
-                  <span className="membership-unit">บาท/ปี (สมาชิก)</span>
-                  <span className="membership-action">📋 จองรายปี</span>
-                </button>
-              )}
-              
-              {/* Booking Section */}
+              {/* Daily Booking Button */}
               {!isBookingMode ? (
-                <button className="booking-btn" onClick={handleBookingClick}>
-                  📋 จองบริการ(รายวัน)
+                <button 
+                  className="membership-btn daily" 
+                  onClick={handleBookingClick}
+                >
+                  <span className="membership-price">{fitnessData.fit_price || fitnessData.price || 69}</span>
+                  <span className="membership-unit">บาท/วัน</span>
+                  <span className="membership-action">📋 จองบริการรายวัน</span>
                 </button>
               ) : (
+                <button 
+                  className="membership-btn daily selected" 
+                  onClick={handleBookingClick}
+                >
+                  <span className="membership-price">{fitnessData.fit_price || fitnessData.price || 69}</span>
+                  <span className="membership-unit">บาท/วัน</span>
+                  <span className="membership-action">📋 จองบริการรายวัน</span>
+                </button>
+              )}
+
+              {/* Booking Section */}
+              {isBookingMode && (
                 <div className="booking-form">
                   <div className="date-selection">
                     <label htmlFor="booking-date">เลือกวันที่:</label>
@@ -436,42 +473,116 @@ const FitnessDetailModal = ({
                 </div>
               )}
 
-              {/* Classes Section */}
-              <div className="classes-section">
-                <h4>🏃‍♂️ คลาสออกกำลังกาย</h4>
-                <div className="classes-container">
-                  {/* ตัวอย่างคลาส - จะต้องดึงข้อมูลจริงจาก API */}
-                  <div className="class-card">
-                    <div className="class-info">
-                      <h5>โยคะผ่อนคลาย</h5>
-                      <p className="class-description">หลวงลึกถึงความเยียนให้ใจและ ผ่อนคลายความตง ใน ระรีอ</p>
-                      <div className="class-details">
-                        <span className="class-time">⏰ 13:00</span>
-                        <span className="class-duration">⏱️ 90 นาที</span>
-                        <span className="class-price">💰 750 บาท</span>
-                      </div>
-                    </div>
-                    <button className="class-booking-btn">
-                      📋 สมัครคลาส
-                    </button>
-                  </div>
+              
 
-                  <div className="class-card">
-                    <div className="class-info">
-                      <h5>มวยไทย</h5>
-                      <p className="class-description">ส่องค์อมดี เเงะชั่ว เสริมสร้างความแข็งแกร่ง สอนศิลปกฤณมี โอองกฤ</p>
-                      <div className="class-details">
-                        <span className="class-time">⏰ 18:00</span>
-                        <span className="class-duration">⏱️ 90 นาที</span>
-                        <span className="class-price">💰 1200 บาท</span>
+              {/* Membership Prices */}
+              {(fitnessData.fit_price_memberm || fitnessData.priceMonthly) && (
+                <div className="membership-container">
+                  {!isMembershipBookingMode.monthly ? (
+                    <button 
+                      className="membership-btn monthly" 
+                      onClick={() => setIsMembershipBookingMode({...isMembershipBookingMode, monthly: true})}
+                    >
+                      <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
+                      <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
+                      <span className="membership-action">📋 จองรายเดือน</span>
+                    </button>
+                  ) : (
+                    <div className="membership-booking-form">
+                      <button className="membership-btn monthly selected">
+                        <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
+                        <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
+                        <span className="membership-action">📋 จองรายเดือน</span>
+                      </button>
+                      <div className="membership-date-selection">
+                        <label htmlFor="membership-start-date-monthly">เลือกวันที่เริ่มสมาชิก:</label>
+                        <input
+                          type="date"
+                          id="membership-start-date-monthly"
+                          value={membershipStartDate.monthly}
+                          onChange={(e) => setMembershipStartDate({...membershipStartDate, monthly: e.target.value})}
+                          min={getTodayDate()}
+                          max={getMaxDate()}
+                          className="date-input"
+                        />
+                      </div>
+                      <div className="membership-actions">
+                        <button 
+                          className="confirm-membership-btn" 
+                          onClick={() => handleMembershipBookingWithDate('monthly', fitnessData.fit_price_memberm || fitnessData.priceMonthly, membershipStartDate.monthly)}
+                        >
+                          ✅ ยืนยันการจองรายเดือน
+                        </button>
+                        <button 
+                          className="cancel-membership-btn" 
+                          onClick={() => {
+                            setIsMembershipBookingMode({...isMembershipBookingMode, monthly: false});
+                            setMembershipStartDate({...membershipStartDate, monthly: ''});
+                          }}
+                        >
+                          ❌ ยกเลิก
+                        </button>
                       </div>
                     </div>
-                    <button className="class-booking-btn">
-                      📋 สมัครคลาส
-                    </button>
-                  </div>
+                  )}
                 </div>
-              </div>
+              )}
+              
+              {(fitnessData.fit_price_membery || fitnessData.priceYearly) && (
+                <div className="membership-container">
+                  {!isMembershipBookingMode.yearly ? (
+                    <button 
+                      className="membership-btn yearly" 
+                      onClick={() => setIsMembershipBookingMode({...isMembershipBookingMode, yearly: true})}
+                    >
+                      <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
+                      <span className="membership-unit">บาท/ปี (สมาชิก)</span>
+                      <span className="membership-action">📋 จองรายปี</span>
+                    </button>
+                  ) : (
+                    <div className="membership-booking-form">
+                      <button className="membership-btn yearly selected">
+                        <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
+                        <span className="membership-unit">บาท/ปี (สมาชิก)</span>
+                        <span className="membership-action">📋 จองรายปี</span>
+                      </button>
+                      <div className="membership-date-selection">
+                        <label htmlFor="membership-start-date-yearly">เลือกวันที่เริ่มสมาชิก:</label>
+                        <input
+                          type="date"
+                          id="membership-start-date-yearly"
+                          value={membershipStartDate.yearly}
+                          onChange={(e) => setMembershipStartDate({...membershipStartDate, yearly: e.target.value})}
+                          min={getTodayDate()}
+                          max={getMaxDate()}
+                          className="date-input"
+                        />
+                      </div>
+                      <div className="membership-actions">
+                        <button 
+                          className="confirm-membership-btn" 
+                          onClick={() => handleMembershipBookingWithDate('yearly', fitnessData.fit_price_membery || fitnessData.priceYearly, membershipStartDate.yearly)}
+                        >
+                          ✅ ยืนยันการจองรายปี
+                        </button>
+                        <button 
+                          className="cancel-membership-btn" 
+                          onClick={() => {
+                            setIsMembershipBookingMode({...isMembershipBookingMode, yearly: false});
+                            setMembershipStartDate({...membershipStartDate, yearly: ''});
+                          }}
+                        >
+                          ❌ ยกเลิก
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              
+
+              
             </div>
 
             {/* Contact Info */}
