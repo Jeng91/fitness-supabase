@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../supabaseClient';
 import imageCompression from 'browser-image-compression';
+import './FitnessManagement.css';
 
 const FitnessManagement = ({ 
   ownerData, 
@@ -300,304 +301,6 @@ const FitnessManagement = ({
 
   return (
     <div className="fitness-management">
-      <style jsx>{`
-        .fitness-management {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 20px;
-        }
-
-        .fitness-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-          padding-bottom: 15px;
-          border-bottom: 2px solid #e9ecef;
-        }
-
-        .fitness-header h2 {
-          color: #333;
-          margin: 0;
-          font-size: 28px;
-        }
-
-        .view-actions {
-          display: flex;
-          gap: 10px;
-        }
-
-        .btn {
-          padding: 10px 20px;
-          border: none;
-          border-radius: 8px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: all 0.3s ease;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-
-        .btn.secondary {
-          background: #6c757d;
-          color: white;
-        }
-
-        .btn.secondary:hover {
-          background: #5a6268;
-          transform: translateY(-2px);
-        }
-
-        .fitness-display-card {
-          background: white;
-          border-radius: 16px;
-          padding: 30px;
-          box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-          border: 1px solid #e9ecef;
-        }
-
-        .fitness-image-gallery {
-          margin-bottom: 30px;
-        }
-
-        .secondary-images {
-          margin-top: 25px;
-        }
-
-        .secondary-images h4 {
-          color: #333;
-          margin-bottom: 15px;
-          font-size: 18px;
-          font-weight: 600;
-        }
-
-        .secondary-images-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-          gap: 15px;
-        }
-
-        .secondary-image-item {
-          position: relative;
-          border-radius: 12px;
-          overflow: hidden;
-          height: 150px;
-          background: #f8f9fa;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-          transition: transform 0.3s ease;
-        }
-
-        .secondary-image-item:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.15);
-        }
-
-        .secondary-image-item img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .secondary-label {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: linear-gradient(transparent, rgba(0,0,0,0.7));
-          color: white;
-          padding: 10px;
-          font-size: 12px;
-          font-weight: 500;
-        }
-
-        .main-image-container {
-          position: relative;
-          border-radius: 12px;
-          overflow: hidden;
-          height: 300px;
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .main-fitness-image {
-          width: 100%;
-          height: 100%;
-          object-fit: cover;
-        }
-
-        .no-image-placeholder {
-          height: 300px;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-          border-radius: 12px;
-          color: #6c757d;
-          font-size: 48px;
-        }
-
-        .no-image-placeholder p {
-          margin: 10px 0 0 0;
-          font-size: 16px;
-        }
-
-        .image-overlay {
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          background: linear-gradient(transparent, rgba(0,0,0,0.7));
-          padding: 20px;
-        }
-
-        .image-label {
-          color: white;
-          font-size: 16px;
-          font-weight: 600;
-        }
-
-        .fitness-info-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-          gap: 20px;
-          margin-bottom: 30px;
-        }
-
-        .info-card {
-          background: #f8f9fa;
-          border-radius: 12px;
-          padding: 20px;
-          display: flex;
-          align-items: center;
-          gap: 15px;
-          transition: all 0.3s ease;
-          border-left: 4px solid #dee2e6;
-        }
-
-        .info-card:hover {
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        }
-
-        .info-card.primary {
-          border-left-color: #007bff;
-          background: linear-gradient(135deg, #007bff);
-        }
-
-        .info-card.price {
-          border-left-color: #28a745;
-          background: linear-gradient(135deg, #28a745);
-        }
-
-        .info-card.location {
-          border-left-color: #dc3545;
-          background: linear-gradient(135deg, #dc3545);
-        }
-
-        .info-card.contact {
-          border-left-color: #ffc107;
-          background: linear-gradient(135deg, #ffc107);
-        }
-
-        .info-card.time {
-          border-left-color: #6f42c1;
-          background: linear-gradient(135deg, #6f42c1);
-        }
-
-        .info-card.social {
-          border-left-color: #20c997;
-          background: linear-gradient(135deg,  #20c997);
-        }
-
-        .info-icon {
-          font-size: 24px;
-          width: 40px;
-          height: 40px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: white;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .info-content h3, .info-content h4 {
-          margin: 0 0 5px 0;
-          color: #333;
-          font-size: 18px;
-          font-weight: 600;
-        }
-
-        .info-label {
-          margin: 0;
-          color: #6c757d;
-          font-size: 14px;
-          font-weight: 500;
-        }
-
-        .gps-info {
-          background: linear-gradient(135deg, #e8f4f8 0%, #f0f8ff 100%);
-          border-radius: 12px;
-          padding: 20px;
-          border-left: 4px solid #17a2b8;
-        }
-
-        .gps-info h4 {
-          margin: 0 0 15px 0;
-          color: #333;
-          font-size: 18px;
-        }
-
-        .gps-coords {
-          display: flex;
-          gap: 20px;
-          margin-bottom: 15px;
-          flex-wrap: wrap;
-        }
-
-        .gps-coords span {
-          background: white;
-          padding: 8px 15px;
-          border-radius: 20px;
-          font-size: 14px;
-          color: #333;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .btn-map {
-          background: #17a2b8;
-          color: white;
-          border: none;
-          padding: 10px 20px;
-          border-radius: 25px;
-          cursor: pointer;
-          font-size: 14px;
-          transition: all 0.3s ease;
-        }
-
-        .btn-map:hover {
-          background: #138496;
-          transform: translateY(-2px);
-        }
-
-        @media (max-width: 768px) {
-          .fitness-header {
-            flex-direction: column;
-            gap: 15px;
-            text-align: center;
-          }
-
-          .fitness-info-grid {
-            grid-template-columns: 1fr;
-          }
-
-          .gps-coords {
-            flex-direction: column;
-            gap: 10px;
-          }
-        }
-      `}</style>
       <div className="section-header">
         <h2>🏋️ จัดการข้อมูลฟิตเนส</h2>
         <div className="header-actions">
@@ -720,7 +423,7 @@ const FitnessManagement = ({
                 <div className="info-icon">💵</div>
                 <div className="info-content">
                   <h3>฿{fitnessData.fit_price ? Number(fitnessData.fit_price).toLocaleString() : '0'}</h3>
-                  <p className="info-label">บาท/เดือน</p>
+                  <p className="info-label">บาท/วัน</p>
                 </div>
               </div>
 
@@ -788,17 +491,6 @@ const FitnessManagement = ({
                 value={fitnessData.fit_name}
                 onChange={(e) => handleInputChange('fit_name', e.target.value)}
                 placeholder="กรอกชื่อฟิตเนส"
-              />
-            </div>
-
-            <div className="form-group">
-              <label>ราคา/เดือน (บาท) *</label>
-              <input
-                type="number"
-                value={fitnessData.fit_price}
-                onChange={(e) => handleInputChange('fit_price', e.target.value)}
-                placeholder="0"
-                min="0"
               />
             </div>
 
@@ -963,6 +655,17 @@ const FitnessManagement = ({
                 onChange={(e) => handleInputChange('fit_moredetails', e.target.value)}
                 placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับฟิตเนส"
                 
+              />
+            </div>
+
+            <div className="form-group">
+              <label>ราคา/วัน (บาท) *</label>
+              <input
+                type="number"
+                value={fitnessData.fit_price}
+                onChange={(e) => handleInputChange('fit_price', e.target.value)}
+                placeholder="0"
+                min="0"
               />
             </div>
 
