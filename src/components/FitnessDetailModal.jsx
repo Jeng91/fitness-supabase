@@ -160,6 +160,40 @@ const FitnessDetailModal = ({
     setSelectedDate('');
   };
 
+  // ฟังก์ชันสำหรับจองสมาชิก
+  const handleMembershipBooking = (membershipType, amount) => {
+    try {
+      // สร้างข้อมูลการจองสมาชิกเพื่อส่งไปหน้าชำระเงิน
+      const membershipData = {
+        fitness_id: fitnessData?.fit_id || 22,
+        fitnessName: fitnessData?.fit_name || fitnessData?.name || 'JM FITNESS',
+        owner_uid: fitnessData?.owner_uid || 1,
+        membership_type: membershipType, // 'monthly' หรือ 'yearly'
+        total_amount: amount,
+        location: fitnessData?.fit_location || fitnessData?.location || 'ขาวเนียง มหาสารคาม',
+        rating: fitnessData?.rating || '4.5',
+        contact: fitnessData?.fit_contact || fitnessData?.contact,
+        phone: fitnessData?.fit_phone || fitnessData?.phone,
+        owner_name: fitnessData?.fit_user || ownerData?.owner_name,
+        description: fitnessData?.fit_description || fitnessData?.description,
+        images: {
+          main: fitnessData?.fit_image || fitnessData?.image,
+          secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
+        },
+        booking_type: 'membership' // ระบุว่าเป็นการจองสมาชิก
+      };
+      
+      // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูลสมาชิก
+      navigate('/payment', { 
+        state: { bookingData: membershipData } 
+      });
+      
+    } catch (error) {
+      console.error('Error in handleMembershipBooking:', error);
+      alert('เกิดข้อผิดพลาด: ' + error.message);
+    }
+  };
+
   // ฟังก์ชันสำหรับกำหนดวันที่ขั้นต่ำ (วันนี้)
   const getTodayDate = () => {
     const today = new Date();
@@ -343,23 +377,31 @@ const FitnessDetailModal = ({
 
               {/* Membership Prices */}
               {(fitnessData.fit_price_memberm || fitnessData.priceMonthly) && (
-                <div className="price-display membership">
-                  <span className="price-number">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
-                  <span className="price-unit">บาท/เดือน (สมาชิก)</span>
-                </div>
+                <button 
+                  className="membership-btn monthly" 
+                  onClick={() => handleMembershipBooking('monthly', fitnessData.fit_price_memberm || fitnessData.priceMonthly)}
+                >
+                  <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
+                  <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
+                  <span className="membership-action">📋 จองรายเดือน</span>
+                </button>
               )}
               
               {(fitnessData.fit_price_membery || fitnessData.priceYearly) && (
-                <div className="price-display membership">
-                  <span className="price-number">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
-                  <span className="price-unit">บาท/ปี (สมาชิก)</span>
-                </div>
+                <button 
+                  className="membership-btn yearly" 
+                  onClick={() => handleMembershipBooking('yearly', fitnessData.fit_price_membery || fitnessData.priceYearly)}
+                >
+                  <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
+                  <span className="membership-unit">บาท/ปี (สมาชิก)</span>
+                  <span className="membership-action">📋 จองรายปี</span>
+                </button>
               )}
               
               {/* Booking Section */}
               {!isBookingMode ? (
                 <button className="booking-btn" onClick={handleBookingClick}>
-                  📋 จองบริการ
+                  📋 จองบริการ(รายวัน)
                 </button>
               ) : (
                 <div className="booking-form">
@@ -393,6 +435,43 @@ const FitnessDetailModal = ({
                   </div>
                 </div>
               )}
+
+              {/* Classes Section */}
+              <div className="classes-section">
+                <h4>🏃‍♂️ คลาสออกกำลังกาย</h4>
+                <div className="classes-container">
+                  {/* ตัวอย่างคลาส - จะต้องดึงข้อมูลจริงจาก API */}
+                  <div className="class-card">
+                    <div className="class-info">
+                      <h5>โยคะผ่อนคลาย</h5>
+                      <p className="class-description">หลวงลึกถึงความเยียนให้ใจและ ผ่อนคลายความตง ใน ระรีอ</p>
+                      <div className="class-details">
+                        <span className="class-time">⏰ 13:00</span>
+                        <span className="class-duration">⏱️ 90 นาที</span>
+                        <span className="class-price">💰 750 บาท</span>
+                      </div>
+                    </div>
+                    <button className="class-booking-btn">
+                      📋 สมัครคลาส
+                    </button>
+                  </div>
+
+                  <div className="class-card">
+                    <div className="class-info">
+                      <h5>มวยไทย</h5>
+                      <p className="class-description">ส่องค์อมดี เเงะชั่ว เสริมสร้างความแข็งแกร่ง สอนศิลปกฤณมี โอองกฤ</p>
+                      <div className="class-details">
+                        <span className="class-time">⏰ 18:00</span>
+                        <span className="class-duration">⏱️ 90 นาที</span>
+                        <span className="class-price">💰 1200 บาท</span>
+                      </div>
+                    </div>
+                    <button className="class-booking-btn">
+                      📋 สมัครคลาส
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Contact Info */}

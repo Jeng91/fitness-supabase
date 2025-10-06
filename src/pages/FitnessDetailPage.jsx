@@ -217,7 +217,7 @@ const FitnessDetailPage = () => {
                     </div>
                     
                     <button className="btn-book-class">
-                      📝 จองคลาสนี้
+                      📝 สมัครคลาสนี้
                     </button>
                     
                   </div>

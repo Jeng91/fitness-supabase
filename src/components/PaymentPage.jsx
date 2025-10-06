@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
 import { createPayment, updateBookingStatus } from '../utils/bookingPaymentAPI';
+import { createMembershipPayment } from '../utils/membershipAPI';
 import './PaymentPage.css';
 
 const PaymentPage = () => {
@@ -81,49 +82,115 @@ const PaymentPage = () => {
     try {
       console.log('🔄 Processing payment for booking:', bookingData);
       
-      // สร้างข้อมูลการชำระเงิน
-      const paymentData = {
-        booking_id: bookingData.booking_id,
-        total_amount: bookingData.total_amount,
-        payment_method: 'credit_card',
-        payment_status: 'completed',
-        transaction_id: `TXN_${Date.now()}`,
-        gateway_response: {
-          card_last_four: paymentForm.cardNumber.slice(-4),
-          email: paymentForm.email,
-          processed_at: new Date().toISOString(),
-          payment_method: 'credit_card',
-          status: 'success'
-        },
-        gateway_reference: `REF_${Date.now()}`
-      };
-
-      console.log('💳 Creating payment record:', paymentData);
-
-      // บันทึกข้อมูลการชำระเงินลง Database
-      const paymentResult = await createPayment(paymentData);
+      // ตรวจสอบประเภทการจอง
+      const isMembershipBooking = bookingData.booking_type === 'membership';
       
-      if (!paymentResult.success) {
-        throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินได้');
-      }
-
-      console.log('✅ Payment created successfully:', paymentResult.data);
-
-      // อัพเดทสถานะการจองเป็น confirmed
-      const bookingUpdateResult = await updateBookingStatus(
-        bookingData.booking_id, 
-        'confirmed',
-        'ชำระเงินสำเร็จ - อัพเดทจาก PaymentPage'
-      );
-
-      if (!bookingUpdateResult.success) {
-        console.warn('⚠️ Warning: Payment saved but failed to update booking status:', bookingUpdateResult.error);
+      if (isMembershipBooking) {
+        // การสมัครสมาชิก
+        await handleMembershipPayment();
       } else {
-        console.log('✅ Booking status updated to confirmed:', bookingUpdateResult.data);
+        // การจองบริการปกติ
+        await handleRegularBookingPayment();
       }
+      
+    } catch (error) {
+      console.error('❌ Payment error:', error);
+      alert('เกิดข้อผิดพลาดในการชำระเงิน: ' + error.message);
+      setIsProcessing(false);
+    }
+  };
 
-      // แสดงผลสำเร็จ
-      alert(`🎉 ชำระเงินสำเร็จ!
+  const handleMembershipPayment = async () => {
+    // สร้างข้อมูลการชำระเงินสำหรับสมาชิก
+    const paymentData = {
+      total_amount: bookingData.total_amount,
+      payment_method: 'credit_card',
+      payment_status: 'completed',
+      transaction_id: `TXN_MEMBER_${Date.now()}`,
+      gateway_response: {
+        card_last_four: paymentForm.cardNumber.slice(-4),
+        email: paymentForm.email,
+        processed_at: new Date().toISOString(),
+        payment_method: 'credit_card',
+        status: 'success',
+        membership_type: bookingData.membership_type
+      },
+      gateway_reference: `REF_MEMBER_${Date.now()}`
+    };
+
+    console.log('💳 Creating membership payment record:', paymentData);
+
+    // บันทึกข้อมูลการชำระเงินลง Database
+    const paymentResult = await createMembershipPayment(paymentData, bookingData);
+    
+    if (!paymentResult.success) {
+      throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินสมาชิกได้');
+    }
+
+    console.log('✅ Membership payment created successfully:', paymentResult.data);
+
+    // แสดงผลสำเร็จสำหรับสมาชิก
+    alert(`🎉 สมัครสมาชิกสำเร็จ!
+    
+🏋️ ฟิตเนส: ${bookingData.fitnessName}
+📅 ประเภท: ${bookingData.membership_type === 'monthly' ? 'รายเดือน' : 'รายปี'}
+💰 จำนวนเงิน: ${bookingData.total_amount} บาท
+💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
+
+สมาชิกของคุณจะเริ่มต้นตั้งแต่วันนี้!`);
+
+    setIsProcessing(false);
+    
+    // กลับไปหน้าหลัก
+    setTimeout(() => {
+      navigate('/');
+    }, 2000);
+  };
+
+  const handleRegularBookingPayment = async () => {
+    // สร้างข้อมูลการชำระเงิน
+    const paymentData = {
+      booking_id: bookingData.booking_id,
+      total_amount: bookingData.total_amount,
+      payment_method: 'credit_card',
+      payment_status: 'completed',
+      transaction_id: `TXN_${Date.now()}`,
+      gateway_response: {
+        card_last_four: paymentForm.cardNumber.slice(-4),
+        email: paymentForm.email,
+        processed_at: new Date().toISOString(),
+        payment_method: 'credit_card',
+        status: 'success'
+      },
+      gateway_reference: `REF_${Date.now()}`
+    };
+
+    console.log('💳 Creating payment record:', paymentData);
+
+    // บันทึกข้อมูลการชำระเงินลง Database
+    const paymentResult = await createPayment(paymentData);
+    
+    if (!paymentResult.success) {
+      throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินได้');
+    }
+
+    console.log('✅ Payment created successfully:', paymentResult.data);
+
+    // อัพเดทสถานะการจองเป็น confirmed
+    const bookingUpdateResult = await updateBookingStatus(
+      bookingData.booking_id, 
+      'confirmed',
+      'ชำระเงินสำเร็จ - อัพเดทจาก PaymentPage'
+    );
+
+    if (!bookingUpdateResult.success) {
+      console.warn('⚠️ Warning: Payment saved but failed to update booking status:', bookingUpdateResult.error);
+    } else {
+      console.log('✅ Booking status updated to confirmed:', bookingUpdateResult.data);
+    }
+
+    // แสดงผลสำเร็จ
+    alert(`🎉 ชำระเงินสำเร็จ!
       
 📋 ID การจอง: ${bookingData.booking_id}
 💰 จำนวนเงิน: ${bookingData.total_amount} บาท
@@ -137,17 +204,12 @@ const PaymentPage = () => {
 
 ขอบคุณที่ใช้บริการ PJ Fitness!`);
       
-      // กลับไปหน้าหลักหลังจากชำระเงินสำเร็จ
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
-      
-    } catch (error) {
-      console.error('❌ Payment processing error:', error);
-      alert(`❌ เกิดข้อผิดพลาดในการชำระเงิน: ${error.message || 'ระบบขัดข้อง'}`);
-    } finally {
-      setIsProcessing(false);
-    }
+    setIsProcessing(false);
+    
+    // กลับไปหน้าหลักหลังจากชำระเงินสำเร็จ
+    setTimeout(() => {
+      navigate('/');
+    }, 1000);
   };
 
   if (!bookingData) {
@@ -174,14 +236,35 @@ const PaymentPage = () => {
               <span className="label">ชื่อฟิตเนส:</span>
               <span className="value">{bookingData.fitnessName}</span>
             </div>
-            <div className="summary-item">
-              <span className="label">วันที่:</span>
-              <span className="value">{bookingData.booking_date}</span>
-            </div>
-            <div className="summary-item">
-              <span className="label">ID การจอง:</span>
-              <span className="value">{bookingData.booking_id}</span>
-            </div>
+            
+            {bookingData.booking_type === 'membership' ? (
+              <>
+                <div className="summary-item">
+                  <span className="label">ประเภท:</span>
+                  <span className="value">
+                    {bookingData.membership_type === 'monthly' ? 'สมาชิกรายเดือน' : 'สมาชิกรายปี'}
+                  </span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">ระยะเวลา:</span>
+                  <span className="value">
+                    {bookingData.membership_type === 'monthly' ? '30 วัน' : '365 วัน'}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="summary-item">
+                  <span className="label">วันที่:</span>
+                  <span className="value">{bookingData.booking_date}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">ID การจอง:</span>
+                  <span className="value">{bookingData.booking_id}</span>
+                </div>
+              </>
+            )}
+            
             <div className="summary-item total">
               <span className="label">ราคาทั้งหมด:</span>
               <span className="value price">{bookingData.total_amount} บาท</span>

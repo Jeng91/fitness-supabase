@@ -408,3 +408,101 @@ create table public.tbl_fitness (
 create index IF not exists idx_tbl_fitness_memberm_price on public.tbl_fitness using btree (fit_price_memberm) TABLESPACE pg_default;
 
 create index IF not exists idx_tbl_fitness_membery_price on public.tbl_fitness using btree (fit_price_membery) TABLESPACE pg_default;
+
+
+create table public.tbl_class_enrollments (
+  enrollment_id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  class_id integer not null,
+  fitness_id integer not null,
+  enrollment_date date not null default CURRENT_DATE,
+  status character varying(20) null default 'enrolled'::character varying,
+  payment_id uuid null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint tbl_class_enrollments_pkey primary key (enrollment_id),
+  constraint tbl_class_enrollments_class_id_fkey foreign KEY (class_id) references tbl_classes (class_id) on delete CASCADE,
+  constraint tbl_class_enrollments_fitness_id_fkey foreign KEY (fitness_id) references tbl_fitness (fit_id) on delete CASCADE,
+  constraint tbl_class_enrollments_payment_id_fkey foreign KEY (payment_id) references payments (payment_id) on delete set null,
+  constraint tbl_class_enrollments_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint tbl_class_enrollments_status_check check (
+    (
+      (status)::text = any (
+        (
+          array[
+            'enrolled'::character varying,
+            'completed'::character varying,
+            'cancelled'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_class_enrollments_user_id on public.tbl_class_enrollments using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_class_enrollments_class_id on public.tbl_class_enrollments using btree (class_id) TABLESPACE pg_default;
+
+create index IF not exists idx_class_enrollments_fitness_id on public.tbl_class_enrollments using btree (fitness_id) TABLESPACE pg_default;
+
+create index IF not exists idx_class_enrollments_status on public.tbl_class_enrollments using btree (status) TABLESPACE pg_default;
+
+create trigger update_class_enrollments_updated_at BEFORE
+update on tbl_class_enrollments for EACH row
+execute FUNCTION update_updated_at_column ();
+
+create table public.tbl_memberships (
+  membership_id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  fitness_id integer not null,
+  membership_type character varying(20) not null,
+  amount numeric(10, 2) not null,
+  start_date date not null default CURRENT_DATE,
+  end_date date not null,
+  status character varying(20) null default 'active'::character varying,
+  payment_id uuid null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint tbl_memberships_pkey primary key (membership_id),
+  constraint tbl_memberships_fitness_id_fkey foreign KEY (fitness_id) references tbl_fitness (fit_id) on delete CASCADE,
+  constraint tbl_memberships_payment_id_fkey foreign KEY (payment_id) references payments (payment_id) on delete set null,
+  constraint tbl_memberships_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint tbl_memberships_membership_type_check check (
+    (
+      (membership_type)::text = any (
+        (
+          array[
+            'monthly'::character varying,
+            'yearly'::character varying
+          ]
+        )::text[]
+      )
+    )
+  ),
+  constraint tbl_memberships_status_check check (
+    (
+      (status)::text = any (
+        (
+          array[
+            'active'::character varying,
+            'expired'::character varying,
+            'cancelled'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_memberships_user_id on public.tbl_memberships using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_memberships_fitness_id on public.tbl_memberships using btree (fitness_id) TABLESPACE pg_default;
+
+create index IF not exists idx_memberships_status on public.tbl_memberships using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_memberships_dates on public.tbl_memberships using btree (start_date, end_date) TABLESPACE pg_default;
+
+create trigger update_memberships_updated_at BEFORE
+update on tbl_memberships for EACH row
+execute FUNCTION update_updated_at_column ();
