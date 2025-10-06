@@ -147,7 +147,8 @@ const FitnessDetailModal = ({
         images: {
           main: fitnessData?.fit_image || fitnessData?.image,
           secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
-        }
+        },
+        booking_type: 'daily' // ระบุว่าเป็นการจองรายวัน
       };
       
       
@@ -166,40 +167,6 @@ const FitnessDetailModal = ({
   const handleCancelBooking = () => {
     setIsBookingMode(false);
     setSelectedDate('');
-  };
-
-  // ฟังก์ชันสำหรับจองสมาชิก
-  const handleMembershipBooking = (membershipType, amount) => {
-    try {
-      // สร้างข้อมูลการจองสมาชิกเพื่อส่งไปหน้าชำระเงิน
-      const membershipData = {
-        fitness_id: fitnessData?.fit_id || 22,
-        fitnessName: fitnessData?.fit_name || fitnessData?.name || 'JM FITNESS',
-        owner_uid: fitnessData?.owner_uid || 1,
-        membership_type: membershipType, // 'monthly' หรือ 'yearly'
-        total_amount: amount,
-        location: fitnessData?.fit_location || fitnessData?.location || 'ขาวเนียง มหาสารคาม',
-        rating: fitnessData?.rating || '4.5',
-        contact: fitnessData?.fit_contact || fitnessData?.contact,
-        phone: fitnessData?.fit_phone || fitnessData?.phone,
-        owner_name: fitnessData?.fit_user || ownerData?.owner_name,
-        description: fitnessData?.fit_description || fitnessData?.description,
-        images: {
-          main: fitnessData?.fit_image || fitnessData?.image,
-          secondary: [fitnessData?.fit_image2, fitnessData?.fit_image3, fitnessData?.fit_image4].filter(Boolean)
-        },
-        booking_type: 'membership' // ระบุว่าเป็นการจองสมาชิก
-      };
-      
-      // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูลสมาชิก
-      navigate('/payment', { 
-        state: { bookingData: membershipData } 
-      });
-      
-    } catch (error) {
-      console.error('Error in handleMembershipBooking:', error);
-      alert('เกิดข้อผิดพลาด: ' + error.message);
-    }
   };
 
   // ฟังก์ชันสำหรับจองสมาชิกพร้อมเลือกวันที่เริ่ม

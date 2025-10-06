@@ -19,6 +19,32 @@ const PaymentPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // ฟังก์ชันคำนวณวันที่สิ้นสุด
+  const calculateEndDate = (startDate, membershipType) => {
+    if (!startDate) return '';
+    
+    const start = new Date(startDate);
+    const end = new Date(start);
+    
+    if (membershipType === 'monthly') {
+      end.setDate(start.getDate() + 30 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
+    } else if (membershipType === 'yearly') {
+      end.setDate(start.getDate() + 365 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
+    }
+    
+    return end.toISOString().split('T')[0];
+  };
+
+  // คำนวณวันที่สิ้นสุดสำหรับการแสดงผล
+  const getEndDate = () => {
+    if (bookingData.booking_type === 'membership') {
+      return calculateEndDate(bookingData.start_date, bookingData.membership_type);
+    } else if (bookingData.booking_type === 'daily') {
+      return bookingData.booking_date; // รายวันจะสิ้นสุดในวันเดียวกัน
+    }
+    return '';
+  };
+
   useEffect(() => {
     if (!bookingData) {
       alert('ไม่พบข้อมูลการจอง');
@@ -134,10 +160,12 @@ const PaymentPage = () => {
     
 🏋️ ฟิตเนส: ${bookingData.fitnessName}
 📅 ประเภท: ${bookingData.membership_type === 'monthly' ? 'รายเดือน' : 'รายปี'}
-💰 จำนวนเงิน: ${bookingData.total_amount} บาท
+� วันที่เริ่ม: ${bookingData.start_date}
+🏁 วันที่สิ้นสุด: ${calculateEndDate(bookingData.start_date, bookingData.membership_type)}
+�💰 จำนวนเงิน: ${bookingData.total_amount} บาท
 💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
 
-สมาชิกของคุณจะเริ่มต้นตั้งแต่วันนี้!`);
+สมาชิกของคุณจะเริ่มต้นตั้งแต่วันที่เลือก!`);
 
     setIsProcessing(false);
     
@@ -197,7 +225,9 @@ const PaymentPage = () => {
 💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
 📧 ใบเสร็จส่งไปที่: ${paymentForm.email}
 🏋️ ฟิตเนส: ${bookingData.fitnessName}
-📅 วันที่: ${bookingData.booking_date}
+📅 ${bookingData.booking_type === 'membership' ? 
+  `วันที่เริ่มสมาชิก: ${bookingData.start_date}\n🏁 วันที่สิ้นสุดสมาชิก: ${getEndDate()}` : 
+  `วันที่จอง: ${bookingData.booking_date}`}
 
 ✅ การจองของคุณได้รับการยืนยันแล้ว
 📱 ข้อมูลการจองถูกบันทึกในระบบเรียบร้อย
@@ -251,9 +281,21 @@ const PaymentPage = () => {
                     {bookingData.membership_type === 'monthly' ? '30 วัน' : '365 วัน'}
                   </span>
                 </div>
+                <div className="summary-item">
+                  <span className="label">วันที่เริ่มสมาชิก:</span>
+                  <span className="value">{bookingData.start_date}</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">วันที่สิ้นสุดสมาชิก:</span>
+                  <span className="value">{getEndDate()}</span>
+                </div>
               </>
             ) : (
               <>
+                <div className="summary-item">
+                  <span className="label">ประเภท:</span>
+                  <span className="value">จองบริการรายวัน</span>
+                </div>
                 <div className="summary-item">
                   <span className="label">วันที่:</span>
                   <span className="value">{bookingData.booking_date}</span>

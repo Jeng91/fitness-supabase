@@ -27,13 +27,13 @@ export const createMembershipPayment = async (paymentData, bookingData) => {
     console.log('✅ Payment created:', paymentResult);
 
     // 2. คำนวณวันที่เริ่มและสิ้นสุดสมาชิก
-    const startDate = new Date();
-    const endDate = new Date();
+    const startDate = new Date(bookingData.start_date || new Date().toISOString().split('T')[0]);
+    const endDate = new Date(startDate);
     
     if (bookingData.membership_type === 'monthly') {
-      endDate.setMonth(endDate.getMonth() + 1);
+      endDate.setDate(endDate.getDate() + 30 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
     } else if (bookingData.membership_type === 'yearly') {
-      endDate.setFullYear(endDate.getFullYear() + 1);
+      endDate.setDate(endDate.getDate() + 365 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
     }
 
     // 3. สร้างข้อมูลสมาชิก
