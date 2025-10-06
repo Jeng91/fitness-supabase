@@ -31,6 +31,8 @@ const FitnessManagement = ({
   const [fitnessData, setFitnessData] = useState({
     fit_name: '',
     fit_price: '',
+    fit_price_memberm: '',
+    fit_price_membery: '',
     fit_image: '',
     fit_image2: '',
     fit_image3: '',
@@ -239,6 +241,14 @@ const FitnessManagement = ({
         fit_moredetails: fitnessData.fit_moredetails || '', // ส่ง string ว่างถ้าไม่มีข้อมูล เพื่อไม่ให้ null
       };
 
+      // เพิ่ม membership prices หากมี columns ในฐานข้อมูล
+      if (fitnessData.fit_price_memberm !== undefined && fitnessData.fit_price_memberm !== '') {
+        saveData.fit_price_memberm = fitnessData.fit_price_memberm || 0;
+      }
+      if (fitnessData.fit_price_membery !== undefined && fitnessData.fit_price_membery !== '') {
+        saveData.fit_price_membery = fitnessData.fit_price_membery || 0;
+      }
+
       let result;
       if (fitnessMode === 'create' || !hasFitnessData) {
         // Create new fitness
@@ -419,14 +429,6 @@ const FitnessManagement = ({
                 </div>
               </div>
 
-              <div className="info-card price">
-                <div className="info-icon">💵</div>
-                <div className="info-content">
-                  <h3>฿{fitnessData.fit_price ? Number(fitnessData.fit_price).toLocaleString() : '0'}</h3>
-                  <p className="info-label">บาท/วัน</p>
-                </div>
-              </div>
-
               <div className="info-card location">
                 <div className="info-icon">🏠</div>
                 <div className="info-content">
@@ -458,6 +460,29 @@ const FitnessManagement = ({
                 <div className="info-content">
                   <h4>{fitnessData.fit_contact || 'ไม่ระบุ'}</h4>
                   <p className="info-label">ช่องทางติดต่อ (โซเชียล)</p>
+                </div>
+              </div>
+              <div className="info-card price">
+                <div className="info-icon">💵</div>
+                <div className="info-content">
+                  <h3>฿{fitnessData.fit_price ? Number(fitnessData.fit_price).toLocaleString() : '0'}</h3>
+                  <p className="info-label">บาท/วัน</p>
+                </div>
+              </div>
+
+              <div className="info-card price-member">
+                <div className="info-icon">💵</div>
+                <div className="info-content">
+                  <h3>฿{fitnessData.fit_price_memberm ? Number(fitnessData.fit_price_memberm).toLocaleString() : '0'}</h3>
+                  <p className="info-label">สมาชิก/เดือน</p>
+                </div>
+              </div>
+
+              <div className="info-card price-member">
+                <div className="info-icon">💵</div>
+                <div className="info-content">
+                  <h3>฿{fitnessData.fit_price_membery ? Number(fitnessData.fit_price_membery).toLocaleString() : '0'}</h3>
+                  <p className="info-label">สมาชิก/ปี</p>
                 </div>
               </div>
             </div>
@@ -664,6 +689,28 @@ const FitnessManagement = ({
                 type="number"
                 value={fitnessData.fit_price}
                 onChange={(e) => handleInputChange('fit_price', e.target.value)}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>ราคาสมาชิกรายเดือน (บาท)</label>
+              <input
+                type="number"
+                value={fitnessData.fit_price_memberm}
+                onChange={(e) => handleInputChange('fit_price_memberm', e.target.value)}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+
+            <div className="form-group">
+              <label>ราคาสมาชิกรายปี (บาท)</label>
+              <input
+                type="number"
+                value={fitnessData.fit_price_membery}
+                onChange={(e) => handleInputChange('fit_price_membery', e.target.value)}
                 placeholder="0"
                 min="0"
               />

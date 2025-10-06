@@ -274,6 +274,14 @@ const FitnessDetailModal = ({
             </div>
           </div>
 
+          {/* Description Section */}
+              {(fitnessData.fit_description || fitnessData.description) && (
+                <div className="description-section">
+                  <h4>📝 รายละเอียดเพิ่มเติม</h4>
+                  <p>{fitnessData.fit_description || fitnessData.description}</p>
+                </div>
+              )}
+
           {/* Right Section - Info & Booking */}
           <div className="fitness-info-sidebar">
             {/* Rating & Price */}
@@ -332,12 +340,19 @@ const FitnessDetailModal = ({
                 <span className="price-number">{fitnessData.fit_price || fitnessData.price || 69}</span>
                 <span className="price-unit">บาท/วัน</span>
               </div>
+
+              {/* Membership Prices */}
+              {(fitnessData.fit_price_memberm || fitnessData.priceMonthly) && (
+                <div className="price-display membership">
+                  <span className="price-number">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
+                  <span className="price-unit">บาท/เดือน (สมาชิก)</span>
+                </div>
+              )}
               
-              {/* Description Section */}
-              {(fitnessData.fit_description || fitnessData.description) && (
-                <div className="description-section">
-                  <h4>📝 รายละเอียดเพิ่มเติม</h4>
-                  <p>{fitnessData.fit_description || fitnessData.description}</p>
+              {(fitnessData.fit_price_membery || fitnessData.priceYearly) && (
+                <div className="price-display membership">
+                  <span className="price-number">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
+                  <span className="price-unit">บาท/ปี (สมาชิก)</span>
                 </div>
               )}
               

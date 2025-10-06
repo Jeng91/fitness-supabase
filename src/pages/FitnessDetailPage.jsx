@@ -34,6 +34,8 @@ const FitnessDetailPage = () => {
           id: data.fit_id,
           name: data.fit_name,
           price: data.fit_price,
+          priceMonthly: data.fit_price_memberm,
+          priceYearly: data.fit_price_membery,
           location: data.fit_address,
           image: data.fit_image,
           fit_image2: data.fit_image2,

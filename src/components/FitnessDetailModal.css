@@ -405,10 +405,21 @@
   color: white;
 }
 
+.price-display.membership {
+  background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin-bottom: 12px;
+  padding: 12px;
+  font-size: 0.9em;
+}
+
 .price-number {
   font-size: 2.5rem;
   font-weight: 700;
   display: block;
+}
+
+.price-display.membership .price-number {
+  font-size: 1.8rem;
 }
 
 .price-unit {

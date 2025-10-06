@@ -188,6 +188,11 @@
           background: linear-gradient(135deg, #28a745);
         }
 
+        .info-card.price-member {
+          border-left-color: #28a745;
+          background: linear-gradient(135deg, #28a745);
+        }
+
         .info-card.location {
           border-left-color: #dc3545;
           background: linear-gradient(135deg, #dc3545);

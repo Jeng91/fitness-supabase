@@ -50,6 +50,8 @@ const HomePage = () => {
         id: item.fit_id,
         name: item.fit_name,
         price: item.fit_price,
+        priceMonthly: item.fit_price_memberm,
+        priceYearly: item.fit_price_membery,
         location: item.fit_address,
         image: item.fit_image,
         fit_image2: item.fit_image2,
