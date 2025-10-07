@@ -7,6 +7,7 @@ const Navbar = () => {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -30,7 +31,18 @@ const Navbar = () => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Scroll effect
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   const loadUserProfile = async (userId) => {
@@ -86,7 +98,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`}>
       <div className="navbar-brand">
         <h2 onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
           PJ Fitness
@@ -132,24 +144,28 @@ const Navbar = () => {
               </li>
             )}
             <li className="user-info">
-              👤 {
-                userProfile?.full_name || 
-                userProfile?.owner_name || 
-                user?.user_metadata?.full_name ||
-                user?.email?.split('@')[0] ||
-                'ผู้ใช้'
-              }
-              {userProfile?.role && (
-                <span className="user-role">
-                  ({userProfile.role === 'user' ? 'ผู้ใช้' : 'พาร์ทเนอร์'})
-                </span>
-              )}
+              <span className="user-avatar">👤</span>
+              <span className="user-details">
+                {
+                  userProfile?.full_name || 
+                  userProfile?.owner_name || 
+                  user?.user_metadata?.full_name ||
+                  user?.email?.split('@')[0] ||
+                  'ผู้ใช้'
+                }
+                {userProfile?.role && (
+                  <span className="user-role">
+                    {userProfile.role === 'user' ? 'สมาชิก' : 'พาร์ทเนอร์'}
+                  </span>
+                )}
+              </span>
             </li>
             <li 
               className="logout-btn"
               onClick={handleLogout}
               style={{ cursor: 'pointer' }}
             >
+              <span className="logout-icon">🚪</span>
               ออกจากระบบ
             </li>
           </>

@@ -295,10 +295,6 @@ const ProfilePage = () => {
     { id: 'booking', name: 'สถานะการจอง', icon: '📅' },
     { id: 'history', name: 'ประวัติการเข้าใช้บริการ', icon: '📋' },
     { id: 'reviews', name: 'การรีวิว', icon: '⭐' },
-    { id: 'workouts', name: 'บันทึกการออกกำลังกาย', icon: '💪' },
-    { id: 'nutrition', name: 'บันทึกโภชนาการ', icon: '🥗' },
-    { id: 'goals', name: 'เป้าหมาย', icon: '🎯' },
-    { id: 'progress', name: 'ความก้าวหน้า', icon: '📊' },
     { id: 'settings', name: 'การตั้งค่า', icon: '⚙️' }
   ];
 
