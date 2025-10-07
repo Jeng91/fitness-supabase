@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
 import { createPayment, updateBookingStatus } from '../utils/bookingPaymentAPI';
 import { createMembershipPayment } from '../utils/membershipAPI';
+import QRPayment from './QRPayment';
 import './PaymentPage.css';
 
 const PaymentPage = () => {
@@ -18,6 +19,7 @@ const PaymentPage = () => {
   });
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState({});
+  const [paymentMethod, setPaymentMethod] = useState('credit_card'); // 'credit_card' or 'qr_code'
 
   // ฟังก์ชันคำนวณวันที่สิ้นสุด
   const calculateEndDate = (startDate, membershipType) => {
@@ -314,8 +316,30 @@ const PaymentPage = () => {
           </div>
 
           <div className="payment-form">
-            <h3>💳 ข้อมูลการชำระเงิน</h3>
-            <div className="form-group">
+            <h3>💳 เลือกวิธีการชำระเงิน</h3>
+            
+            {/* Payment Method Selector */}
+            <div className="payment-method-selector">
+              <div className="method-options">
+                <button 
+                  className={`method-btn ${paymentMethod === 'credit_card' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('credit_card')}
+                >
+                  💳 บัตรเครดิต
+                </button>
+                <button 
+                  className={`method-btn ${paymentMethod === 'qr_code' ? 'active' : ''}`}
+                  onClick={() => setPaymentMethod('qr_code')}
+                >
+                  📱 QR Code
+                </button>
+              </div>
+            </div>
+
+            {/* Credit Card Form */}
+            {paymentMethod === 'credit_card' && (
+              <div className="credit-card-form">
+                <div className="form-group">
               <label>หมายเลขบัตรเครดิต</label>
               <input
                 type="text"
@@ -390,6 +414,41 @@ const PaymentPage = () => {
                 )}
               </button>
             </div>
+              </div>
+            )}
+
+            {/* QR Code Payment */}
+            {paymentMethod === 'qr_code' && (
+              <div className="qr-payment-section">
+                <QRPayment 
+                  paymentData={{
+                    total_amount: bookingData.total_amount,
+                    description: `${bookingData.fitnessName} - ${bookingData.booking_type === 'membership' ? 
+                      (bookingData.membership_type === 'monthly' ? 'สมาชิกรายเดือน' : 'สมาชิกรายปี') : 
+                      'จองบริการรายวัน'}`
+                  }}
+                  onSuccess={(paymentResult) => {
+                    alert(`🎉 ชำระเงินด้วย QR Code สำเร็จ!
+                    
+💰 จำนวนเงิน: ${bookingData.total_amount} บาท
+💳 รหัสอ้างอิง: ${paymentResult.transaction_id}
+🏋️ ฟิตเนส: ${bookingData.fitnessName}
+
+✅ การจองของคุณได้รับการยืนยันแล้ว`);
+                    
+                    setTimeout(() => {
+                      navigate('/');
+                    }, 2000);
+                  }}
+                  onCancel={() => {
+                    navigate(-1);
+                  }}
+                  onError={(error) => {
+                    alert(`❌ เกิดข้อผิดพลาด: ${error}`);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
