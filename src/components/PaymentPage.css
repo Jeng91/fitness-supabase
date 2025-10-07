@@ -167,6 +167,8 @@
 
 .payment-form {
   padding: 2rem;
+  border: 1px solid #ffffff;
+   background: linear-gradient(135deg, #a2b3ff 0%, #764ba2 100%);
 }
 
 .payment-form h3 {

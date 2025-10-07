@@ -37,7 +37,8 @@ const generateSignature = async (data, secretKey) => {
 
 // สร้าง Mock QR Code สำหรับ Development
 const generateMockQRCode = (paymentData) => {
-  const qrData = `EMVCo QR Code\nAmount: ${paymentData.amount} THB\nReference: ${paymentData.reference}\nMerchant: ${paymentData.merchant_id}`;
+  // QR Code text data for display (commented out to avoid ESLint warning)
+  // const qrData = `EMVCo QR Code\nAmount: ${paymentData.amount} THB\nReference: ${paymentData.reference}\nMerchant: ${paymentData.merchant_id}`;
   
   // สร้าง SVG QR Code แบบง่าย (Mock)
   const qrSvg = `
