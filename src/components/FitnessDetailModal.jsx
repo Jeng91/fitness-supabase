@@ -17,6 +17,7 @@ const FitnessDetailModal = ({
   const [isBookingMode, setIsBookingMode] = useState(false);
   const [equipmentData, setEquipmentData] = useState([]);
   const [ownerData, setOwnerData] = useState(null);
+  const [moreDetailsData, setMoreDetailsData] = useState([]);
   const [isMembershipBookingMode, setIsMembershipBookingMode] = useState({
     monthly: false,
     yearly: false
@@ -55,6 +56,56 @@ const FitnessDetailModal = ({
           console.error('Error loading owner:', ownerError);
         } else {
           setOwnerData(owner);
+        }
+
+        // โหลดข้อมูลรายละเอียดเพิ่มเติม
+        console.log('Loading more details for fitness_id:', fitnessData.fit_id);
+        
+        // ดึงข้อมูลทั้งหมดจาก fit_moredetails เพื่อดูโครงสร้าง
+        const { data: allMoreDetails, error: allError } = await supabase
+          .from('fit_moredetails')
+          .select('*');
+          
+        if (allError) {
+          console.error('Error loading all fit_moredetails:', allError);
+        }
+        console.log('All fit_moredetails data:', allMoreDetails);
+        
+        // ลองทั้ง fitness_id และ fit_id
+        let moreDetails = null;
+        let moreDetailsError = null;
+        
+        // ลอง fitness_id ก่อน
+        const { data: moreDetails1, error: error1 } = await supabase
+          .from('fit_moredetails')
+          .select('*')
+          .eq('fitness_id', fitnessData.fit_id)
+          .order('created_at', { ascending: false });
+          
+        if (error1 || !moreDetails1 || moreDetails1.length === 0) {
+          console.log('No data with fitness_id, trying fit_id:', error1);
+          // ลอง fit_id แทน
+          const { data: moreDetails2, error: error2 } = await supabase
+            .from('fit_moredetails')
+            .select('*')
+            .eq('fit_id', fitnessData.fit_id)
+            .order('created_at', { ascending: false });
+            
+          moreDetails = moreDetails2;
+          moreDetailsError = error2;
+          console.log('Trying with fit_id:', { moreDetails2, error2 });
+        } else {
+          moreDetails = moreDetails1;
+          moreDetailsError = error1;
+        }
+
+        console.log('More details query result:', { moreDetails, moreDetailsError });
+
+        if (moreDetailsError && moreDetailsError.code !== 'PGRST116') {
+          console.error('Error loading more details:', moreDetailsError);
+        } else {
+          console.log('Setting more details data:', moreDetails);
+          setMoreDetailsData(moreDetails || []);
         }
 
       } catch (error) {
@@ -307,7 +358,7 @@ const FitnessDetailModal = ({
                         </div>
                         <div className="equipment-showcase-info">
                           <h4>{equipment.em_name || 'ไม่ระบุชื่อ'}</h4>
-                          <p>จำนวน: {equipment.em_qty || 1} ชิ้น</p>
+                          {/* <p>จำนวน: {equipment.em_qty || 1} ชิ้น</p> */}
                           {equipment.em_detail && (
                             <p className="equipment-detail">{equipment.em_detail}</p>
                           )}
@@ -320,6 +371,59 @@ const FitnessDetailModal = ({
                     </div>
                   )}
                 </div>
+            </div>
+
+            {/* More Details Section */}
+            <div className="more-details-section">
+              <h3>📋 รายละเอียดเพิ่มเติม</h3>
+              
+              {/* Debug Info */}
+              <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', fontSize: '12px'}}>
+                <strong>Debug Info:</strong><br/>
+                Fitness ID: {fitnessData?.fit_id}<br/>
+                More Details Count: {moreDetailsData?.length || 0}<br/>
+                Data: {JSON.stringify(moreDetailsData, null, 2)}
+              </div>
+              
+              {moreDetailsData && moreDetailsData.length > 0 ? (
+                <div className="more-details-grid">
+                  {moreDetailsData.map((detail, index) => (
+                    <div key={detail.id || index} className="more-detail-card">
+                      <div className="detail-header">
+                        <h4 className="detail-title">
+                          {detail.title || detail.detail_title || `รายละเอียด ${index + 1}`}
+                        </h4>
+                        <span className="detail-date">
+                          {detail.created_at 
+                            ? new Date(detail.created_at).toLocaleDateString('th-TH', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric'
+                              })
+                            : 'ไม่ระบุวันที่'
+                          }
+                        </span>
+                      </div>
+                      <div className="detail-content">
+                        <p>{detail.content || detail.detail_content || detail.description || 'ไม่มีรายละเอียด'}</p>
+                      </div>
+                      {detail.image && (
+                        <div className="detail-image-container">
+                          <img 
+                            src={detail.image} 
+                            alt={detail.title || 'รายละเอียดเพิ่มเติม'}
+                            className="detail-image"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-more-details">
+                  <p>📝 ยังไม่มีรายละเอียดเพิ่มเติม</p>
+                </div>
+              )}
             </div>
           </div>
 

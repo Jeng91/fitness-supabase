@@ -377,34 +377,6 @@ const callThaiQRAPI = async (paymentData) => {
         is_production: true
       }
     };
-    
-    const finalQRString = generatePromptPayQR(config.promptpay_id, amount);
-    console.log('📱 PromptPay QR String:', finalQRString);
-    
-    // สร้าง QR Code Image จริง
-    const qrImagePNG = await generateQRImageFromString(finalQRString, amount);
-    
-    console.log('✅ PromptPay QR generated successfully:', {
-      transactionId,
-      amount,
-      promptpay_id: config.promptpay_id
-    });
-    
-    return {
-      success: true,
-      data: {
-        transactionId: transactionId,
-        qrString: finalQRString,
-        qrImage: qrImagePNG,
-        amount: amount,
-        currency: 'THB',
-        status: 'pending',
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        merchant_name: config.merchant_name,
-        payment_method: 'promptpay',
-        promptpay_id: config.promptpay_id
-      }
-    };
 
   } catch (error) {
     console.error('❌ Thai QR API Error:', error);
@@ -413,7 +385,10 @@ const callThaiQRAPI = async (paymentData) => {
       error: error.message
     };
   }
-};// ฟังก์ชันช่วยสำหรับการทดสอบ QR Code
+};
+
+// ฟังก์ชันช่วยสำหรับการทดสอบ QR Code (For Development/Testing)
+// eslint-disable-next-line no-unused-vars
 const testPromptPayQR = (promptpayId = '0951791181', amount = 1.00) => {
   console.log('🧪 Testing PromptPay QR Generation...');
   try {
