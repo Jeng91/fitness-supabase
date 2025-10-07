@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
 import './AdminPage.css';
 import PaymentAdmin from './PaymentAdmin';
+import PaymentApproval from './PaymentApproval';
 import { SYSTEM_BANK_ACCOUNTS } from '../utils/paymentConfig';
 
 const AdminPage = () => {
@@ -451,6 +452,12 @@ const AdminPage = () => {
             💳 การชำระเงิน
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'approval' ? 'active' : ''}`}
+            onClick={() => setActiveTab('approval')}
+          >
+            🔍 อนุมัติการชำระเงิน
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'bank' ? 'active' : ''}`}
             onClick={() => setActiveTab('bank')}
           >
@@ -478,6 +485,7 @@ const AdminPage = () => {
         {activeTab === 'partners' && <PartnersTab data={dashboardData} />}
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
         {activeTab === 'payments' && <PaymentAdmin />}
+        {activeTab === 'approval' && <PaymentApproval />}
         {activeTab === 'bank' && <BankAccountTab />}
         {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
         {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
