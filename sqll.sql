@@ -171,52 +171,7 @@ create trigger update_payment_splits_updated_at BEFORE
 update on payment_splits for EACH row
 execute FUNCTION update_updated_at_column ();
 
-create table public.payment_splits (
-  split_id uuid not null default gen_random_uuid (),
-  payment_id uuid null,
-  system_split_amount numeric(10, 2) not null,
-  system_split_status character varying(20) null default 'pending'::character varying,
-  fitness_split_amount numeric(10, 2) not null,
-  fitness_split_status character varying(20) null default 'pending'::character varying,
-  fitness_transfer_ref character varying(255) null,
-  system_fee_ref character varying(255) null,
-  created_at timestamp with time zone null default now(),
-  updated_at timestamp with time zone null default now(),
-  constraint payment_splits_pkey primary key (split_id),
-  constraint payment_splits_payment_id_fkey foreign KEY (payment_id) references payments (payment_id) on delete CASCADE,
-  constraint payment_splits_fitness_split_status_check check (
-    (
-      (fitness_split_status)::text = any (
-        (
-          array[
-            'pending'::character varying,
-            'completed'::character varying,
-            'failed'::character varying
-          ]
-        )::text[]
-      )
-    )
-  ),
-  constraint payment_splits_system_split_status_check check (
-    (
-      (system_split_status)::text = any (
-        (
-          array[
-            'pending'::character varying,
-            'completed'::character varying,
-            'failed'::character varying
-          ]
-        )::text[]
-      )
-    )
-  )
-) TABLESPACE pg_default;
 
-create index IF not exists idx_payment_splits_payment_id on public.payment_splits using btree (payment_id) TABLESPACE pg_default;
-
-create trigger update_payment_splits_updated_at BEFORE
-update on payment_splits for EACH row
-execute FUNCTION update_updated_at_column ();
 
 create table public.refunds (
   refund_id uuid not null default gen_random_uuid (),
@@ -247,34 +202,7 @@ create table public.refunds (
   )
 ) TABLESPACE pg_default;
 
-create table public.refunds (
-  refund_id uuid not null default gen_random_uuid (),
-  payment_id uuid null,
-  booking_id uuid null,
-  refund_amount numeric(10, 2) not null,
-  refund_reason text null,
-  refund_status character varying(20) null default 'pending'::character varying,
-  refund_reference character varying(255) null,
-  processed_at timestamp with time zone null,
-  created_at timestamp with time zone null default now(),
-  constraint refunds_pkey primary key (refund_id),
-  constraint refunds_booking_id_fkey foreign KEY (booking_id) references bookings (booking_id) on delete CASCADE,
-  constraint refunds_payment_id_fkey foreign KEY (payment_id) references payments (payment_id) on delete CASCADE,
-  constraint refunds_refund_status_check check (
-    (
-      (refund_status)::text = any (
-        (
-          array[
-            'pending'::character varying,
-            'processing'::character varying,
-            'completed'::character varying,
-            'failed'::character varying
-          ]
-        )::text[]
-      )
-    )
-  )
-) TABLESPACE pg_default;
+
 
 create table public.tbl_favorites (
   favorite_id uuid not null default gen_random_uuid (),
@@ -505,4 +433,156 @@ create index IF not exists idx_memberships_dates on public.tbl_memberships using
 
 create trigger update_memberships_updated_at BEFORE
 update on tbl_memberships for EACH row
+execute FUNCTION update_updated_at_column ();
+
+create table public.qr_payments (
+  qr_payment_id uuid not null default gen_random_uuid (),
+  transaction_id text not null,
+  user_id uuid null,
+  qr_code text not null,
+  qr_image_url text null,
+  amount numeric(10, 2) not null,
+  currency character varying(3) null default 'THB'::character varying,
+  status character varying(20) null default 'pending'::character varying,
+  payment_method character varying(50) null default 'qr_promptpay'::character varying,
+  expires_at timestamp with time zone not null,
+  paid_at timestamp with time zone null,
+  cancelled_at timestamp with time zone null,
+  gateway_response jsonb null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint qr_payments_pkey primary key (qr_payment_id),
+  constraint qr_payments_transaction_id_key unique (transaction_id),
+  constraint qr_payments_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint qr_payments_status_check check (
+    (
+      (status)::text = any (
+        (
+          array[
+            'pending'::character varying,
+            'success'::character varying,
+            'failed'::character varying,
+            'expired'::character varying,
+            'cancelled'::character varying
+          ]
+        )::text[]
+      )
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_payments_transaction_id on public.qr_payments using btree (transaction_id) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_payments_user_id on public.qr_payments using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_payments_status on public.qr_payments using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_qr_payments_expires_at on public.qr_payments using btree (expires_at) TABLESPACE pg_default;
+
+create trigger trigger_update_qr_payments_updated_at BEFORE
+update on qr_payments for EACH row
+execute FUNCTION update_qr_payments_updated_at ();
+
+create table public.tbl_equipment (
+  em_id serial not null,
+  em_name character varying(100) not null,
+  em_image character varying(255) null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  fitness_id integer not null,
+  created_by uuid null,
+  constraint tbl_equipment_pkey primary key (em_id),
+  constraint tbl_equipment_created_by_fkey foreign KEY (created_by) references auth.users (id),
+  constraint tbl_equipment_fitness_id_fkey foreign KEY (fitness_id) references tbl_fitness (fit_id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_tbl_equipment_fitness_id on public.tbl_equipment using btree (fitness_id) TABLESPACE pg_default;
+
+create index IF not exists idx_tbl_equipment_created_by on public.tbl_equipment using btree (created_by) TABLESPACE pg_default;
+
+create trigger trg_set_created_by_equipment BEFORE INSERT on tbl_equipment for EACH row
+execute FUNCTION set_created_by_equipment ();
+
+
+create table public.tbl_favorites (
+  favorite_id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  fitness_id integer not null,
+  created_at timestamp with time zone not null default now(),
+  constraint tbl_favorites_pkey primary key (favorite_id),
+  constraint tbl_favorites_fitness_id_fkey foreign KEY (fitness_id) references tbl_fitness (fit_id) on delete CASCADE,
+  constraint tbl_favorites_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE
+) TABLESPACE pg_default;
+
+create index IF not exists idx_tbl_favorites_fitness_id on public.tbl_favorites using btree (fitness_id) TABLESPACE pg_default;
+
+create trigger trg_set_favorite_user BEFORE INSERT on tbl_favorites for EACH row
+execute FUNCTION set_favorite_user ();
+
+create table public.tbl_fitness_requests (
+  id uuid not null default gen_random_uuid (),
+  fit_name character varying(255) not null,
+  fit_type character varying(100) null,
+  fit_description text null,
+  fit_price numeric(10, 2) null,
+  fit_duration integer null,
+  fit_location character varying(500) null,
+  fit_contact character varying(255) null,
+  fit_image text null,
+  owner_id integer null,
+  status character varying(50) null default 'pending'::character varying,
+  approved_at timestamp with time zone null,
+  approved_by integer null,
+  rejected_at timestamp with time zone null,
+  rejected_by integer null,
+  rejection_reason text null,
+  created_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp with time zone null default CURRENT_TIMESTAMP,
+  constraint tbl_fitness_requests_pkey primary key (id),
+  constraint tbl_fitness_requests_approved_by_fkey foreign KEY (approved_by) references tbl_admin (admin_id),
+  constraint tbl_fitness_requests_owner_id_fkey foreign KEY (owner_id) references tbl_owner (owner_uid) on delete CASCADE,
+  constraint tbl_fitness_requests_rejected_by_fkey foreign KEY (rejected_by) references tbl_admin (admin_id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_fitness_requests_owner_id on public.tbl_fitness_requests using btree (owner_id) TABLESPACE pg_default;
+
+create index IF not exists idx_fitness_requests_status on public.tbl_fitness_requests using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_fitness_requests_created_at on public.tbl_fitness_requests using btree (created_at) TABLESPACE pg_default;
+
+create trigger update_fitness_requests_updated_at BEFORE
+update on tbl_fitness_requests for EACH row
+execute FUNCTION update_updated_at_column ();
+
+
+create table public.tbl_reviews (
+  id uuid not null default gen_random_uuid (),
+  user_id uuid not null,
+  fitness_id integer not null,
+  rating integer not null,
+  comment text null,
+  created_at timestamp with time zone not null default timezone ('utc'::text, now()),
+  updated_at timestamp with time zone not null default timezone ('utc'::text, now()),
+  constraint tbl_reviews_pkey primary key (id),
+  constraint tbl_reviews_user_id_fitness_id_key unique (user_id, fitness_id),
+  constraint tbl_reviews_fitness_id_fkey foreign KEY (fitness_id) references tbl_fitness (fit_id) on delete CASCADE,
+  constraint tbl_reviews_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
+  constraint tbl_reviews_rating_check check (
+    (
+      (rating >= 1)
+      and (rating <= 5)
+    )
+  )
+) TABLESPACE pg_default;
+
+create index IF not exists idx_reviews_fitness_id on public.tbl_reviews using btree (fitness_id) TABLESPACE pg_default;
+
+create index IF not exists idx_reviews_user_id on public.tbl_reviews using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_reviews_rating on public.tbl_reviews using btree (rating) TABLESPACE pg_default;
+
+create index IF not exists idx_reviews_created_at on public.tbl_reviews using btree (created_at) TABLESPACE pg_default;
+
+create trigger update_tbl_reviews_updated_at BEFORE
+update on tbl_reviews for EACH row
 execute FUNCTION update_updated_at_column ();

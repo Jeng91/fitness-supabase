@@ -9,13 +9,15 @@ export const createMembershipPayment = async (paymentData, bookingData) => {
     const { data: paymentResult, error: paymentError } = await supabase
       .from('payments')
       .insert({
+        user_id: (await supabase.auth.getUser()).data.user?.id,
         total_amount: paymentData.total_amount,
-        payment_method: paymentData.payment_method,
-        payment_status: paymentData.payment_status,
+        system_fee: 0, // ไม่มีค่าธรรมเนียม
+        fitness_amount: paymentData.total_amount,
+        payment_method: paymentData.payment_method || 'qr_code',
+        payment_status: paymentData.payment_status || 'pending',
         transaction_id: paymentData.transaction_id,
         gateway_response: paymentData.gateway_response,
-        gateway_reference: paymentData.gateway_reference,
-        user_id: (await supabase.auth.getUser()).data.user?.id
+        gateway_reference: paymentData.gateway_reference
       })
       .select()
       .single();
@@ -31,9 +33,9 @@ export const createMembershipPayment = async (paymentData, bookingData) => {
     const endDate = new Date(startDate);
     
     if (bookingData.membership_type === 'monthly') {
-      endDate.setDate(endDate.getDate() + 30 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
+      endDate.setDate(endDate.getDate() + 30 - 1);
     } else if (bookingData.membership_type === 'yearly') {
-      endDate.setDate(endDate.getDate() + 365 - 1); // -1 เพราะวันแรกนับเป็นวันที่ 1
+      endDate.setDate(endDate.getDate() + 365 - 1);
     }
 
     // 3. สร้างข้อมูลสมาชิก
@@ -56,13 +58,16 @@ export const createMembershipPayment = async (paymentData, bookingData) => {
       throw new Error(`Membership creation failed: ${membershipError.message}`);
     }
 
-    console.log('✅ Membership created:', membershipResult);
+    console.log('✅ Membership created successfully:', membershipResult);
 
     return {
       success: true,
       data: {
         payment: paymentResult,
-        membership: membershipResult
+        membership: membershipResult,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0],
+        total_amount: paymentData.total_amount
       }
     };
 
@@ -91,8 +96,12 @@ export const getFitnessMemberships = async (fitnessId) => {
           usertel
         ),
         payments:payment_id (
+          payment_id,
           transaction_id,
-          paid_at
+          payment_method,
+          payment_status,
+          paid_at,
+          total_amount
         )
       `)
       .eq('fitness_id', fitnessId)

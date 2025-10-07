@@ -202,6 +202,13 @@ export const generatePaymentQR = async (paymentData) => {
   try {
     console.log('🔄 Generating QR Payment with AppzStory...', paymentData);
 
+    // ตรวจสอบ Authentication ก่อน
+    const { data: { user: currentUser }, error: authCheckError } = await supabase.auth.getUser();
+    if (authCheckError || !currentUser) {
+      throw new Error('User must be logged in to create payment');
+    }
+    console.log('👤 Authenticated user:', currentUser.id);
+
     // เรียก AppzStory Studio API สำหรับสร้าง QR Payment
     const qrResponse = await callAppzStoryAPI({
       amount: paymentData.total_amount,
@@ -217,6 +224,19 @@ export const generatePaymentQR = async (paymentData) => {
     }
 
     // บันทึกข้อมูลการชำระเงินลงฐานข้อมูล
+    // ดึง user_id จาก auth.getUser() เพื่อให้แน่ใจว่าตรงกับ auth.uid()
+    const { data: { user: authUser }, error: authError } = await supabase.auth.getUser();
+    if (authError || !authUser) {
+      throw new Error('User not authenticated');
+    }
+
+    console.log('👤 User ID:', authUser.id);
+    console.log('💾 Inserting QR payment data...', {
+      transaction_id: paymentData.transaction_id,
+      amount: paymentData.total_amount,
+      user_id: authUser.id
+    });
+
     const { data: qrRecord, error: dbError } = await supabase
       .from('qr_payments')
       .insert([{
@@ -224,19 +244,25 @@ export const generatePaymentQR = async (paymentData) => {
         amount: paymentData.total_amount,
         currency: 'THB',
         status: 'pending',
-        qr_code_url: qrResponse.data.qr_code_url,
-        payment_id: qrResponse.data.payment_id,
+        qr_code: qrResponse.data.qr_code_text || '00020101021102160004123456789012345678901234567890',
+        qr_image_url: qrResponse.data.qr_code_url,
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
-        description: paymentData.description || 'Fitness Booking Payment',
-        user_id: paymentData.user_id,
-        booking_data: paymentData
+        user_id: authUser.id, // ใช้ authUser.id จาก auth.getUser()
+        gateway_response: qrResponse.data
       }])
       .select()
       .single();
 
+    // เพิ่ม debug information สำหรับ database error
     if (dbError) {
-      console.error('❌ Database error:', dbError);
-      throw new Error('Failed to save payment record');
+      console.error('❌ Database error details:', {
+        code: dbError.code,
+        message: dbError.message,
+        details: dbError.details,
+        hint: dbError.hint,
+        user_id: authUser.id
+      });
+      throw new Error(`Failed to save payment record: ${dbError.message}`);
     }
 
     console.log('✅ QR Payment created successfully:', qrRecord);
@@ -246,6 +272,7 @@ export const generatePaymentQR = async (paymentData) => {
       data: {
         transaction_id: paymentData.transaction_id,
         qr_code_url: qrResponse.data.qr_code_url,
+        qr_code_text: qrResponse.data.qr_code_text,
         payment_id: qrResponse.data.payment_id,
         amount: paymentData.total_amount,
         expires_at: qrRecord.expires_at,
