@@ -591,3 +591,36 @@ create index IF not exists idx_reviews_created_at on public.tbl_reviews using bt
 create trigger update_tbl_reviews_updated_at BEFORE
 update on tbl_reviews for EACH row
 execute FUNCTION update_updated_at_column ();
+
+create table public.tbl_fitness (
+  fit_id serial not null,
+  fit_name character varying(200) not null,
+  fit_user character varying(100) not null,
+  fit_price character varying(50) not null,
+  fit_image text not null,
+  fit_address text not null,
+  fit_contact character varying(200) not null,
+  fit_dateclose time without time zone not null,
+  fit_dateopen time without time zone not null,
+  fit_location text not null,
+  fit_moredetails text not null,
+  fit_phone character varying(50) not null,
+  created_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  updated_at timestamp without time zone null default CURRENT_TIMESTAMP,
+  created_by uuid null,
+  fit_image2 text null,
+  fit_image3 text null,
+  fit_image4 text null,
+  fit_price_memberm numeric(10, 2) null default 0,
+  fit_price_membery numeric(10, 2) null default 0,
+  partner_bank_account character varying(20) null,
+  partner_bank_name character varying(100) null,
+  partner_account_name character varying(100) null,
+  partner_promptpay_id character varying(20) null,
+  revenue_split_percentage numeric(5, 2) null default 80.00,
+  constraint tbl_fitness_pkey primary key (fit_id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_tbl_fitness_memberm_price on public.tbl_fitness using btree (fit_price_memberm) TABLESPACE pg_default;
+
+create index IF not exists idx_tbl_fitness_membery_price on public.tbl_fitness using btree (fit_price_membery) TABLESPACE pg_default;

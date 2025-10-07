@@ -58,55 +58,31 @@ const FitnessDetailModal = ({
           setOwnerData(owner);
         }
 
-        // โหลดข้อมูลรายละเอียดเพิ่มเติม
-        console.log('Loading more details for fitness_id:', fitnessData.fit_id);
-        
-        // ดึงข้อมูลทั้งหมดจาก fit_moredetails เพื่อดูโครงสร้าง
-        const { data: allMoreDetails, error: allError } = await supabase
-          .from('fit_moredetails')
-          .select('*');
-          
-        if (allError) {
-          console.error('Error loading all fit_moredetails:', allError);
+        // โหลดข้อมูลรายละเอียดเพิ่มเติมจาก field fit_moredetails
+        if (process.env.NODE_ENV === 'development') {
+          console.log('🔍 Loading more details from fit_moredetails field:', fitnessData.fit_moredetails);
         }
-        console.log('All fit_moredetails data:', allMoreDetails);
         
-        // ลองทั้ง fitness_id และ fit_id
-        let moreDetails = null;
-        let moreDetailsError = null;
+        // ดึงข้อมูลจาก field fit_moredetails ในตาราง tbl_fitness
+        const moreDetailsText = fitnessData.fit_moredetails || '';
         
-        // ลอง fitness_id ก่อน
-        const { data: moreDetails1, error: error1 } = await supabase
-          .from('fit_moredetails')
-          .select('*')
-          .eq('fitness_id', fitnessData.fit_id)
-          .order('created_at', { ascending: false });
-          
-        if (error1 || !moreDetails1 || moreDetails1.length === 0) {
-          console.log('No data with fitness_id, trying fit_id:', error1);
-          // ลอง fit_id แทน
-          const { data: moreDetails2, error: error2 } = await supabase
-            .from('fit_moredetails')
-            .select('*')
-            .eq('fit_id', fitnessData.fit_id)
-            .order('created_at', { ascending: false });
-            
-          moreDetails = moreDetails2;
-          moreDetailsError = error2;
-          console.log('Trying with fit_id:', { moreDetails2, error2 });
-        } else {
-          moreDetails = moreDetails1;
-          moreDetailsError = error1;
+        // แปลงข้อความเป็น array สำหรับแสดงผล
+        let processedMoreDetails = [];
+        if (moreDetailsText && moreDetailsText.trim()) {
+          // แยกข้อความตาม newline หรือ bullet points
+          const lines = moreDetailsText.split(/\n|•|◦|-/).filter(line => line.trim());
+          processedMoreDetails = lines.map((line, index) => ({
+            id: index + 1,
+            title: line.trim(),
+            description: '',
+            type: 'text'
+          }));
         }
-
-        console.log('More details query result:', { moreDetails, moreDetailsError });
-
-        if (moreDetailsError && moreDetailsError.code !== 'PGRST116') {
-          console.error('Error loading more details:', moreDetailsError);
-        } else {
-          console.log('Setting more details data:', moreDetails);
-          setMoreDetailsData(moreDetails || []);
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log('📝 Processed more details:', processedMoreDetails);
         }
+        setMoreDetailsData(processedMoreDetails);
 
       } catch (error) {
         console.error('Error loading additional data:', error);
@@ -114,7 +90,7 @@ const FitnessDetailModal = ({
     };
 
     loadAdditionalData();
-  }, [fitnessData?.fit_id, fitnessData?.fit_user]);
+  }, [fitnessData?.fit_id, fitnessData?.fit_user, fitnessData?.fit_moredetails]);
 
   if (!isOpen || !fitnessData) return null;
 
@@ -377,47 +353,31 @@ const FitnessDetailModal = ({
             <div className="more-details-section">
               <h3>📋 รายละเอียดเพิ่มเติม</h3>
               
-              {/* Debug Info */}
-              <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', fontSize: '12px'}}>
-                <strong>Debug Info:</strong><br/>
-                Fitness ID: {fitnessData?.fit_id}<br/>
-                More Details Count: {moreDetailsData?.length || 0}<br/>
-                Data: {JSON.stringify(moreDetailsData, null, 2)}
-              </div>
+              {/* Debug Info - Hidden for production */}
+              {process.env.NODE_ENV === 'development' && (
+                <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', fontSize: '12px'}}>
+                  <strong>Debug Info:</strong><br/>
+                  Fitness ID: {fitnessData?.fit_id}<br/>
+                  More Details Count: {moreDetailsData?.length || 0}<br/>
+                  Raw Data: {fitnessData?.fit_moredetails || 'ไม่มีข้อมูล'}<br/>
+                  Processed Data: {JSON.stringify(moreDetailsData, null, 2)}
+                </div>
+              )}
               
               {moreDetailsData && moreDetailsData.length > 0 ? (
-                <div className="more-details-grid">
+                <div className="more-details-list">
                   {moreDetailsData.map((detail, index) => (
-                    <div key={detail.id || index} className="more-detail-card">
-                      <div className="detail-header">
-                        <h4 className="detail-title">
-                          {detail.title || detail.detail_title || `รายละเอียด ${index + 1}`}
-                        </h4>
-                        <span className="detail-date">
-                          {detail.created_at 
-                            ? new Date(detail.created_at).toLocaleDateString('th-TH', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric'
-                              })
-                            : 'ไม่ระบุวันที่'
-                          }
-                        </span>
-                      </div>
-                      <div className="detail-content">
-                        <p>{detail.content || detail.detail_content || detail.description || 'ไม่มีรายละเอียด'}</p>
-                      </div>
-                      {detail.image && (
-                        <div className="detail-image-container">
-                          <img 
-                            src={detail.image} 
-                            alt={detail.title || 'รายละเอียดเพิ่มเติม'}
-                            className="detail-image"
-                          />
-                        </div>
-                      )}
+                    <div key={index} className="more-detail-item">
+                      <div className="detail-bullet">•</div>
+                      <div className="detail-text">{detail.title}</div>
                     </div>
                   ))}
+                </div>
+              ) : fitnessData?.fit_moredetails && fitnessData.fit_moredetails.trim() ? (
+                <div className="direct-more-details">
+                  <div className="detail-content">
+                    <pre className="detail-text-raw">{fitnessData.fit_moredetails}</pre>
+                  </div>
                 </div>
               ) : (
                 <div className="no-more-details">
