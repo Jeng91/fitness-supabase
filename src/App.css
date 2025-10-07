@@ -289,7 +289,7 @@ body.dark-mode .form-group input::placeholder {
 .login-content {
   max-width: 400px;
   margin: 0 auto;
-  background: linear-gradient(135deg, #2c2c2c 0%, #000000 100%);
+  background: linear-gradient(135deg, #494949 0%, #000000 100%);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);

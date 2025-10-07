@@ -183,6 +183,130 @@
           box-shadow: 0 10px 25px rgba(79, 172, 254, 0.3);
         }
 
+        /* Login Required Modal Styles */
+        .login-required-modal {
+          background: white;
+          border-radius: 15px;
+          max-width: 450px;
+          width: 90%;
+          position: relative;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+          overflow: hidden;
+          animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+          from {
+            opacity: 0;
+            transform: translateY(-50px) scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+
+        .login-required-modal .modal-header {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          padding: 20px;
+          text-align: center;
+          position: relative;
+        }
+
+        .login-required-modal .modal-header h3 {
+          margin: 0;
+          font-size: 1.5em;
+          font-weight: 600;
+        }
+
+        .login-required-modal .close-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          font-size: 24px;
+          width: 35px;
+          height: 35px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.3s ease;
+        }
+
+        .login-required-modal .close-btn:hover {
+          background: rgba(255,255,255,0.3);
+          transform: rotate(90deg);
+        }
+
+        .login-required-modal .modal-body {
+          padding: 30px;
+          text-align: center;
+        }
+
+        .login-required-modal .modal-body p {
+          color: #666;
+          line-height: 1.6;
+          margin-bottom: 25px;
+          font-size: 1.1em;
+        }
+
+        .login-required-modal .modal-actions {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .login-required-modal .login-btn-modal,
+        .login-required-modal .register-btn-modal {
+          padding: 12px 25px;
+          border: none;
+          border-radius: 25px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          font-size: 1em;
+          min-width: 140px;
+        }
+
+        .login-required-modal .login-btn-modal {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .login-required-modal .login-btn-modal:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .login-required-modal .register-btn-modal {
+          background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+          color: #333;
+        }
+
+        .login-required-modal .register-btn-modal:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(252, 182, 159, 0.4);
+        }
+
+        @media (max-width: 480px) {
+          .login-required-modal .modal-actions {
+            flex-direction: column;
+            align-items: center;
+          }
+
+          .login-required-modal .login-btn-modal,
+          .login-required-modal .register-btn-modal {
+            width: 100%;
+            max-width: 200px;
+          }
+        }
+
         .loading, .error {
           text-align: center;
           padding: 50px;
