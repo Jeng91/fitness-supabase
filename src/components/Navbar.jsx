@@ -12,10 +12,15 @@ const Navbar = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log('🔍 Navbar - Current user from supabase.auth.getUser():', user);
       setUser(user);
       
       if (user) {
+        console.log('✅ User found, loading profile for user ID:', user.id);
         await loadUserProfile(user.id);
+      } else {
+        console.log('❌ No user found, clearing profile');
+        setUserProfile(null);
       }
     };
     
@@ -23,6 +28,7 @@ const Navbar = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user || null);
       setUser(session?.user || null);
       if (session?.user) {
         await loadUserProfile(session.user.id);
@@ -47,6 +53,7 @@ const Navbar = () => {
 
   const loadUserProfile = async (userId) => {
     try {
+      console.log('📝 Loading user profile for ID:', userId);
       // ตรวจสอบใน profiles ก่อน
       const { data: profile } = await supabase
         .from('profiles')
@@ -55,6 +62,7 @@ const Navbar = () => {
         .single();
 
       if (profile) {
+        console.log('✅ Found profile in profiles table:', profile);
         setUserProfile(profile);
         return;
       }
@@ -67,6 +75,7 @@ const Navbar = () => {
         .single();
 
       if (owner) {
+        console.log('✅ Found profile in tbl_owner table:', owner);
         setUserProfile({
           id: owner.owner_uid,
           full_name: owner.owner_name,
@@ -74,20 +83,59 @@ const Navbar = () => {
           role: 'partner',
           ...owner
         });
+      } else {
+        console.log('❌ No profile found in either table for user ID:', userId);
       }
     } catch (error) {
-      console.error('Error loading user profile:', error);
+      console.error('❌ Error loading user profile:', error);
     }
   };
 
   const handleLogout = async () => {
     try {
+      console.log('🚪 Logging out user...');
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
+      
+      // Clear local storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      console.log('✅ Logout successful, navigating to home');
       navigate('/');
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error('❌ Logout error:', error);
+    }
+  };
+
+  const handleForceLogout = async () => {
+    try {
+      console.log('🔥 Force logout - clearing all auth state...');
+      
+      // Force sign out
+      await supabase.auth.signOut({ scope: 'global' });
+      
+      // Clear all storage
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear cookies
+      document.cookie.split(";").forEach((c) => {
+        const eqPos = c.indexOf("=");
+        const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+        document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+      });
+      
+      // Reset component state
+      setUser(null);
+      setUserProfile(null);
+      
+      console.log('✅ Force logout complete');
+      navigate('/');
+      window.location.reload(); // Force reload
+    } catch (error) {
+      console.error('❌ Force logout error:', error);
     }
   };
 
@@ -168,6 +216,18 @@ const Navbar = () => {
               <span className="logout-icon">🚪</span>
               ออกจากระบบ
             </li>
+            {/* Force Logout button - HIDDEN */}
+            {false && process.env.NODE_ENV === 'development' && (
+              <li 
+                className="logout-btn"
+                onClick={handleForceLogout}
+                style={{ cursor: 'pointer', background: '#ff6b6b' }}
+                title="Force Logout (Debug Only)"
+              >
+                <span className="logout-icon">🔥</span>
+                Force Logout
+              </li>
+            )}
           </>
         )}
       </ul>
