@@ -457,6 +457,12 @@ const AdminPage = () => {
             🏦 บัญชีระบบ
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'partnerAccounts' ? 'active' : ''}`}
+            onClick={() => setActiveTab('partnerAccounts')}
+          >
+            🤝 บัญชีพาร์ทเนอร์
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => setActiveTab('reports')}
           >
@@ -473,6 +479,7 @@ const AdminPage = () => {
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
         {activeTab === 'payments' && <PaymentAdmin />}
         {activeTab === 'bank' && <BankAccountTab />}
+        {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
         {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
         {activeTab === 'reports' && <ReportsTab />}
       </main>
@@ -1004,6 +1011,298 @@ const BankAccountTab = () => {
   );
 };
 
+// Partner Accounts Tab Component
+const PartnerAccountsTab = () => {
+  const [partnerAccounts, setPartnerAccounts] = useState([]);
+  const [partnerTransfers, setPartnerTransfers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeSubTab, setActiveSubTab] = useState('accounts'); // 'accounts', 'transfers'
+
+  useEffect(() => {
+    loadPartnerAccountsData();
+  }, []);
+
+  const loadPartnerAccountsData = async () => {
+    setLoading(true);
+    try {
+      // Import functions
+      const { getAllPartnerBankAccounts, getPartnerTransfers } = await import('../utils/partnerAccountAPI');
+
+      // โหลดข้อมูลบัญชีพาร์ทเนอร์
+      const accountsResult = await getAllPartnerBankAccounts();
+      if (accountsResult.success) {
+        setPartnerAccounts(accountsResult.data);
+      }
+
+      // โหลดข้อมูลการโอนเงิน
+      const transfersResult = await getPartnerTransfers();
+      if (transfersResult.success) {
+        setPartnerTransfers(transfersResult.data);
+      }
+
+    } catch (error) {
+      console.error('Error loading partner accounts data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text, label) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`📋 คัดลอก${label}แล้ว: ${text}`);
+    });
+  };
+
+  const formatStatus = (status) => {
+    const statusMap = {
+      'pending': '⏳ รอดำเนินการ',
+      'processing': '🔄 กำลังดำเนินการ',
+      'completed': '✅ เสร็จสิ้น',
+      'failed': '❌ ล้มเหลว',
+      'cancelled': '🚫 ยกเลิก'
+    };
+    return statusMap[status] || status;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('th-TH');
+  };
+
+  if (loading) {
+    return <div className="loading">กำลังโหลดข้อมูลบัญชีพาร์ทเนอร์...</div>;
+  }
+
+  return (
+    <div className="partner-accounts-content">
+      <h2>🤝 จัดการบัญชีพาร์ทเนอร์</h2>
+      
+      {/* Sub Tab Navigation */}
+      <div className="sub-tab-navigation">
+        <button 
+          className={`sub-tab-btn ${activeSubTab === 'accounts' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('accounts')}
+        >
+          🏦 บัญชีพาร์ทเนอร์
+        </button>
+        <button 
+          className={`sub-tab-btn ${activeSubTab === 'transfers' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('transfers')}
+        >
+          💸 การโอนเงิน
+        </button>
+        <button 
+          className={`sub-tab-btn ${activeSubTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveSubTab('analytics')}
+        >
+          📊 สถิติ
+        </button>
+      </div>
+
+      {/* Partner Accounts Sub Tab */}
+      {activeSubTab === 'accounts' && (
+        <div className="partner-accounts-section">
+          <div className="section-header">
+            <h3>💳 บัญชีธนาคารพาร์ทเนอร์</h3>
+            <span className="count-badge">{partnerAccounts.length} บัญชี</span>
+          </div>
+          
+          {partnerAccounts.length > 0 ? (
+            <div className="partner-accounts-grid">
+              {partnerAccounts.map((account) => (
+                <div key={account.fit_id} className="partner-account-card">
+                  <div className="account-header">
+                    <h4>🏋️ {account.fit_name}</h4>
+                    <span className="partner-badge">พาร์ทเนอร์: {account.fit_user}</span>
+                  </div>
+                  
+                  <div className="account-details">
+                    <div className="detail-row">
+                      <span className="label">ธนาคาร:</span>
+                      <span className="value">{account.partner_bank_name}</span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">หมายเลขบัญชี:</span>
+                      <span className="value">
+                        {account.partner_bank_account}
+                        <button 
+                          className="copy-btn-small"
+                          onClick={() => copyToClipboard(account.partner_bank_account, 'หมายเลขบัญชี')}
+                        >
+                          📋
+                        </button>
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <span className="label">ชื่อบัญชี:</span>
+                      <span className="value">
+                        {account.partner_account_name}
+                        <button 
+                          className="copy-btn-small"
+                          onClick={() => copyToClipboard(account.partner_account_name, 'ชื่อบัญชี')}
+                        >
+                          📋
+                        </button>
+                      </span>
+                    </div>
+                    {account.partner_promptpay_id && (
+                      <div className="detail-row">
+                        <span className="label">PromptPay:</span>
+                        <span className="value">
+                          {account.partner_promptpay_id}
+                          <button 
+                            className="copy-btn-small"
+                            onClick={() => copyToClipboard(account.partner_promptpay_id, 'PromptPay ID')}
+                          >
+                            📋
+                          </button>
+                        </span>
+                      </div>
+                    )}
+                    <div className="detail-row">
+                      <span className="label">การแบ่งรายได้:</span>
+                      <span className="value revenue-split">
+                        พาร์ทเนอร์ {account.revenue_split_percentage}% | 
+                        ระบบ {(100 - account.revenue_split_percentage).toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <h3>🏦 ยังไม่มีบัญชีพาร์ทเนอร์</h3>
+              <p>พาร์ทเนอร์ยังไม่ได้ตั้งค่าบัญชีธนาคาร</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Partner Transfers Sub Tab */}
+      {activeSubTab === 'transfers' && (
+        <div className="partner-transfers-section">
+          <div className="section-header">
+            <h3>💸 ประวัติการโอนเงินพาร์ทเนอร์</h3>
+            <span className="count-badge">{partnerTransfers.length} รายการ</span>
+          </div>
+          
+          {partnerTransfers.length > 0 ? (
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ฟิตเนส</th>
+                    <th>จำนวนรวม</th>
+                    <th>ส่วนพาร์ทเนอร์</th>
+                    <th>ส่วนระบบ</th>
+                    <th>บัญชีปลายทาง</th>
+                    <th>สถานะ</th>
+                    <th>วันที่สร้าง</th>
+                    <th>วันที่โอน</th>
+                    <th>หมายเลขอ้างอิง</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {partnerTransfers.map((transfer) => (
+                    <tr key={transfer.transfer_id}>
+                      <td>
+                        <div className="fitness-info">
+                          <span className="fitness-name">{transfer.tbl_fitness?.fit_name || 'N/A'}</span>
+                          <small className="partner-name">{transfer.tbl_fitness?.fit_user || 'N/A'}</small>
+                        </div>
+                      </td>
+                      <td className="amount">฿{transfer.total_amount?.toLocaleString()}</td>
+                      <td className="partner-amount">฿{transfer.partner_amount?.toLocaleString()}</td>
+                      <td className="system-amount">฿{transfer.system_amount?.toLocaleString()}</td>
+                      <td>
+                        <div className="bank-info">
+                          <span className="bank-name">{transfer.partner_bank_name}</span>
+                          <small className="account-number">{transfer.partner_bank_account}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`status-badge transfer-${transfer.transfer_status}`}>
+                          {formatStatus(transfer.transfer_status)}
+                        </span>
+                      </td>
+                      <td>{formatDate(transfer.created_at)}</td>
+                      <td>{formatDate(transfer.transfer_date)}</td>
+                      <td>{transfer.transfer_reference || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="empty-state">
+              <h3>💸 ยังไม่มีประวัติการโอนเงิน</h3>
+              <p>เมื่อมีการชำระเงิน ระบบจะสร้างรายการโอนให้พาร์ทเนอร์อัตโนมัติ</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Analytics Sub Tab */}
+      {activeSubTab === 'analytics' && (
+        <div className="partner-analytics-section">
+          <div className="section-header">
+            <h3>📊 สถิติและรายงาน</h3>
+          </div>
+          
+          <div className="analytics-stats">
+            <div className="stat-card">
+              <h4>🏦 บัญชีพาร์ทเนอร์</h4>
+              <div className="stat-number">{partnerAccounts.length}</div>
+              <div className="stat-label">บัญชี</div>
+            </div>
+            <div className="stat-card">
+              <h4>💸 การโอนทั้งหมด</h4>
+              <div className="stat-number">{partnerTransfers.length}</div>
+              <div className="stat-label">รายการ</div>
+            </div>
+            <div className="stat-card">
+              <h4>✅ โอนสำเร็จ</h4>
+              <div className="stat-number">
+                {partnerTransfers.filter(t => t.transfer_status === 'completed').length}
+              </div>
+              <div className="stat-label">รายการ</div>
+            </div>
+            <div className="stat-card">
+              <h4>⏳ รอดำเนินการ</h4>
+              <div className="stat-number">
+                {partnerTransfers.filter(t => t.transfer_status === 'pending').length}
+              </div>
+              <div className="stat-label">รายการ</div>
+            </div>
+          </div>
+
+          <div className="analytics-summary">
+            <div className="summary-card">
+              <h4>💰 มูลค่าการโอนรวม</h4>
+              <div className="summary-amount">
+                ฿{partnerTransfers.reduce((sum, t) => sum + (t.total_amount || 0), 0).toLocaleString()}
+              </div>
+            </div>
+            <div className="summary-card">
+              <h4>🤝 ส่วนพาร์ทเนอร์รวม</h4>
+              <div className="summary-amount">
+                ฿{partnerTransfers.reduce((sum, t) => sum + (t.partner_amount || 0), 0).toLocaleString()}
+              </div>
+            </div>
+            <div className="summary-card">
+              <h4>🏢 ส่วนระบบรวม</h4>
+              <div className="summary-amount">
+                ฿{partnerTransfers.reduce((sum, t) => sum + (t.system_amount || 0), 0).toLocaleString()}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const ReportsTab = () => (
   <div className="reports-content">
     <h2>📈 รายงานและสถิติ</h2>
@@ -1015,6 +1314,7 @@ const ReportsTab = () => (
         <p>✅ รายงานรายได้</p>
         <p>✅ รายงานผู้ใช้งาน</p>
         <p>✅ รายงานพาร์ทเนอร์</p>
+        <p>✅ รายงานบัญชีพาร์ทเนอร์</p>
       </div>
     </div>
   </div>

@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import { createPartnerTransfer } from './partnerAccountAPI';
 
 // ฟังก์ชันสำหรับสร้างการชำระเงินสมาชิก
 export const createMembershipPayment = async (paymentData, bookingData) => {
@@ -59,6 +60,40 @@ export const createMembershipPayment = async (paymentData, bookingData) => {
     }
 
     console.log('✅ Membership created successfully:', membershipResult);
+
+    // 4. สร้าง Partner Transfer อัตโนมัติ
+    try {
+      // ดึงข้อมูลฟิตเนสและการแบ่งรายได้
+      const { data: fitnessData, error: fitnessError } = await supabase
+        .from('tbl_fitness')
+        .select('partner_bank_account, partner_bank_name, partner_account_name, revenue_split_percentage')
+        .eq('fit_id', bookingData.fitness_id)
+        .single();
+
+      if (!fitnessError && fitnessData?.partner_bank_account) {
+        console.log('🔄 Creating partner transfer for payment:', paymentResult.payment_id);
+        
+        const transferResult = await createPartnerTransfer({
+          partner_fitness_id: bookingData.fitness_id,
+          payment_id: paymentResult.payment_id,
+          total_amount: paymentData.total_amount,
+          revenue_split_percentage: fitnessData.revenue_split_percentage || 80.00,
+          partner_bank_account: fitnessData.partner_bank_account,
+          partner_bank_name: fitnessData.partner_bank_name,
+          partner_account_name: fitnessData.partner_account_name,
+          notes: `การสมัครสมาชิก ${bookingData.membership_type === 'monthly' ? 'รายเดือน' : 'รายปี'} - Transaction: ${paymentData.transaction_id}`
+        });
+
+        if (transferResult.success) {
+          console.log('✅ Partner transfer created:', transferResult.data);
+        } else {
+          console.error('❌ Partner transfer failed:', transferResult.error);
+        }
+      }
+    } catch (transferError) {
+      console.error('❌ Error creating partner transfer:', transferError);
+      // ไม่ให้ error ของ transfer ทำให้ payment ล้มเหลว
+    }
 
     return {
       success: true,

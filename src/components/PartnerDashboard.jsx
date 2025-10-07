@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
+import PartnerBankManagement from './PartnerBankManagement';
 
 const PartnerDashboard = ({ ownerData }) => {
   const [fitnessData, setFitnessData] = useState(null);
@@ -118,6 +119,11 @@ const PartnerDashboard = ({ ownerData }) => {
           </div>
           <p>จำนวนอุปกรณ์ทั้งหมด</p>
         </div>
+      </div>
+
+      {/* เพิ่ม Partner Bank Management Component */}
+      <div className="bank-management-section">
+        <PartnerBankManagement ownerData={ownerData} />
       </div>
 
       <style jsx>{`

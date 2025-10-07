@@ -61,87 +61,128 @@ const getCurrentUser = async () => {
   return authUser;
 };
 
-// สร้าง Mock QR Code สำหรับ Development (Fast Generation)
-const generateMockQRCode = (paymentData) => {
-  // Simple and fast SVG QR Code pattern
-  const qrSvg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="white"/><rect x="10" y="10" width="20" height="20" fill="black"/><rect x="40" y="10" width="20" height="20" fill="black"/><rect x="70" y="10" width="20" height="20" fill="black"/><rect x="10" y="40" width="20" height="20" fill="black"/><rect x="70" y="40" width="20" height="20" fill="black"/>
-      <rect x="10" y="70" width="20" height="20" fill="black"/>
-      <rect x="40" y="70" width="20" height="20" fill="black"/>
-      <rect x="70" y="70" width="20" height="20" fill="black"/>
-      <text x="100" y="100" font-family="Arial" font-size="12" fill="black">Thai QR</text>
-      <text x="100" y="120" font-family="Arial" font-size="10" fill="gray">${paymentData.amount} THB</text>
-    </svg>
-  `;
-  
-  // Convert SVG to Data URL
-  const base64 = btoa(unescape(encodeURIComponent(qrSvg)));
-  return `data:image/svg+xml;base64,${base64}`;
-};
-
-// PromptPay QR Code Generator (ตาม EMVCo Standard)
-const generatePromptPayQR = (promptpayId, amount) => {
-  // แปลง amount เป็น number และตรวจสอบความถูกต้อง
+// สร้าง PromptPay QR ที่ถูกต้องตามมาตรฐาน Thailand QR Payment
+const generateCorrectPromptPayQR = (promptpayId, amount) => {
   const numericAmount = parseFloat(amount);
   if (isNaN(numericAmount) || numericAmount <= 0) {
     throw new Error(`Invalid amount: ${amount}`);
   }
   
-  const formatAmount = numericAmount.toFixed(2);
+  const amountStr = numericAmount.toFixed(2);
   
-  // ลบ prefix เบอร์โทร (0 แรก) และใส่ country code
-  const cleanedId = promptpayId.startsWith('0') 
-    ? '66' + promptpayId.slice(1) 
+  // แปลงเบอร์โทรให้ถูกต้อง (เอา 0 หน้าออก แล้วใส่ 66)
+  const phoneNumber = promptpayId.startsWith('0') 
+    ? '66' + promptpayId.substring(1)
     : promptpayId;
   
-  console.log('🔧 PromptPay QR Generation Debug:', {
-    originalId: promptpayId,
-    cleanedId: cleanedId,
-    amount: formatAmount
+  // สร้าง QR Code ตามมาตรฐาน PromptPay
+  let qr = '00020101'; // Payload Format Indicator
+  qr += '010212'; // Point of Initiation Method
+  
+  // Merchant Account Information (Tag 29)
+  let tag29 = '0016A000000677010111'; // Application Identifier for PromptPay
+  tag29 += '01' + phoneNumber.length.toString().padStart(2, '0') + phoneNumber;
+  qr += '29' + tag29.length.toString().padStart(2, '0') + tag29;
+  
+  qr += '5303764'; // Transaction Currency (THB)
+  qr += '54' + amountStr.length.toString().padStart(2, '0') + amountStr; // Transaction Amount
+  qr += '5802TH'; // Country Code
+  qr += '6304'; // CRC (placeholder)
+  
+  // คำนวณ CRC16
+  const crc = calculateCRC16(qr);
+  const finalQR = qr + crc;
+  
+  console.log('🔧 Correct PromptPay QR Details:', {
+    originalPhone: promptpayId,
+    formattedPhone: phoneNumber,
+    amount: amountStr,
+    qrLength: finalQR.length,
+    qrString: finalQR
   });
   
-  // PromptPay QR Structure ตาม EMVCo (Thailand)
-  const parts = [
-    '00020101', // Payload Format Indicator
-    '010212', // Point of Initiation Method (Static QR)
-    '29' + ('0' + (16 + cleanedId.length)).toString().padStart(2, '0'), // Merchant Account Template Length
-    '0016A000000677010111', // Application Identifier (PromptPay)
-    '01' + ('0' + cleanedId.length).toString().padStart(2, '0') + cleanedId, // Proxy ID
-    '5303764', // Transaction Currency (764 = THB)
-    '54' + ('0' + formatAmount.length).toString().padStart(2, '0') + formatAmount, // Transaction Amount
-    '5802TH', // Country Code
-    '6304' // CRC placeholder
-  ];
+  // แสดงตัวอย่าง QR String ที่ถูกต้อง
+  console.log('📋 QR String Breakdown:');
+  console.log('  00020101 - Payload Format');
+  console.log('  010212 - Point of Initiation');
+  console.log('  29xx... - Merchant Account Info');
+  console.log('  5303764 - Currency (THB)');
+  console.log('  54xx... - Amount');
+  console.log('  5802TH - Country Code');
+  console.log('  6304xxxx - CRC16');
   
-  const qrStringWithoutCRC = parts.join('');
-  console.log('📱 QR String (without CRC):', qrStringWithoutCRC);
-  
-  // คำนวณ CRC16 สำหรับ production
-  const crc = calculateCRC16(qrStringWithoutCRC);
-  const finalQRString = qrStringWithoutCRC + crc;
-  
-  console.log('✅ Final PromptPay QR String:', finalQRString);
-  console.log('🔐 CRC16:', crc);
-  
-  return finalQRString;
+  return finalQR;
 };
+
+// PromptPay QR Code Generator (ตาม EMVCo Standard)
+const generatePromptPayQR = (promptpayId, amount) => {
+  // ใช้ฟังก์ชันใหม่ที่ถูกต้อง
+  return generateCorrectPromptPayQR(promptpayId, amount);
+};
+
+// ฟังก์ชันทดสอบ PromptPay QR Code
+const testPromptPayQRGeneration = () => {
+  console.log('🧪 Testing PromptPay QR Generation...');
+  
+  try {
+    // ทดสอบด้วยข้อมูลจริง
+    const testPhone = '0951791181';
+    const testAmount = 1.00;
+    
+    const qrString = generateCorrectPromptPayQR(testPhone, testAmount);
+    
+    console.log('✅ Test Results:');
+    console.log('📞 Phone:', testPhone);
+    console.log('💰 Amount:', testAmount, 'THB');
+    console.log('📱 QR String:', qrString);
+    console.log('📏 QR Length:', qrString.length);
+    
+    // ตรวจสอบองค์ประกอบพื้นฐาน
+    const hasPayloadFormat = qrString.startsWith('00020101');
+    const hasThailandCode = qrString.includes('5802TH');
+    const hasPromptPayId = qrString.includes('A000000677010111');
+    
+    console.log('🔍 Validation:');
+    console.log('- Payload Format:', hasPayloadFormat ? '✅' : '❌');
+    console.log('- Thailand Code:', hasThailandCode ? '✅' : '❌');
+    console.log('- PromptPay ID:', hasPromptPayId ? '✅' : '❌');
+    
+    return qrString;
+    
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return null;
+  }
+};
+
+// Export test function
+if (typeof window !== 'undefined') {
+  window.testPromptPayQR = testPromptPayQRGeneration;
+}
 
 // สร้าง QR Code Image จาก PromptPay String (Production Ready)
 const generateQRImageFromString = async (qrString, amount) => {
   try {
     // สร้าง QR Code จริงด้วย qrcode library
     const qrDataURL = await QRCode.toDataURL(qrString, {
-      errorCorrectionLevel: 'M',
+      errorCorrectionLevel: 'H', // High error correction for banking
       type: 'image/png',
-      quality: 0.92,
-      margin: 1,
+      quality: 0.95,
+      margin: 2, // เพิ่ม margin เพื่อความปลอดภัย
       color: {
         dark: '#000000',
         light: '#FFFFFF'
       },
-      width: 300
+      width: 400 // เพิ่มขนาดเพื่อความชัดเจน
     });
     
     console.log('✅ Real QR Code generated successfully');
+    console.log('📊 QR Code Details:', {
+      format: 'PNG',
+      width: '300px',
+      errorCorrection: 'M',
+      dataLength: qrString.length
+    });
     return qrDataURL;
     
   } catch (error) {
@@ -199,19 +240,24 @@ const callThaiQRAPI = async (paymentData) => {
         throw new Error(`Invalid payment amount: ${paymentData.amount || paymentData.total_amount}`);
       }
       
-      // Mock response สำหรับ development (ไม่มี delay)
-      const mockQRCode = generateMockQRCode(paymentData);
+      // สร้าง PromptPay QR Code จริงแม้ใน development mode
+      const realQRString = generatePromptPayQR(config.promptpay_id, amount);
+      console.log('📱 PromptPay QR String (Dev):', realQRString);
+      
+      // สร้าง QR Code Image จริงที่สแกนได้
+      const realQRImage = await generateQRImageFromString(realQRString, amount);
       
       return {
         success: true,
         data: {
-          transactionId: `TQR${Date.now()}`,
-          qrString: generatePromptPayQR(config.promptpay_id, amount),
-          qrImage: mockQRCode,
+          transactionId: `DEV${Date.now()}`,
+          qrString: realQRString,
+          qrImage: realQRImage,
           amount: amount,
           currency: 'THB',
           status: 'pending',
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+          promptpay_id: config.promptpay_id
         }
       };
     }
@@ -264,7 +310,36 @@ const callThaiQRAPI = async (paymentData) => {
       error: error.message
     };
   }
-};const checkThaiQRPaymentStatus = async (transactionId) => {
+};// ฟังก์ชันช่วยสำหรับการทดสอบ QR Code
+const testPromptPayQR = (promptpayId = '0951791181', amount = 1.00) => {
+  console.log('🧪 Testing PromptPay QR Generation...');
+  try {
+    const qrString = generatePromptPayQR(promptpayId, amount);
+    console.log('📱 Test QR String:', qrString);
+    console.log('💰 Test Amount:', amount);
+    console.log('📞 Test PromptPay ID:', promptpayId);
+    
+    // แสดง breakdown ของ QR String
+    console.log('🔍 QR String Breakdown:');
+    console.log('- Payload Format:', qrString.substring(0, 8)); // 00020101
+    console.log('- Point of Initiation:', qrString.substring(8, 14)); // 010212
+    console.log('- Merchant Account Info:', qrString.substring(14, qrString.indexOf('5303764')));
+    console.log('- Currency:', qrString.substring(qrString.indexOf('5303764'), qrString.indexOf('5303764') + 7)); // 5303764
+    console.log('- Amount:', qrString.substring(qrString.indexOf('54'), qrString.indexOf('5802TH')));
+    console.log('- Country:', qrString.substring(qrString.indexOf('5802TH'), qrString.indexOf('5802TH') + 6)); // 5802TH
+    console.log('- CRC:', qrString.slice(-4));
+    
+    return qrString;
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+    return null;
+  }
+};
+
+// Export test function for console testing
+window.testPromptPayQR = testPromptPayQR;
+
+const checkThaiQRPaymentStatus = async (transactionId) => {
   try {
     const config = QR_PAYMENT_CONFIG.thai_qr;
     
@@ -370,7 +445,7 @@ export const generatePaymentQR = async (paymentData) => {
         amount: paymentData.total_amount,
         currency: 'THB',
         status: 'pending',
-        qr_code: qrResponse.data.qrString || '00020101021102160004123456789012345678901234567890',
+        qr_code: qrResponse.data.qrString || '',
         qr_image_url: qrResponse.data.qrImage,
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(), // 15 minutes
         user_id: authUser.id,

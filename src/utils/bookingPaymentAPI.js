@@ -223,9 +223,56 @@ export const updatePaymentStatus = async (paymentId, status, gatewayData = null)
 
     if (error) throw error;
 
-    // ถ้าชำระเงินสำเร็จ ให้สร้างการแบ่งเงิน
+    // ถ้าชำระเงินสำเร็จ ให้สร้างการแบ่งเงินและ Partner Transfer
     if (status === 'completed') {
       await createPaymentSplit(paymentId, data.system_fee, data.fitness_amount);
+      
+      // สร้าง Partner Transfer อัตโนมัติ
+      try {
+        const { createPartnerTransfer } = await import('./partnerAccountAPI');
+        
+        // ดึงข้อมูลฟิตเนสจากการจอง
+        if (data.booking_id) {
+          const { data: bookingData, error: bookingError } = await supabase
+            .from('bookings')
+            .select('fitness_id')
+            .eq('booking_id', data.booking_id)
+            .single();
+
+          if (!bookingError && bookingData?.fitness_id) {
+            // ดึงข้อมูลฟิตเนสและการแบ่งรายได้
+            const { data: fitnessData, error: fitnessError } = await supabase
+              .from('tbl_fitness')
+              .select('partner_bank_account, partner_bank_name, partner_account_name, revenue_split_percentage')
+              .eq('fit_id', bookingData.fitness_id)
+              .single();
+
+            if (!fitnessError && fitnessData?.partner_bank_account) {
+              console.log('🔄 Creating partner transfer for booking payment:', paymentId);
+              
+              const transferResult = await createPartnerTransfer({
+                partner_fitness_id: bookingData.fitness_id,
+                payment_id: paymentId,
+                total_amount: data.total_amount,
+                revenue_split_percentage: fitnessData.revenue_split_percentage || 80.00,
+                partner_bank_account: fitnessData.partner_bank_account,
+                partner_bank_name: fitnessData.partner_bank_name,
+                partner_account_name: fitnessData.partner_account_name,
+                notes: `การจองบริการรายวัน - Transaction: ${data.transaction_id}`
+              });
+
+              if (transferResult.success) {
+                console.log('✅ Partner transfer created for booking:', transferResult.data);
+              } else {
+                console.error('❌ Partner transfer failed for booking:', transferResult.error);
+              }
+            }
+          }
+        }
+      } catch (transferError) {
+        console.error('❌ Error creating partner transfer for booking:', transferError);
+        // ไม่ให้ error ของ transfer ทำให้ payment ล้มเหลว
+      }
       
       // อัพเดทสถานะการจองเป็น confirmed
       if (data.booking_id) {

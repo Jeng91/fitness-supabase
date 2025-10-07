@@ -330,6 +330,11 @@ create table public.tbl_fitness (
   fit_image4 text null,
   fit_price_memberm numeric(10, 2) null default 0,
   fit_price_membery numeric(10, 2) null default 0,
+  partner_bank_account character varying(20) null,
+  partner_bank_name character varying(100) null,
+  partner_account_name character varying(100) null,
+  partner_promptpay_id character varying(20) null,
+  revenue_split_percentage numeric(5, 2) null default 80.00,
   constraint tbl_fitness_pkey primary key (fit_id)
 ) TABLESPACE pg_default;
 
