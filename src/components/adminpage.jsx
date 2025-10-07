@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
 import './AdminPage.css';
+import PaymentAdmin from './PaymentAdmin';
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -463,7 +464,7 @@ const AdminPage = () => {
         {activeTab === 'users' && <UsersTab data={dashboardData} />}
         {activeTab === 'partners' && <PartnersTab data={dashboardData} />}
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
-        {activeTab === 'payments' && <PaymentsTab data={dashboardData} />}
+        {activeTab === 'payments' && <PaymentAdmin />}
         {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
         {activeTab === 'reports' && <ReportsTab />}
       </main>
@@ -907,87 +908,6 @@ const BookingsTab = ({ data }) => (
       ) : (
         <div className="empty-state">
           <p>ไม่มีการจองในขณะนี้</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-// Payments Tab Component  
-const PaymentsTab = ({ data }) => (
-  <div className="payments-content">
-    <h2>💳 จัดการการชำระเงิน</h2>
-    <div className="section">
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h4>💰 รายได้รวม</h4>
-          <div className="stat-number">฿{(data.totalRevenue || 0).toLocaleString()}</div>
-        </div>
-        <div className="stat-card">
-          <h4>🏢 รายได้ระบบ (20%)</h4>
-          <div className="stat-number">฿{(data.systemRevenue || 0).toLocaleString()}</div>
-        </div>
-        <div className="stat-card">
-          <h4>🤝 รายได้พาร์ทเนอร์ (80%)</h4>
-          <div className="stat-number">฿{((data.totalRevenue || 0) - (data.systemRevenue || 0)).toLocaleString()}</div>
-        </div>
-      </div>
-      
-      <h3>💳 รายการชำระเงินทั้งหมด</h3>
-      {data?.payments?.length > 0 ? (
-        <div className="data-table">
-          <table>
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>การจอง</th>
-                <th>ลูกค้า</th>
-                <th>จำนวนเงิน</th>
-                <th>ค่าธรรมเนียม</th>
-                <th>วิธีชำระ</th>
-                <th>สถานะ</th>
-                <th>วันที่ชำระ</th>
-                <th>จัดการ</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.payments.map((payment, index) => (
-                <tr key={payment.payment_id || index}>
-                  <td>{payment.payment_id?.substring(0, 8) || `P${String(index + 1).padStart(3, '0')}`}</td>
-                  <td>{payment.booking_id?.substring(0, 8) || 'ไม่ระบุ'}</td>
-                  <td>{payment.user_id || 'ไม่ระบุ'}</td>
-                  <td>฿{(payment.total_amount || 0).toLocaleString()}</td>
-                  <td>฿{(payment.system_fee || 0).toLocaleString()}</td>
-                  <td>
-                    {payment.payment_method === 'credit_card' && '💳 บัตรเครดิต'}
-                    {payment.payment_method === 'debit_card' && '💳 บัตรเดบิต'}
-                    {payment.payment_method === 'promptpay' && '📱 พร้อมเพย์'}
-                    {payment.payment_method === 'bank_transfer' && '🏦 โอนธนาคาร'}
-                    {payment.payment_method === 'wallet' && '👛 กระเป๋าเงิน'}
-                  </td>
-                  <td>
-                    <span className={`status ${payment.payment_status}`}>
-                      {payment.payment_status === 'pending' && '⏳ รอชำระ'}
-                      {payment.payment_status === 'processing' && '🔄 กำลังประมวลผล'}
-                      {payment.payment_status === 'completed' && '✅ สำเร็จ'}
-                      {payment.payment_status === 'failed' && '❌ ล้มเหลว'}
-                      {payment.payment_status === 'refunded' && '↩️ คืนเงิน'}
-                      {payment.payment_status === 'cancelled' && '🚫 ยกเลิก'}
-                    </span>
-                  </td>
-                  <td>{payment.paid_at ? new Date(payment.paid_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
-                  <td>
-                    <button className="btn-view">ดู</button>
-                    <button className="btn-edit">แก้ไข</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="empty-state">
-          <p>ไม่มีการชำระเงินในขณะนี้</p>
         </div>
       )}
     </div>

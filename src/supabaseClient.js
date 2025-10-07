@@ -5,8 +5,9 @@ const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || "eyJhbGciOiJI
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // ปิดการเก็บ session เพื่อหลีกเลี่ยง refresh token errors
-    autoRefreshToken: false, // ปิดการ refresh token อัตโนมัติ
+    persistSession: true,  // เปิดการเก็บ session เพื่อให้ authentication ทำงานปกติ
+    autoRefreshToken: true, // เปิดการ refresh token อัตโนมัติ
+    detectSessionInUrl: true
   }
 });
 

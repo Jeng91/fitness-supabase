@@ -1,13 +1,26 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
 import { generatePaymentQR, checkQRPaymentStatus, cancelQRPayment, generateTransactionId } from '../utils/qrPaymentAPI';
 import './QRPayment.css';
 
-const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
+const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
   const [qrData, setQrData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('pending');
   const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
   const [error, setError] = useState('');
+
+  // ใช้ useRef เพื่อเก็บ callbacks ที่เสถียร
+  const onSuccessRef = useRef(onSuccess);
+  const onCancelRef = useRef(onCancel);
+  const onErrorRef = useRef(onError);
+  const generateQRRef = useRef();
+
+  // อัปเดต refs เมื่อ props เปลี่ยน
+  useEffect(() => {
+    onSuccessRef.current = onSuccess;
+    onCancelRef.current = onCancel;
+    onErrorRef.current = onError;
+  }, [onSuccess, onCancel, onError]);
 
   const generateQR = useCallback(async () => {
     try {
@@ -24,6 +37,8 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
       const result = await generatePaymentQR(qrPaymentData);
 
       if (result.success) {
+        console.log('🎯 QR Data received:', result.data);
+        console.log('🖼️ QR Image URL:', result.data.qr_code_url);
         setQrData(result.data);
         setStatus('pending');
       } else {
@@ -32,11 +47,14 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
     } catch (err) {
       console.error('QR Generation error:', err);
       setError(err.message);
-      onError?.(err.message);
+      onErrorRef.current?.(err.message);
     } finally {
       setLoading(false);
     }
-  }, [paymentData, onError]);
+  }, [paymentData]); // ใช้เฉพาะ paymentData
+
+  // เชื่อมต่อ generateQR กับ ref
+  generateQRRef.current = generateQR;
 
   const checkPaymentStatus = useCallback(async () => {
     try {
@@ -47,17 +65,18 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
         setStatus(newStatus);
 
         if (newStatus === 'success') {
-          onSuccess?.(result.data);
+          onSuccessRef.current?.(result.data);
         } else if (newStatus === 'failed') {
           setError('การชำระเงินล้มเหลว กรุณาลองใหม่อีกครั้ง');
-          onError?.('Payment failed');
+          onErrorRef.current?.('Payment failed');
         }
       }
     } catch (err) {
       console.error('Status check error:', err);
     }
-  }, [qrData?.transaction_id, onSuccess, onError]);
+  }, [qrData?.transaction_id]); // ใช้เฉพาะ transaction_id
 
+  // เรียก generateQR เมื่อ component mount หรือ paymentData เปลี่ยน
   useEffect(() => {
     generateQR();
   }, [generateQR]);
@@ -113,17 +132,17 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
     }
   }, [qrData?.transaction_id, onSuccess, onError]);
 
-  const handleCancel = async () => {
+  const handleCancel = useCallback(async () => {
     try {
       if (qrData?.transaction_id) {
         await cancelQRPayment(qrData.transaction_id);
       }
       setStatus('cancelled');
-      onCancel?.();
+      onCancelRef.current?.();
     } catch (err) {
       console.error('Cancel error:', err);
     }
-  };
+  }, [qrData?.transaction_id]);
 
   const handleExpired = () => {
     setStatus('expired');
@@ -136,12 +155,12 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     setTimeLeft(900);
     setStatus('pending');
     setError('');
-    generateQR();
-  };
+    generateQRRef.current();
+  }, []);
 
   if (loading) {
     return (
@@ -270,6 +289,8 @@ const QRPayment = ({ paymentData, onSuccess, onCancel, onError }) => {
       )}
     </div>
   );
-};
+});
+
+QRPayment.displayName = 'QRPayment';
 
 export default QRPayment;
