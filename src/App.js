@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿﻿import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import supabase from './supabaseClient';
 import ProfilePage from './components/ProfilePage';

@@ -289,7 +289,7 @@ body.dark-mode .form-group input::placeholder {
 .login-content {
   max-width: 400px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #2c2c2c 0%, #000000 100%);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -376,7 +376,7 @@ body.dark-mode .form-group input::placeholder {
 .register-content {
   max-width: 450px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
+  background: linear-gradient(135deg, #2c2c2c 0%, #000000 100%);
   padding: 2rem;
   border-radius: 15px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -448,6 +448,129 @@ body.dark-mode .form-group input::placeholder {
 
 .login-link .link:hover {
   text-decoration: underline;
+}
+
+/* Forgot Password Link */
+.forgot-password-link {
+  text-align: center;
+  margin-top: 1rem;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.forgot-password-link .link {
+  color: #667eea;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.forgot-password-link .link:hover {
+  text-decoration: underline;
+  color: #5a67d8;
+  background: rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Submit Button (Reset Password) */
+.submit-btn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+  text-transform: none;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #e74c3c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+}
+
+.submit-btn:disabled {
+  background: #95a5a6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  position: relative;
+}
+
+.submit-btn:disabled:hover {
+  background: #95a5a6;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Loading state for submit button */
+.submit-btn:disabled::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
+  border: 2px solid transparent;
+  border-top: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  opacity: 0;
+}
+
+.submit-btn:disabled[data-loading="true"]::after {
+  opacity: 1;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+/* Cancel Button */
+.cancel-btn {
+  background: transparent;
+  color: #6c757d;
+  border: 2px solid #dee2e6;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.cancel-btn:hover {
+  background: #f8f9fa;
+  border-color: #adb5bd;
+  color: #495057;
+  transform: translateY(-1px);
+}
+
+.cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 /* Message Styles */
@@ -556,7 +679,7 @@ body.dark-mode .form-group input::placeholder {
 .fitness-section {
   background: white;
   padding: 2rem;
-  border-radius: 20px;
+  border-radius: 0px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
@@ -1044,7 +1167,8 @@ body.dark-mode .form-group input::placeholder {
 }
 
 /* Detail Button */
-.detail-btn {
+.detail-btn,
+.view-details-btn {
   width: 100%;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -1058,7 +1182,8 @@ body.dark-mode .form-group input::placeholder {
   font-size: 0.9rem;
 }
 
-.detail-btn:hover {
+.detail-btn:hover,
+.view-details-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }

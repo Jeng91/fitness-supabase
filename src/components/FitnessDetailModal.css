@@ -548,6 +548,121 @@
   }
 }
 
+/* Membership Buttons */
+.membership-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: 5px solid #dee2e6;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.membership-btn:hover {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #f8f9ff 0%, #e9ecff 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+}
+
+.membership-btn.selected {
+  border-color: #667eea;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.membership-btn.daily {
+  border-color: #667eea;
+}
+
+.membership-btn.daily:hover,
+.membership-btn.daily.selected {
+  border-color: #28a745;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.membership-btn.monthly {
+  border-color: #667eea;
+}
+
+.membership-btn.monthly:hover,
+.membership-btn.monthly.selected {
+  border-color: #ffc107;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.membership-btn.yearly {
+  border-color: #667eea;
+}
+
+.membership-btn.yearly:hover,
+.membership-btn.yearly.selected {
+  border-color: #dc3545;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.membership-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.membership-btn.selected .membership-price {
+  color: white;
+}
+
+.membership-unit {
+  font-size: 1rem;
+  color: #ffffff;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.membership-btn.selected .membership-unit {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.membership-action {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #667eea;
+  padding: 8px 16px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 6px;
+  display: inline-block;
+}
+
+.membership-btn.selected .membership-action {
+  color: white;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.membership-btn.daily .membership-action {
+  color: #28a745;
+  background: rgba(40, 167, 69, 0.1);
+}
+
+.membership-btn.monthly .membership-action {
+  color: #ffc107;
+  background: rgba(255, 193, 7, 0.1);
+}
+
+.membership-btn.yearly .membership-action {
+  color: #dc3545;
+  background: rgba(220, 53, 69, 0.1);
+}
+
 @media (max-width: 768px) {
   .fitness-detail-fullpage {
     padding: 15px;
@@ -588,6 +703,25 @@
   
   .price-number {
     font-size: 2rem;
+  }
+  
+  /* Membership buttons responsive */
+  .membership-btn {
+    padding: 12px 16px;
+    margin-bottom: 8px;
+  }
+  
+  .membership-price {
+    font-size: 1.5rem;
+  }
+  
+  .membership-unit {
+    font-size: 0.9rem;
+  }
+  
+  .membership-action {
+    font-size: 0.9rem;
+    padding: 6px 12px;
   }
 }
 

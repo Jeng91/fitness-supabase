@@ -244,19 +244,19 @@ const LoginPage = () => {
                   </div>
                   <div className="modal-actions">
                     <button 
+                      type="submit" 
+                      className="submit-btn"
+                      disabled={isResetting || !resetEmail}
+                    >
+                      {isResetting ? 'กำลังส่งอีเมล...' : 'ส่งลิงก์รีเซ็ต'}
+                    </button>
+                    <button 
                       type="button" 
                       className="cancel-btn"
                       onClick={closeForgotPasswordModal}
                       disabled={isResetting}
                     >
                       ยกเลิก
-                    </button>
-                    <button 
-                      type="submit" 
-                      className="submit-btn"
-                      disabled={isResetting || !resetEmail}
-                    >
-                      {isResetting ? 'กำลังส่งอีเมล...' : 'ส่งลิงก์รีเซ็ต'}
                     </button>
                   </div>
                 </form>

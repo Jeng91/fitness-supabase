@@ -179,7 +179,7 @@ const validatePromptPayQR = (qrString) => {
   }
 };
 
-// ฟังก์ชันทดสอบ PromptPay QR Code 
+// ฟังก์ชันทดสอบ PromptPay QR Code
 const testPromptPayQRGeneration = () => {
   console.log('🧪 Testing PromptPay QR Generation...');
   

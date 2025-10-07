@@ -370,10 +370,7 @@ const FitnessDetailModal = ({
             {/* Schedule & Booking */}
             <div className="schedule-booking">
               <div className="schedule-info">
-                <div className="schedule-item">
-                  <span className="schedule-label">เปิดวัน:</span>
-                  <span className="schedule-value">จันทร์-เสาร์</span>
-                </div>
+                
                 <div className="schedule-item">
                   <span className="schedule-label">เวลา:</span>
                   <span className="schedule-value">
@@ -393,7 +390,7 @@ const FitnessDetailModal = ({
                 >
                   <span className="membership-price">{fitnessData.fit_price || fitnessData.price || 69}</span>
                   <span className="membership-unit">บาท/วัน</span>
-                  <span className="membership-action">📋 จองบริการรายวัน</span>
+                  <span className="membership-action"> จองบริการรายวัน</span>
                 </button>
               ) : (
                 <button 
@@ -402,7 +399,7 @@ const FitnessDetailModal = ({
                 >
                   <span className="membership-price">{fitnessData.fit_price || fitnessData.price || 69}</span>
                   <span className="membership-unit">บาท/วัน</span>
-                  <span className="membership-action">📋 จองบริการรายวัน</span>
+                  <span className="membership-action"> จองบริการรายวัน</span>
                 </button>
               )}
 
@@ -452,14 +449,14 @@ const FitnessDetailModal = ({
                     >
                       <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
                       <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
-                      <span className="membership-action">📋 จองรายเดือน</span>
+                      <span className="membership-action"> จองรายเดือน</span>
                     </button>
                   ) : (
                     <div className="membership-booking-form">
                       <button className="membership-btn monthly selected">
                         <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
                         <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
-                        <span className="membership-action">📋 จองรายเดือน</span>
+                        <span className="membership-action"> จองรายเดือน</span>
                       </button>
                       <div className="membership-date-selection">
                         <label htmlFor="membership-start-date-monthly">เลือกวันที่เริ่มสมาชิก:</label>
@@ -504,14 +501,14 @@ const FitnessDetailModal = ({
                     >
                       <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
                       <span className="membership-unit">บาท/ปี (สมาชิก)</span>
-                      <span className="membership-action">📋 จองรายปี</span>
+                      <span className="membership-action"> จองรายปี</span>
                     </button>
                   ) : (
                     <div className="membership-booking-form">
                       <button className="membership-btn yearly selected">
                         <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
                         <span className="membership-unit">บาท/ปี (สมาชิก)</span>
-                        <span className="membership-action">📋 จองรายปี</span>
+                        <span className="membership-action"> จองรายปี</span>
                       </button>
                       <div className="membership-date-selection">
                         <label htmlFor="membership-start-date-yearly">เลือกวันที่เริ่มสมาชิก:</label>
