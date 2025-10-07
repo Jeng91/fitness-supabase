@@ -33,22 +33,55 @@ const PaymentAdmin = () => {
 
   const updatePaymentStatus = async (paymentId, newStatus) => {
     try {
+      const updateData = { 
+        status: newStatus,
+        paid_at: newStatus === 'success' ? new Date().toISOString() : null,
+        verified_by: 'admin', // เพิ่มข้อมูลว่าใครยืนยัน
+        verified_at: newStatus === 'success' ? new Date().toISOString() : null
+      };
+
+      console.log('🔄 Updating payment status:', { paymentId, newStatus, updateData });
+
       const { error } = await supabase
         .from('qr_payments')
-        .update({ 
-          status: newStatus,
-          paid_at: newStatus === 'success' ? new Date().toISOString() : null
-        })
+        .update(updateData)
         .eq('qr_payment_id', paymentId);
 
       if (error) throw error;
       
       // Refresh payments
       fetchPayments();
-      alert(`Payment status updated to: ${newStatus}`);
+      
+      const statusText = newStatus === 'success' ? 'ยืนยันการชำระเงิน' : 
+                        newStatus === 'failed' ? 'ปฏิเสธการชำระเงิน' : newStatus;
+      
+      alert(`✅ ${statusText}เรียบร้อยแล้ว`);
+      
     } catch (error) {
       console.error('Error updating payment:', error);
-      alert('Error updating payment status');
+      alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+    }
+  };
+
+  // ฟังก์ชันดู QR Code
+  const viewQRCode = (payment) => {
+    if (payment.qr_image_url) {
+      // สร้าง modal หรือ popup แสดง QR Code
+      const qrWindow = window.open('', '_blank', 'width=400,height=500');
+      qrWindow.document.write(`
+        <html>
+          <head><title>QR Code - ${payment.transaction_id}</title></head>
+          <body style="text-align:center; padding:20px;">
+            <h3>QR Code การชำระเงิน</h3>
+            <p><strong>Transaction ID:</strong> ${payment.transaction_id}</p>
+            <p><strong>จำนวนเงิน:</strong> ${formatCurrency(payment.amount)}</p>
+            <img src="${payment.qr_image_url}" alt="QR Code" style="max-width:300px;">
+            <p><strong>สถานะ:</strong> ${payment.status}</p>
+          </body>
+        </html>
+      `);
+    } else {
+      alert('ไม่พบ QR Code สำหรับรายการนี้');
     }
   };
 
@@ -92,25 +125,36 @@ const PaymentAdmin = () => {
               {payment.paid_at && (
                 <p><strong>วันที่ชำระ:</strong> {formatDate(payment.paid_at)}</p>
               )}
-              <p><strong>QR Code:</strong> {payment.qr_code?.substring(0, 50)}...</p>
+              {payment.verified_by && (
+                <p><strong>ยืนยันโดย:</strong> {payment.verified_by}</p>
+              )}
             </div>
             
-            {payment.status === 'pending' && (
-              <div className="payment-actions">
-                <button 
-                  onClick={() => updatePaymentStatus(payment.qr_payment_id, 'success')}
-                  className="btn-success"
-                >
-                  ✅ ยืนยันการชำระ
-                </button>
-                <button 
-                  onClick={() => updatePaymentStatus(payment.qr_payment_id, 'failed')}
-                  className="btn-failed"
-                >
-                  ❌ ยกเลิก
-                </button>
-              </div>
-            )}
+            <div className="payment-actions">
+              <button 
+                onClick={() => viewQRCode(payment)}
+                className="btn-view"
+              >
+                👁️ ดู QR Code
+              </button>
+              
+              {payment.status === 'pending' && (
+                <>
+                  <button 
+                    onClick={() => updatePaymentStatus(payment.qr_payment_id, 'success')}
+                    className="btn-success"
+                  >
+                    ✅ ยืนยันการชำระ
+                  </button>
+                  <button 
+                    onClick={() => updatePaymentStatus(payment.qr_payment_id, 'failed')}
+                    className="btn-failed"
+                  >
+                    ❌ ปฏิเสธ
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         ))}
       </div>
@@ -174,6 +218,21 @@ const PaymentAdmin = () => {
           display: flex;
           gap: 10px;
           margin-top: 12px;
+          flex-wrap: wrap;
+        }
+        
+        .btn-view {
+          background: #17a2b8;
+          color: white;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .btn-view:hover {
+          background: #138496;
         }
         
         .btn-success {
@@ -183,6 +242,11 @@ const PaymentAdmin = () => {
           padding: 8px 16px;
           border-radius: 4px;
           cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .btn-success:hover {
+          background: #218838;
         }
         
         .btn-failed {
@@ -192,6 +256,11 @@ const PaymentAdmin = () => {
           padding: 8px 16px;
           border-radius: 4px;
           cursor: pointer;
+          font-size: 14px;
+        }
+        
+        .btn-failed:hover {
+          background: #c82333;
         }
         
         .loading {

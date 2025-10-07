@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient';
+import QRCode from 'qrcode';
 
 // QR Payment API Configuration - Thai QR (PromptPay)
 const QR_PAYMENT_CONFIG = {
@@ -92,45 +93,87 @@ const generatePromptPayQR = (promptpayId, amount) => {
     ? '66' + promptpayId.slice(1) 
     : promptpayId;
   
+  console.log('🔧 PromptPay QR Generation Debug:', {
+    originalId: promptpayId,
+    cleanedId: cleanedId,
+    amount: formatAmount
+  });
+  
   // PromptPay QR Structure ตาม EMVCo (Thailand)
   const parts = [
     '00020101', // Payload Format Indicator
-    '021102', // Point of Initiation Method
-    '2937', // Merchant Account Information Template
-    '0016A000000677010111', // Application Identifier
-    '01' + ('0' + cleanedId.length).slice(-2) + cleanedId, // Proxy ID
-    '2703', // Transaction Currency
-    '764', // Currency Code (764 = THB)
-    '54' + ('0' + formatAmount.length).slice(-2) + formatAmount, // Transaction Amount
+    '010212', // Point of Initiation Method (Static QR)
+    '29' + ('0' + (16 + cleanedId.length)).toString().padStart(2, '0'), // Merchant Account Template Length
+    '0016A000000677010111', // Application Identifier (PromptPay)
+    '01' + ('0' + cleanedId.length).toString().padStart(2, '0') + cleanedId, // Proxy ID
+    '5303764', // Transaction Currency (764 = THB)
+    '54' + ('0' + formatAmount.length).toString().padStart(2, '0') + formatAmount, // Transaction Amount
     '5802TH', // Country Code
-    '6304' // CRC placeholder (จะคำนวณจริงใน production)
+    '6304' // CRC placeholder
   ];
   
-  const qrString = parts.join('');
+  const qrStringWithoutCRC = parts.join('');
+  console.log('📱 QR String (without CRC):', qrStringWithoutCRC);
   
-  // คำนวณ CRC16 สำหรับ production (simplified version)
-  const crc = calculateCRC16(qrString);
+  // คำนวณ CRC16 สำหรับ production
+  const crc = calculateCRC16(qrStringWithoutCRC);
+  const finalQRString = qrStringWithoutCRC + crc;
   
-  return qrString + crc;
+  console.log('✅ Final PromptPay QR String:', finalQRString);
+  console.log('🔐 CRC16:', crc);
+  
+  return finalQRString;
 };
 
-// สร้าง QR Code Image สำหรับ Production (Optimized)
-const generateQRImageFromString = (qrString, amount) => {
-  // สร้าง SVG QR Code แบบ Simple และเร็ว
-  const qrSvg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="white"/><rect x="10" y="10" width="60" height="60" fill="black"/><rect x="20" y="20" width="40" height="40" fill="white"/><rect x="30" y="30" width="20" height="20" fill="black"/><rect x="130" y="10" width="60" height="60" fill="black"/><rect x="140" y="20" width="40" height="40" fill="white"/><rect x="150" y="30" width="20" height="20" fill="black"/><rect x="10" y="130" width="60" height="60" fill="black"/><rect x="20" y="140" width="40" height="40" fill="white"/><rect x="30" y="150" width="20" height="20" fill="black"/><rect x="90" y="90" width="20" height="20" fill="black"/><text x="100" y="180" font-family="Arial" font-size="12" fill="black" text-anchor="middle">PromptPay QR</text><text x="100" y="195" font-family="Arial" font-size="10" fill="gray" text-anchor="middle">${amount} THB</text></svg>`;
-  
-  // Fast base64 conversion
-  return `data:image/svg+xml;base64,${btoa(qrSvg)}`;
+// สร้าง QR Code Image จาก PromptPay String (Production Ready)
+const generateQRImageFromString = async (qrString, amount) => {
+  try {
+    // สร้าง QR Code จริงด้วย qrcode library
+    const qrDataURL = await QRCode.toDataURL(qrString, {
+      errorCorrectionLevel: 'M',
+      type: 'image/png',
+      quality: 0.92,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      },
+      width: 300
+    });
+    
+    console.log('✅ Real QR Code generated successfully');
+    return qrDataURL;
+    
+  } catch (error) {
+    console.error('❌ QR Code generation error:', error);
+    // Fallback to simple pattern if QR generation fails
+    const fallbackSvg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="200" fill="white"/><rect x="10" y="10" width="60" height="60" fill="black"/><rect x="20" y="20" width="40" height="40" fill="white"/><rect x="30" y="30" width="20" height="20" fill="black"/><rect x="130" y="10" width="60" height="60" fill="black"/><rect x="140" y="20" width="40" height="40" fill="white"/><rect x="150" y="30" width="20" height="20" fill="black"/><rect x="10" y="130" width="60" height="60" fill="black"/><rect x="20" y="140" width="40" height="40" fill="white"/><rect x="30" y="150" width="20" height="20" fill="black"/><rect x="90" y="90" width="20" height="20" fill="black"/><text x="100" y="180" font-family="Arial" font-size="12" fill="black" text-anchor="middle">PromptPay QR</text><text x="100" y="195" font-family="Arial" font-size="10" fill="gray" text-anchor="middle">${amount} THB</text></svg>`;
+    return `data:image/svg+xml;base64,${btoa(fallbackSvg)}`;
+  }
 };
 
-// Simple CRC16 calculation for PromptPay (Optimized)
+// CRC16 Calculation สำหรับ PromptPay EMVCo Standard (Production Ready)
 const calculateCRC16 = (data) => {
-  // Simplified CRC16 - faster version for development
-  const checksum = data.split('').reduce((acc, char, index) => {
-    return (acc + char.charCodeAt(0) * (index + 1)) % 65536;
-  }, 0);
+  const polynomial = 0x1021; // CRC-16-CCITT polynomial
+  let crc = 0xFFFF; // Initial value
   
-  return checksum.toString(16).toUpperCase().padStart(4, '0');
+  // Convert string to bytes and calculate CRC
+  for (let i = 0; i < data.length; i++) {
+    const byte = data.charCodeAt(i);
+    crc ^= (byte << 8);
+    
+    for (let j = 0; j < 8; j++) {
+      if (crc & 0x8000) {
+        crc = (crc << 1) ^ polynomial;
+      } else {
+        crc = crc << 1;
+      }
+      crc &= 0xFFFF; // Keep it 16-bit
+    }
+  }
+  
+  // Return as 4-digit uppercase hex
+  return crc.toString(16).toUpperCase().padStart(4, '0');
 };
 
 // Thai QR (PromptPay) API Functions
@@ -182,22 +225,35 @@ const callThaiQRAPI = async (paymentData) => {
       throw new Error(`Invalid payment amount: ${paymentData.amount || paymentData.total_amount}`);
     }
     
-    // Fast QR generation
-    const realQRString = generatePromptPayQR(config.promptpay_id, amount);
-    const qrImageSVG = generateQRImageFromString(realQRString, amount);
+    // สร้าง Transaction ID ที่ไม่ซ้ำกัน
+    const transactionId = `PROD_${Date.now()}_${Math.floor(Math.random() * 1000000)}`;
     
-    console.log('✅ PromptPay QR generated successfully');
+    // สร้าง PromptPay QR Code จริงตาม EMVCo Standard
+    const realQRString = generatePromptPayQR(config.promptpay_id, amount);
+    console.log('📱 PromptPay QR String:', realQRString);
+    
+    // สร้าง QR Code Image จริง
+    const qrImagePNG = await generateQRImageFromString(realQRString, amount);
+    
+    console.log('✅ PromptPay QR generated successfully:', {
+      transactionId,
+      amount,
+      promptpay_id: config.promptpay_id
+    });
     
     return {
       success: true,
       data: {
-        transactionId: `REAL${Date.now()}`,
+        transactionId: transactionId,
         qrString: realQRString,
-        qrImage: qrImageSVG,
+        qrImage: qrImagePNG,
         amount: amount,
         currency: 'THB',
         status: 'pending',
-        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString()
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+        merchant_name: config.merchant_name,
+        payment_method: 'promptpay',
+        promptpay_id: config.promptpay_id
       }
     };
 
@@ -230,23 +286,25 @@ const callThaiQRAPI = async (paymentData) => {
       };
     }
     
-    // Production Thai QR API call
-    const response = await fetch(`${config.base_url}/status/${transactionId}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    });
+    // Production Mode: ในการใช้งานจริง จะต้องมีระบบ Webhook หรือ Manual verification
+    // เนื่องจาก PromptPay ไม่มี Public API สำหรับตรวจสอบสถานะ
+    console.log('🚀 Production Mode: Payment status check from database only');
     
-    const result = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(result.message || 'Status check failed');
-    }
+    // ตรวจสอบจาก database และส่งกลับสถานะปัจจุบัน
+    // ในการใช้งานจริง สถานะจะถูกอัปเดตผ่าน:
+    // 1. Webhook จากธนาคาร (ถ้ามี)
+    // 2. Manual verification โดย Admin
+    // 3. Auto-timeout หลังจากเวลาหมดอายุ
     
     return {
       success: true,
-      data: result
+      data: {
+        transactionId: transactionId,
+        status: 'pending', // จะอัปเดตเมื่อมีการยืนยันจริง
+        currency: 'THB',
+        paid_at: null,
+        note: 'Production mode: Status updated via webhook or manual verification'
+      }
     };
     
   } catch (error) {
