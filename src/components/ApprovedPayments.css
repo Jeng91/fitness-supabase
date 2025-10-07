@@ -1,0 +1,382 @@
+.approved-payments-container {
+  padding: 24px;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.approved-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.approved-header h2 {
+  margin: 0;
+  color: #2e7d4f;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.approved-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+  padding: 16px 24px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 120px;
+  border: 1px solid #2196f3;
+}
+
+.stat-card.total-amount {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+  border: 1px solid #4caf50;
+}
+
+.stat-number {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1976d2;
+  margin-bottom: 4px;
+}
+
+.total-amount .stat-number {
+  color: #2e7d4f;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #555;
+  font-weight: 500;
+}
+
+/* Filters Section */
+.filters-section {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  flex-wrap: wrap;
+}
+
+.search-filter {
+  flex: 1;
+  min-width: 300px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.date-filter {
+  min-width: 200px;
+}
+
+.date-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 16px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.date-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Table Styles */
+.payments-table-container {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.payments-table thead {
+  background: linear-gradient(135deg, #2e7d4f, #4caf50);
+  color: white;
+}
+
+.payments-table th {
+  padding: 16px 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.payments-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.payments-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.payments-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.payments-table td {
+  padding: 16px 12px;
+  vertical-align: top;
+}
+
+/* Cell Specific Styles */
+.transaction-id {
+  width: 140px;
+}
+
+.transaction-badge {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.customer-info {
+  width: 150px;
+}
+
+.customer-name {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 4px;
+}
+
+.contact-info {
+  width: 200px;
+}
+
+.contact-details {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.email, .phone {
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+.description {
+  width: 180px;
+}
+
+.description-text {
+  display: block;
+  color: #2c3e50;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.payment-type {
+  font-size: 12px;
+  color: #6c757d;
+  background: #f1f3f4;
+  padding: 4px 8px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.amount {
+  width: 120px;
+  text-align: right;
+}
+
+.amount-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: #2e7d4f;
+}
+
+.approved-date {
+  width: 140px;
+  font-size: 13px;
+  color: #6c757d;
+}
+
+.approved-by {
+  width: 150px;
+}
+
+.approver-info {
+  font-size: 13px;
+}
+
+.approver-name {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 2px;
+}
+
+.approver-email {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.slip-actions {
+  width: 100px;
+  text-align: center;
+}
+
+.view-slip-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  text-decoration: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.view-slip-btn:hover {
+  background: linear-gradient(135deg, #20c997, #17a2b8);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+.no-slip {
+  color: #6c757d;
+  font-style: italic;
+  font-size: 12px;
+}
+
+/* Empty State */
+.no-approved-payments {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.no-approved-payments h3 {
+  color: #495057;
+  margin-bottom: 12px;
+  font-size: 24px;
+}
+
+.no-approved-payments p {
+  color: #6c757d;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  color: #6c757d;
+  font-size: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .payments-table {
+    font-size: 13px;
+  }
+  
+  .payments-table th,
+  .payments-table td {
+    padding: 12px 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .approved-payments-container {
+    padding: 16px;
+  }
+  
+  .approved-header {
+    flex-direction: column;
+    gap: 20px;
+    text-align: center;
+  }
+  
+  .approved-stats {
+    justify-content: center;
+  }
+  
+  .filters-section {
+    flex-direction: column;
+  }
+  
+  .payments-table-container {
+    overflow-x: auto;
+  }
+  
+  .payments-table {
+    min-width: 800px;
+  }
+}

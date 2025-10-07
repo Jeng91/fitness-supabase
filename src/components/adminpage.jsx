@@ -3,6 +3,7 @@ import supabase from '../supabaseClient';
 import './AdminPage.css';
 import PaymentAdmin from './PaymentAdmin';
 import PaymentApproval from './PaymentApproval';
+import ApprovedPayments from './ApprovedPayments';
 import { SYSTEM_BANK_ACCOUNTS } from '../utils/paymentConfig';
 
 const AdminPage = () => {
@@ -458,6 +459,12 @@ const AdminPage = () => {
             🔍 อนุมัติการชำระเงิน
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
+            onClick={() => setActiveTab('approved')}
+          >
+            ✅ รายการที่อนุมัติแล้ว
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'bank' ? 'active' : ''}`}
             onClick={() => setActiveTab('bank')}
           >
@@ -486,6 +493,7 @@ const AdminPage = () => {
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
         {activeTab === 'payments' && <PaymentAdmin />}
         {activeTab === 'approval' && <PaymentApproval />}
+        {activeTab === 'approved' && <ApprovedPayments />}
         {activeTab === 'bank' && <BankAccountTab />}
         {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
         {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}

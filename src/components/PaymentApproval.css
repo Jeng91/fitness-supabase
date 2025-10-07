@@ -52,6 +52,83 @@
   transform: translateY(-1px);
 }
 
+/* Status Badges */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-badge.pending {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: white;
+}
+
+.status-badge.pending_approval {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+}
+
+.status-badge.approved {
+  background: linear-gradient(135deg, #4caf50, #45a049);
+  color: white;
+}
+
+.status-badge.rejected {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+}
+
+/* Slip Preview Section */
+.slip-preview-section {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.slip-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.view-slip-btn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.view-slip-btn:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  color: white;
+  text-decoration: none;
+}
+
+.slip-filename {
+  color: #6c757d;
+  font-size: 0.85rem;
+  background: white;
+  padding: 6px 12px;
+  border-radius: 15px;
+  border: 1px solid #dee2e6;
+}
+
 /* Loading State */
 .loading-spinner {
   text-align: center;

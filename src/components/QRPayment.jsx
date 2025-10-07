@@ -11,6 +11,7 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
   const [slipPreview, setSlipPreview] = useState('');
   const [uploading, setUploading] = useState(false);
   const [transactionId, setTransactionId] = useState(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   // Static QR Code path - replace with your new QR image
   // QR Code Path
@@ -80,7 +81,7 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
         const fileName = `${transactionId}-${Date.now()}.${fileExt}`;
         const filePath = `slips/${fileName}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage
+        const { error: uploadError } = await supabase.storage
           .from('payment-slips')
           .upload(filePath, slipFile);
 
@@ -168,6 +169,7 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
 
       // อัปเดตสถานะเป็นรออนุมัติ
       setStatus('pending_approval');
+      setShowSuccessModal(true);
       
       onSuccessRef.current?.({
         transaction_id: transactionId,
@@ -188,6 +190,11 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleConfirmUpload = () => {
+    setShowSuccessModal(false);
+    // ยังคงอยู่ในหน้าเดิมเพื่อรอการอนุมัติ
   };
 
   // เริ่มต้นด้วย static QR
@@ -349,6 +356,20 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
               )}
             </div>
           </>
+        ) : status === 'pending_approval' ? (
+          <div className="pending-approval-display">
+            <div className="approval-icon">🔍</div>
+            <h3>รอการอนุมัติ</h3>
+            <p>สลิปการชำระเงินของคุณถูกส่งเรียบร้อยแล้ว</p>
+            <p className="approval-message">
+              📄 รหัสอ้างอิง: <strong>{transactionId}</strong><br/>
+              💰 จำนวนเงิน: <strong>{paymentData?.amount} บาท</strong><br/>
+              ⏰ กรุณารอให้แอดมินตรวจสอบและอนุมัติการชำระเงิน
+            </p>
+            <div className="pending-status">
+              <span className="status-badge pending">🔍 รออนุมัติ</span>
+            </div>
+          </div>
         ) : status === 'success' ? (
           <div className="qr-success">
             <div className="success-icon">✅</div>
@@ -444,6 +465,34 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
           <button className="cancel-btn" onClick={handleCancel}>
             ❌ ยกเลิก
           </button>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="modal-overlay">
+          <div className="success-modal">
+            <div className="modal-content">
+              <div className="success-icon">✅</div>
+              <h3>อัพโหลดสลิปสำเร็จ!</h3>
+              <p>สลิปการชำระเงินของคุณถูกส่งเรียบร้อยแล้ว</p>
+              <div className="success-details">
+                <p><strong>รหัสอ้างอิง:</strong> {transactionId}</p>
+                <p><strong>จำนวนเงิน:</strong> {paymentData?.amount} บาท</p>
+                <p><strong>สถานะ:</strong> รอการอนุมัติ</p>
+              </div>
+              <p className="approval-note">
+                📋 แอดมินจะตรวจสอบและอนุมัติการชำระเงินของคุณ<br/>
+                🔔 คุณจะได้รับการแจ้งเตือนเมื่อการชำระเงินได้รับการอนุมัติ
+              </p>
+              <button 
+                className="confirm-btn"
+                onClick={handleConfirmUpload}
+              >
+                ตกลง
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
