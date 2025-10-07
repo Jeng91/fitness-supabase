@@ -38,25 +38,21 @@ CREATE POLICY "Users can create their own pending payments"
 ON pending_payments FOR INSERT 
 WITH CHECK (auth.uid() = user_id);
 
--- Policy สำหรับ admins: ดูและแก้ไขได้ทุกอัน
+-- Policy สำหรับ admins: ดูและแก้ไขได้ทุกอัน (ใช้อีเมลแอดมิน)
 CREATE POLICY "Admins can view all pending payments" 
 ON pending_payments FOR SELECT 
 USING (
-  EXISTS (
-    SELECT 1 FROM user_profiles 
-    WHERE user_id = auth.uid() 
-    AND role = 'admin'
-  )
+  (SELECT auth.email()) = 'admin@pjfitness.com'
+  OR 
+  (SELECT auth.email()) LIKE '%@admin.%'
 );
 
 CREATE POLICY "Admins can update all pending payments" 
 ON pending_payments FOR UPDATE 
 USING (
-  EXISTS (
-    SELECT 1 FROM user_profiles 
-    WHERE user_id = auth.uid() 
-    AND role = 'admin'
-  )
+  (SELECT auth.email()) = 'admin@pjfitness.com'
+  OR 
+  (SELECT auth.email()) LIKE '%@admin.%'
 );
 
 -- Function สำหรับอัปเดต updated_at
@@ -73,3 +69,20 @@ CREATE TRIGGER update_pending_payments_updated_at
   BEFORE UPDATE ON pending_payments
   FOR EACH ROW
   EXECUTE FUNCTION update_pending_payments_updated_at();
+
+-- สร้าง Storage bucket สำหรับเก็บไฟล์สลิป (รันใน Supabase Dashboard -> Storage)
+-- INSERT INTO storage.buckets (id, name, public)
+-- VALUES ('payment-slips', 'payment-slips', true);
+
+-- Storage Policies สำหรับ payment-slips bucket (รันใน SQL Editor):
+CREATE POLICY "Anyone can view payment slips" 
+ON storage.objects FOR SELECT 
+USING (bucket_id = 'payment-slips');
+
+CREATE POLICY "Users can upload payment slips" 
+ON storage.objects FOR INSERT 
+WITH CHECK (bucket_id = 'payment-slips' AND auth.role() = 'authenticated');
+
+CREATE POLICY "Users can delete their own payment slips" 
+ON storage.objects FOR DELETE 
+USING (bucket_id = 'payment-slips' AND auth.uid()::text = (storage.foldername(name))[1]);

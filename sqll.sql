@@ -624,3 +624,39 @@ create table public.tbl_fitness (
 create index IF not exists idx_tbl_fitness_memberm_price on public.tbl_fitness using btree (fit_price_memberm) TABLESPACE pg_default;
 
 create index IF not exists idx_tbl_fitness_membery_price on public.tbl_fitness using btree (fit_price_membery) TABLESPACE pg_default;
+
+create table public.pending_payments (
+  id uuid not null default gen_random_uuid (),
+  transaction_id character varying(255) not null,
+  user_id uuid null,
+  amount numeric(10, 2) not null,
+  description text null,
+  slip_url text null,
+  slip_filename character varying(255) null,
+  payment_type character varying(50) null default 'qr_payment'::character varying,
+  status character varying(50) null default 'pending'::character varying,
+  booking_id uuid null,
+  membership_id uuid null,
+  admin_notes text null,
+  approved_by uuid null,
+  approved_at timestamp with time zone null,
+  rejected_at timestamp with time zone null,
+  created_at timestamp with time zone null default now(),
+  updated_at timestamp with time zone null default now(),
+  constraint pending_payments_pkey primary key (id),
+  constraint pending_payments_transaction_id_key unique (transaction_id),
+  constraint pending_payments_approved_by_fkey foreign KEY (approved_by) references auth.users (id),
+  constraint pending_payments_user_id_fkey foreign KEY (user_id) references auth.users (id)
+) TABLESPACE pg_default;
+
+create index IF not exists idx_pending_payments_status on public.pending_payments using btree (status) TABLESPACE pg_default;
+
+create index IF not exists idx_pending_payments_user_id on public.pending_payments using btree (user_id) TABLESPACE pg_default;
+
+create index IF not exists idx_pending_payments_transaction_id on public.pending_payments using btree (transaction_id) TABLESPACE pg_default;
+
+create index IF not exists idx_pending_payments_created_at on public.pending_payments using btree (created_at) TABLESPACE pg_default;
+
+create trigger update_pending_payments_updated_at BEFORE
+update on pending_payments for EACH row
+execute FUNCTION update_pending_payments_updated_at ();

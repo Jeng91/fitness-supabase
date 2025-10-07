@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient';
 import './PaymentApproval.css';
 
 const PaymentApproval = () => {
@@ -37,23 +38,70 @@ const PaymentApproval = () => {
   ], []);
 
   useEffect(() => {
-    // ดึงข้อมูลจาก localStorage และ mock data
-    setTimeout(() => {
+    fetchPendingPayments();
+  }, []);
+
+  const fetchPendingPayments = async () => {
+    try {
+      setLoading(true);
+      
+      // ดึงข้อมูลจากฐานข้อมูล
+      const { data: dbPayments, error } = await supabase
+        .from('pending_payments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            usertel,
+            useremail
+          )
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Database error:', error);
+        // หากไม่สามารถดึงจากฐานข้อมูลได้ ใช้ข้อมูลจำลอง
+        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
+        const allPayments = [...mockPendingPayments, ...storedPayments];
+        setPendingPayments(allPayments);
+      } else {
+        // รวมข้อมูลจากฐานข้อมูลและ localStorage
+        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
+        const allPayments = [...(dbPayments || []), ...mockPendingPayments, ...storedPayments];
+        setPendingPayments(allPayments);
+      }
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      // ใช้ข้อมูลจำลองในกรณีที่เกิดข้อผิดพลาด
       const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
       const allPayments = [...mockPendingPayments, ...storedPayments];
       setPendingPayments(allPayments);
+    } finally {
       setLoading(false);
-    }, 1000);
-  }, [mockPendingPayments]);
+    }
+  };
 
   const handleApprovePayment = async (paymentId, transactionId) => {
     try {
       setProcessing(paymentId);
       
-      // จำลองการอนุมัติ
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // ลองอัปเดตในฐานข้อมูลก่อน
+      const { error } = await supabase
+        .from('pending_payments')
+        .update({
+          status: 'approved',
+          approved_by: (await supabase.auth.getUser()).data.user?.id,
+          approved_at: new Date().toISOString()
+        })
+        .eq('id', paymentId);
 
-      // ลบรายการที่อนุมัติแล้วออกจากลิสต์และ localStorage
+      if (error) {
+        console.error('Database update error:', error);
+        // หากไม่สามารถอัปเดตฐานข้อมูลได้ ใช้ localStorage
+      }
+
+      // อัปเดต UI และ localStorage
       setPendingPayments(prev => {
         const updated = prev.filter(payment => payment.id !== paymentId);
         // อัปเดต localStorage
@@ -129,6 +177,17 @@ const PaymentApproval = () => {
           <span className="pending-count">
             รออนุมัติ: {pendingPayments.length} รายการ
           </span>
+          <button 
+            className="debug-btn"
+            onClick={() => {
+              console.log('=== Payment Data Locations ===');
+              console.log('1. Supabase Database: pending_payments table');
+              console.log('2. Supabase Storage: payment-slips bucket');
+              console.log('3. localStorage backup:', JSON.parse(localStorage.getItem('pending_payments') || '[]'));
+            }}
+          >
+            🔍 Debug Info
+          </button>
         </div>
       </div>
 
@@ -173,7 +232,20 @@ const PaymentApproval = () => {
                 </div>
                 <div className="detail-row">
                   <span className="label">ไฟล์สลิป:</span>
-                  <span className="value">{payment.slip_filename}</span>
+                  <span className="value">
+                    {payment.slip_url ? (
+                      <a 
+                        href={payment.slip_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="slip-link"
+                      >
+                        📄 {payment.slip_filename || 'ดูสลิป'}
+                      </a>
+                    ) : (
+                      payment.slip_filename || 'ไม่มีไฟล์'
+                    )}
+                  </span>
                 </div>
               </div>
 

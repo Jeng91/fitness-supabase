@@ -35,6 +35,23 @@
   font-size: 0.9rem;
 }
 
+.debug-btn {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.debug-btn:hover {
+  background: linear-gradient(135deg, #5a6268, #495057);
+  transform: translateY(-1px);
+}
+
 /* Loading State */
 .loading-spinner {
   text-align: center;
@@ -160,6 +177,21 @@
   text-align: right;
   word-break: break-word;
   max-width: 250px;
+}
+
+.slip-link {
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: rgba(0, 123, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.slip-link:hover {
+  background: rgba(0, 123, 255, 0.2);
+  text-decoration: underline;
 }
 
 /* Payment Actions */

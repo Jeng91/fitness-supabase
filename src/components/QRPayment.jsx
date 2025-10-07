@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, memo, useRef } from 'react';
+import { supabase } from '../supabaseClient';
 import './QRPayment.css';
 
 const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
@@ -64,55 +65,117 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
       setUploading(true);
       setError('');
 
-      // จำลองการอัปโหลดไฟล์และบันทึกข้อมูล
       console.log('🔄 กำลังอัปโหลดสลิป...', {
         file: slipFile.name,
         size: slipFile.size,
         type: slipFile.type
       });
 
-      // จำลองเวลาประมวลผล
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // ลองอัปโหลดไฟล์ไปยัง Supabase Storage
+      let slipUrl = null;
+      let slipFileName = slipFile.name;
+      
+      try {
+        const fileExt = slipFile.name.split('.').pop();
+        const fileName = `${transactionId}-${Date.now()}.${fileExt}`;
+        const filePath = `slips/${fileName}`;
 
-      // จำลองการบันทึกข้อมูลการชำระเงิน
-      const paymentRecord = {
-        transaction_id: transactionId,
-        amount: paymentData?.amount || 0,
-        description: paymentData?.description || 'Fitness Payment',
-        slip_filename: slipFile.name,
-        slip_url: URL.createObjectURL(slipFile), // จำลอง URL
-        payment_type: 'qr_payment',
-        status: 'pending_approval',
-        booking_id: paymentData?.booking_id || null,
-        membership_id: paymentData?.membership_id || null,
-        created_at: new Date().toISOString()
-      };
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('payment-slips')
+          .upload(filePath, slipFile);
 
-      console.log('💾 บันทึกข้อมูลการชำระเงิน:', paymentRecord);
+        if (!uploadError) {
+          // ได้ URL ของไฟล์ที่อัปโหลด
+          const { data: urlData } = supabase.storage
+            .from('payment-slips')
+            .getPublicUrl(filePath);
 
-      // เก็บข้อมูลใน localStorage เพื่อให้ admin เห็น
-      const existingPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-      existingPayments.push({
-        ...paymentRecord,
-        id: Date.now().toString(),
-        user_profiles: {
-          full_name: 'ผู้ใช้ทดสอบ',
-          email: 'test@email.com',
-          phone_number: '081-234-5678'
+          slipUrl = urlData.publicUrl;
+          slipFileName = fileName;
+          console.log('✅ อัปโหลดไฟล์สำเร็จ:', slipUrl);
+        } else {
+          console.error('❌ อัปโหลดไฟล์ล้มเหลว:', uploadError);
+          slipUrl = URL.createObjectURL(slipFile); // ใช้ local URL แทน
         }
-      });
-      localStorage.setItem('pending_payments', JSON.stringify(existingPayments));
+      } catch (uploadError) {
+        console.error('❌ Storage error:', uploadError);
+        slipUrl = URL.createObjectURL(slipFile); // ใช้ local URL แทน
+      }
+
+      // ลองบันทึกลงฐานข้อมูล
+      let savedToDatabase = false;
+      try {
+        const { data: user } = await supabase.auth.getUser();
+        
+        if (user.user) {
+          const { data, error } = await supabase
+            .from('pending_payments')
+            .insert([{
+              transaction_id: transactionId,
+              user_id: user.user.id,
+              amount: paymentData?.amount || 0,
+              description: paymentData?.description || 'Fitness Payment',
+              slip_url: slipUrl,
+              slip_filename: slipFileName,
+              payment_type: 'qr_payment',
+              status: 'pending',
+              booking_id: paymentData?.booking_id || null,
+              membership_id: paymentData?.membership_id || null
+            }])
+            .select()
+            .single();
+
+          if (!error) {
+            console.log('✅ บันทึกลงฐานข้อมูลสำเร็จ:', data);
+            savedToDatabase = true;
+          } else {
+            console.error('❌ บันทึกลงฐานข้อมูลล้มเหลว:', error);
+          }
+        }
+      } catch (dbError) {
+        console.error('❌ Database error:', dbError);
+      }
+
+      // หากไม่สามารถบันทึกลงฐานข้อมูลได้ ใช้ localStorage
+      if (!savedToDatabase) {
+        console.log('📝 ใช้ localStorage แทน');
+        const paymentRecord = {
+          transaction_id: transactionId,
+          amount: paymentData?.amount || 0,
+          description: paymentData?.description || 'Fitness Payment',
+          slip_filename: slipFileName,
+          slip_url: slipUrl,
+          payment_type: 'qr_payment',
+          status: 'pending_approval',
+          booking_id: paymentData?.booking_id || null,
+          membership_id: paymentData?.membership_id || null,
+          created_at: new Date().toISOString()
+        };
+
+        // เก็บข้อมูลใน localStorage
+        const existingPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
+        existingPayments.push({
+          ...paymentRecord,
+          id: Date.now().toString(),
+          profiles: {
+            full_name: 'ผู้ใช้ทดสอบ',
+            useremail: 'test@email.com',
+            usertel: '081-234-5678'
+          }
+        });
+        localStorage.setItem('pending_payments', JSON.stringify(existingPayments));
+      }
 
       // อัปเดตสถานะเป็นรออนุมัติ
       setStatus('pending_approval');
       
-      // แจ้งผลลัพธ์
       onSuccessRef.current?.({
         transaction_id: transactionId,
         amount: paymentData?.amount,
         status: 'pending_approval',
         slip_uploaded: true,
-        slip_filename: slipFile.name,
+        slip_filename: slipFileName,
+        slip_url: slipUrl,
         payment_id: Date.now().toString(),
         message: 'ส่งข้อมูลการชำระเงินเรียบร้อย รอการอนุมัติจากแอดมิน'
       });
