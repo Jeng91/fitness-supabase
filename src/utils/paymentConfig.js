@@ -5,22 +5,13 @@ export const SYSTEM_BANK_ACCOUNTS = {
   main: {
     accountNumber: '3300613558',
     accountName: 'นายทรงเดช ศรีวิราช', 
-    bankName: 'ธนาคารกรุงไทย',
-    bankCode: 'KTB',
+    bankName: 'ธนาคารกรุงเทพ',
+    bankCode: 'BBL',
     accountType: 'บัญชีออมทรัพย์',
     purpose: 'รับเงินค่าธรรมเนียมระบบ (20%)',
-    promptpayId: '0951791181',
     qrCode: null // จะเพิ่ม QR Code ภายหลัง
   },
-  backup: {
-    accountNumber: '1234567890',
-    accountName: 'บริษัท PJ ฟิตเนส จำกัด',
-    bankName: 'ธนาคารกสิกรไทย',
-    bankCode: 'KBANK', 
-    accountType: 'บัญชีกระแสรายวัน',
-    purpose: 'บัญชีสำรอง',
-    qrCode: null
-  }
+  
 };
 
 export const PAYMENT_METHODS = {
