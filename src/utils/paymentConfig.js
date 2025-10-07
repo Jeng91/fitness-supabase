@@ -5,10 +5,11 @@ export const SYSTEM_BANK_ACCOUNTS = {
   main: {
     accountNumber: '3300613558',
     accountName: 'นายทรงเดช ศรีวิราช', 
-    bankName: 'ธนาคารกรุงเทพ',
-    bankCode: 'BBL',
+    bankName: 'ธนาคารกรุงไทย',
+    bankCode: 'KTB',
     accountType: 'บัญชีออมทรัพย์',
     purpose: 'รับเงินค่าธรรมเนียมระบบ (20%)',
+    promptpayId: '0951791181',
     qrCode: null // จะเพิ่ม QR Code ภายหลัง
   },
   backup: {

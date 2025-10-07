@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
 import './AdminPage.css';
 import PaymentAdmin from './PaymentAdmin';
+import { SYSTEM_BANK_ACCOUNTS } from '../utils/paymentConfig';
 
 const AdminPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -450,6 +451,12 @@ const AdminPage = () => {
             💳 การชำระเงิน
           </button>
           <button 
+            className={`tab-btn ${activeTab === 'bank' ? 'active' : ''}`}
+            onClick={() => setActiveTab('bank')}
+          >
+            🏦 บัญชีระบบ
+          </button>
+          <button 
             className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
             onClick={() => setActiveTab('reports')}
           >
@@ -465,6 +472,7 @@ const AdminPage = () => {
         {activeTab === 'partners' && <PartnersTab data={dashboardData} />}
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
         {activeTab === 'payments' && <PaymentAdmin />}
+        {activeTab === 'bank' && <BankAccountTab />}
         {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
         {activeTab === 'reports' && <ReportsTab />}
       </main>
@@ -914,6 +922,88 @@ const BookingsTab = ({ data }) => (
   </div>
 );
 
+// Bank Account Tab Component
+const BankAccountTab = () => {
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text).then(() => {
+      alert(`✅ คัดลอก${type}เรียบร้อยแล้ว: ${text}`);
+    }).catch(() => {
+      alert('❌ ไม่สามารถคัดลอกได้');
+    });
+  };
+
+  return (
+    <div className="bank-account-content">
+      <h2>🏦 บัญชีธนาคารระบบ</h2>
+      <div className="section">
+        <div className="bank-info-grid">
+          {Object.entries(SYSTEM_BANK_ACCOUNTS).map(([key, account]) => (
+            <div key={key} className="bank-card">
+              <div className="bank-header">
+                <h3>💰 {account.purpose}</h3>
+                <span className={`bank-type ${key}`}>บัญชีหลัก</span>
+              </div>
+              <div className="bank-details">
+                <div className="detail-row">
+                  <span className="label">🏦 ธนาคาร:</span>
+                  <span className="value">{account.bankName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">💳 เลขบัญชี:</span>
+                  <span className="value account-number">{account.accountNumber}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">👤 ชื่อบัญชี:</span>
+                  <span className="value">{account.accountName}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">📱 PromptPay:</span>
+                  <span className="value promptpay">{account.promptpayId}</span>
+                </div>
+                <div className="detail-row">
+                  <span className="label">📊 ประเภท:</span>
+                  <span className="value">{account.accountType}</span>
+                </div>
+              </div>
+              <div className="bank-actions">
+                <button 
+                  className="btn-copy-account"
+                  onClick={() => copyToClipboard(account.accountNumber, 'เลขบัญชี')}
+                >
+                  📋 คัดลอกเลขบัญชี
+                </button>
+                <button 
+                  className="btn-copy-promptpay"
+                  onClick={() => copyToClipboard(account.promptpayId, 'PromptPay')}
+                >
+                  📱 คัดลอก PromptPay
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="revenue-info">
+          <h3>💡 ข้อมูลการแบ่งรายได้</h3>
+          <div className="revenue-split-card">
+            <div className="split-item">
+              <span className="split-percentage">20%</span>
+              <span className="split-description">ค่าธรรมเนียมระบบ</span>
+              <span className="split-detail">โอนเข้าบัญชีระบบ</span>
+            </div>
+            <div className="split-arrow">→</div>
+            <div className="split-item">
+              <span className="split-percentage">80%</span>
+              <span className="split-description">รายได้พาร์ทเนอร์</span>
+              <span className="split-detail">โอนให้เจ้าของฟิตเนส</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const ReportsTab = () => (
   <div className="reports-content">
     <h2>📈 รายงานและสถิติ</h2>
@@ -929,5 +1019,7 @@ const ReportsTab = () => (
     </div>
   </div>
 );
+
+
 
 export default AdminPage;
