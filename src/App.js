@@ -51,10 +51,22 @@ function App() {
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อแอปเริ่มต้น
   useEffect(() => {
     const checkUserSession = async () => {
+      // Force clear any cached authentication data
+      localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
+      sessionStorage.clear();
+      
+      // Force sign out any existing session
+      await supabase.auth.signOut({ scope: 'global' });
+      
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUser(user);
         await loadUserProfile(user.id);
+      } else {
+        // ถ้าไม่มี user ให้แสดงหน้าหลัก
+        setUser(null);
+        setUserProfile(null);
+        setCurrentPage('หน้าหลัก');
       }
     };
 
@@ -62,18 +74,18 @@ function App() {
     
     // ฟังการเปลี่ยนแปลงสถานะ auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
+      // console.log('Auth state changed:', event, session?.user?.email);
       
       if (event === 'SIGNED_OUT' || !session?.user) {
         // Clear all user data เมื่อออกจากระบบ
         setUser(null);
         setUserProfile(null);
         setCurrentPage('หน้าหลัก');
-        console.log('User signed out, cleared all data');
+        // console.log('User signed out, cleared all data');
       } else if (session?.user) {
         setUser(session.user);
         await loadUserProfile(session.user.id);
-        console.log('User signed in:', session.user.email);
+        // console.log('User signed in:', session.user.email);
       }
     });
 
@@ -82,7 +94,7 @@ function App() {
 
   const loadUserProfile = async (userId) => {
     try {
-      console.log('Loading profile for user:', userId);
+      // console.log('Loading profile for user:', userId);
 
       // ตรวจสอบ tbl_owner ก่อน
       const { data: owner, error: ownerError } = await supabase
@@ -92,8 +104,8 @@ function App() {
         .single();
 
       if (owner && !ownerError) {
-        console.log('Found owner profile:', owner);
-        console.log('Owner keys:', Object.keys(owner));
+        // console.log('Found owner profile:', owner);
+        // console.log('Owner keys:', Object.keys(owner));
         setUserProfile({ ...owner, role: 'partner' });
         return;
       }
@@ -666,12 +678,144 @@ function App() {
   };
 
   const renderContent = () => {
+    // Force show homepage if no user
+    if (!user || !userProfile) {
+      return (
+        <div className="home-content">
+          <div className="fitness-section">
+            <div className="fitness-header">
+              <div className="fitness-title">
+                <h2>ฟิตเนสที่อยู่ใกล้</h2>
+                <p className="fitness-count">พบ {filteredFitnessData.length} แห่ง จากทั้งหมด {fitnessData.length} แห่ง</p>
+              </div>
+              <button 
+                className="refresh-btn" 
+                onClick={loadFitnessData}
+                title="รีเฟรชข้อมูล"
+              >
+                🔄 รีเฟรช
+              </button>
+            </div>
+            
+            {/* ระบบค้นหาและกรอง */}
+            <div className="search-filter-section">
+              <div className="search-box">
+                <input
+                  type="text"
+                  placeholder="ค้นหาฟิตเนส, ที่อยู่, หรือเจ้าของ..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="search-input"
+                />
+                <span className="search-icon">🔍</span>
+              </div>
+              
+              <div className="filter-section">
+                <select 
+                  value={priceFilter} 
+                  onChange={(e) => setPriceFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="all">ทุกราคา</option>
+                  <option value="under50">ต่ำกว่า 50 บาท</option>
+                  <option value="50-100">50-100 บาท</option>
+                  <option value="over100">มากกว่า 100 บาท</option>
+                </select>
+                
+                <select 
+                  value={sortBy} 
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="newest">ใหม่ล่าสุด</option>
+                  <option value="price-low">ราคาต่ำ-สูง</option>
+                  <option value="price-high">ราคาสูง-ต่ำ</option>
+                  <option value="name">ชื่อ A-Z</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* รายการฟิตเนส */}
+            <div className="fitness-grid">
+              {filteredFitnessData.length > 0 ? (
+                filteredFitnessData.map((fitness, index) => (
+                  <div key={fitness.fit_id || index} className="fitness-card">
+                    <div className="fitness-image-container">
+                      <img 
+                        src={fitness.image || "data:image/svg+xml,%3Csvg width='300' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E"}
+                        alt={fitness.fitness_name}
+                        className="fitness-image"
+                        onClick={() => handleShowImages(fitness)}
+                        onError={(e) => {
+                          e.target.src = "data:image/svg+xml,%3Csvg width='300' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='100%' height='100%' fill='%23f0f0f0'/%3E%3Ctext x='50%' y='50%' font-size='18' fill='%23666' text-anchor='middle' dy='.3em'%3EGym Image%3C/text%3E%3C/svg%3E";
+                        }}
+                      />
+                      <div className="fitness-status">
+                        <span className="status-text">เปิดทำการ</span>
+                        <span className="status-dot green"></span>
+                      </div>
+                      <button className="favorite-btn">❤️</button>
+                    </div>
+                    <div className="fitness-info">
+                      <h3>{fitness.fitness_name}</h3>
+                      <p className="fitness-location">📍 {fitness.location}</p>
+                      <p className="fitness-phone">📞 {fitness.phone}</p>
+                      <p className="fitness-owner">👤 {fitness.owner_name}</p>
+                      <div className="fitness-details">
+                        <span className="fitness-hours">🕒 {formatTime(fitness.hours)}</span>
+                        <div className="fitness-rating">
+                          <span className="stars">⭐</span>
+                          <span>{fitness.rating || '4.5'}</span>
+                        </div>
+                      </div>
+                      <div className="fitness-price">
+                        <span>{fitness.price_per_day || 100}</span>
+                        <span>บาท/วัน</span>
+                      </div>
+                      <button 
+                        className="detail-btn"
+                        onClick={() => handleShowDetail(fitness)}
+                      >
+                        📋 ดูรายละเอียด
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="no-fitness">
+                  {fitnessData.length === 0 ? (
+                    <>
+                      <p>ยังไม่มีข้อมูลฟิตเนส</p>
+                      <p>เจ้าของฟิตเนสสามารถเพิ่มข้อมูลได้ที่หน้า Partner</p>
+                    </>
+                  ) : (
+                    <>
+                      <p>ไม่พบฟิตเนสที่ตรงกับเงื่อนไขการค้นหา</p>
+                      <p>ลองเปลี่ยนคำค้นหาหรือเงื่อนไขการกรอง</p>
+                      <button 
+                        onClick={() => {
+                          setSearchTerm('');
+                          setPriceFilter('all');
+                          setSortBy('newest');
+                        }}
+                        className="clear-filters-btn"
+                      >
+                        เคลียร์การค้นหา
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentPage) {
       case 'หน้าหลัก':
         return (
           <div className="home-content">
-            
-            
             <div className="fitness-section">
               <div className="fitness-header">
                 <div className="fitness-title">

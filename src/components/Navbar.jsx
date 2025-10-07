@@ -12,14 +12,15 @@ const Navbar = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('🔍 Navbar - Current user from supabase.auth.getUser():', user);
+      // Debug logging disabled for clean console
+      // console.log('🔍 Navbar - Current user from supabase.auth.getUser():', user);
       setUser(user);
       
       if (user) {
-        console.log('✅ User found, loading profile for user ID:', user.id);
+        // console.log('✅ User found, loading profile for user ID:', user.id);
         await loadUserProfile(user.id);
       } else {
-        console.log('❌ No user found, clearing profile');
+        // console.log('❌ No user found, clearing profile');
         setUserProfile(null);
       }
     };
@@ -28,7 +29,7 @@ const Navbar = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('🔄 Auth state changed:', event, session?.user || null);
+      // console.log('🔄 Auth state changed:', event, session?.user || null);
       setUser(session?.user || null);
       if (session?.user) {
         await loadUserProfile(session.user.id);
@@ -53,7 +54,8 @@ const Navbar = () => {
 
   const loadUserProfile = async (userId) => {
     try {
-      console.log('📝 Loading user profile for ID:', userId);
+      // Debug logging disabled for clean console
+      // console.log('📝 Loading user profile for ID:', userId);
       // ตรวจสอบใน profiles ก่อน
       const { data: profile } = await supabase
         .from('profiles')
@@ -62,7 +64,7 @@ const Navbar = () => {
         .single();
 
       if (profile) {
-        console.log('✅ Found profile in profiles table:', profile);
+        // console.log('✅ Found profile in profiles table:', profile);
         setUserProfile(profile);
         return;
       }
@@ -75,7 +77,7 @@ const Navbar = () => {
         .single();
 
       if (owner) {
-        console.log('✅ Found profile in tbl_owner table:', owner);
+        // console.log('✅ Found profile in tbl_owner table:', owner);
         setUserProfile({
           id: owner.owner_uid,
           full_name: owner.owner_name,
@@ -84,7 +86,7 @@ const Navbar = () => {
           ...owner
         });
       } else {
-        console.log('❌ No profile found in either table for user ID:', userId);
+        // console.log('❌ No profile found in either table for user ID:', userId);
       }
     } catch (error) {
       console.error('❌ Error loading user profile:', error);
@@ -93,7 +95,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      console.log('🚪 Logging out user...');
+      // console.log('🚪 Logging out user...');
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);
@@ -102,7 +104,7 @@ const Navbar = () => {
       localStorage.clear();
       sessionStorage.clear();
       
-      console.log('✅ Logout successful, navigating to home');
+      // console.log('✅ Logout successful, navigating to home');
       navigate('/');
     } catch (error) {
       console.error('❌ Logout error:', error);

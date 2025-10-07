@@ -59,9 +59,10 @@ const FitnessDetailModal = ({
         }
 
         // โหลดข้อมูลรายละเอียดเพิ่มเติมจาก field fit_moredetails
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Loading more details from fit_moredetails field:', fitnessData.fit_moredetails);
-        }
+        // Debug logging disabled for clean console
+        // if (process.env.NODE_ENV === 'development') {
+        //   console.log('🔍 Loading more details from fit_moredetails field:', fitnessData.fit_moredetails);
+        // }
         
         // ดึงข้อมูลจาก field fit_moredetails ในตาราง tbl_fitness
         const moreDetailsText = fitnessData.fit_moredetails || '';
@@ -79,9 +80,10 @@ const FitnessDetailModal = ({
           }));
         }
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('📝 Processed more details:', processedMoreDetails);
-        }
+        // Debug logging disabled for clean console  
+        // if (process.env.NODE_ENV === 'development') {
+        //   console.log('📝 Processed more details:', processedMoreDetails);
+        // }
         setMoreDetailsData(processedMoreDetails);
 
       } catch (error) {
@@ -353,16 +355,7 @@ const FitnessDetailModal = ({
             <div className="more-details-section">
               <h3>📋 รายละเอียดเพิ่มเติม</h3>
               
-              {/* Debug Info - Hidden for production */}
-              {process.env.NODE_ENV === 'development' && (
-                <div style={{background: '#f0f0f0', padding: '10px', margin: '10px 0', fontSize: '12px'}}>
-                  <strong>Debug Info:</strong><br/>
-                  Fitness ID: {fitnessData?.fit_id}<br/>
-                  More Details Count: {moreDetailsData?.length || 0}<br/>
-                  Raw Data: {fitnessData?.fit_moredetails || 'ไม่มีข้อมูล'}<br/>
-                  Processed Data: {JSON.stringify(moreDetailsData, null, 2)}
-                </div>
-              )}
+              {/* Debug Info removed for clean UI */}
               
               {moreDetailsData && moreDetailsData.length > 0 ? (
                 <div className="more-details-list">

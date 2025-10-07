@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Auth State</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 50px;
+            text-align: center;
+        }
+        .clear-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 20px 40px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 20px;
+        }
+        .clear-btn:hover {
+            background: #ff6666;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Auth State Cleaner</h1>
+    <p>คลิกปุ่มด้านล่างเพื่อลบข้อมูล authentication ทั้งหมด</p>
+    
+    <button class="clear-btn" onclick="clearAuthState()">
+        🔥 Clear Auth State
+    </button>
+    
+    <div id="status"></div>
+    
+    <script>
+        function clearAuthState() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<p>🧹 กำลังลบข้อมูล authentication...</p>';
+            
+            try {
+                // Clear localStorage
+                localStorage.clear();
+                
+                // Clear sessionStorage
+                sessionStorage.clear();
+                
+                // Clear all cookies
+                document.cookie.split(";").forEach((c) => {
+                    const eqPos = c.indexOf("=");
+                    const name = eqPos > -1 ? c.substr(0, eqPos) : c;
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+                    document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/;domain=.supabase.co";
+                });
+                
+                // Clear IndexedDB
+                if (window.indexedDB) {
+                    indexedDB.databases().then(databases => {
+                        databases.forEach(db => {
+                            indexedDB.deleteDatabase(db.name);
+                        });
+                    }).catch(e => console.log('IndexedDB clear error:', e));
+                }
+                
+                status.innerHTML = `
+                    <div style="color: green;">
+                        <h3>✅ ลบข้อมูล authentication สำเร็จ!</h3>
+                        <p>📝 localStorage: ลบแล้ว</p>
+                        <p>📝 sessionStorage: ลบแล้ว</p>
+                        <p>📝 Cookies: ลบแล้ว</p>
+                        <p>📝 IndexedDB: ลบแล้ว</p>
+                        <br>
+                        <p><strong>🔄 กำลังรีเฟรชหน้าเว็บ...</strong></p>
+                    </div>
+                `;
+                
+                // Redirect to main app
+                setTimeout(() => {
+                    window.location.href = 'http://localhost:65050';
+                }, 2000);
+                
+            } catch (error) {
+                status.innerHTML = `<p style="color: red;">❌ เกิดข้อผิดพลาด: ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
