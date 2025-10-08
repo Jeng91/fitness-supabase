@@ -8,6 +8,27 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 
 function App() {
+  // ฟังก์ชันจัดการ Auth Error
+  const handleAuthError = useCallback(async () => {
+    try {
+      // Clear local storage
+      localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
+      localStorage.clear();
+      
+      // Sign out user
+      await supabase.auth.signOut();
+      
+      // Reset states
+      setUser(null);
+      setUserProfile(null);
+      setCurrentPage('หน้าหลัก');
+      
+      console.log('Auth error handled, user signed out');
+    } catch (error) {
+      console.error('Error handling auth error:', error);
+    }
+  }, []);
+
   // ฟังก์ชันปรับฟอร์แมตเวลา
   const formatTime = (timeString) => {
     if (!timeString) return timeString;
@@ -51,23 +72,50 @@ function App() {
 
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อแอปเริ่มต้น
   useEffect(() => {
+    // Global error handler for unhandled promise rejections
+    const handleUnhandledRejection = (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      if (event.reason?.message?.includes('Invalid Refresh Token') || 
+          event.reason?.message?.includes('refresh_token_not_found') ||
+          event.reason?.message?.includes('AuthApiError')) {
+        handleAuthError();
+      }
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
     const checkUserSession = async () => {
-      // Force clear any cached authentication data
-      localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
-      sessionStorage.clear();
-      
-      // Force sign out any existing session
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUser(user);
-        await loadUserProfile(user.id);
-      } else {
-        // ถ้าไม่มี user ให้แสดงหน้าหลัก
-        setUser(null);
-        setUserProfile(null);
-        setCurrentPage('หน้าหลัก');
+      try {
+        // Force clear any cached authentication data
+        localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
+        sessionStorage.clear();
+        
+        // Force sign out any existing session
+        await supabase.auth.signOut({ scope: 'global' });
+        
+        const { data: { user }, error } = await supabase.auth.getUser();
+        
+        if (error) {
+          console.error('Error getting user session:', error);
+          if (error.message?.includes('Invalid Refresh Token') || 
+              error.message?.includes('refresh_token_not_found')) {
+            await handleAuthError();
+            return;
+          }
+        }
+        
+        if (user) {
+          setUser(user);
+          await loadUserProfile(user.id);
+        } else {
+          // ถ้าไม่มี user ให้แสดงหน้าหลัก
+          setUser(null);
+          setUserProfile(null);
+          setCurrentPage('หน้าหลัก');
+        }
+      } catch (error) {
+        console.error('Error in checkUserSession:', error);
+        await handleAuthError();
       }
     };
 
@@ -75,23 +123,37 @@ function App() {
     
     // ฟังการเปลี่ยนแปลงสถานะ auth
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // console.log('Auth state changed:', event, session?.user?.email);
+      console.log('Auth state changed:', event, session?.user?.email);
       
       if (event === 'SIGNED_OUT' || !session?.user) {
         // Clear all user data เมื่อออกจากระบบ
         setUser(null);
         setUserProfile(null);
         setCurrentPage('หน้าหลัก');
-        // console.log('User signed out, cleared all data');
+        console.log('User signed out, cleared all data');
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log('Token refreshed successfully');
       } else if (session?.user) {
-        setUser(session.user);
-        await loadUserProfile(session.user.id);
-        // console.log('User signed in:', session.user.email);
+        try {
+          setUser(session.user);
+          await loadUserProfile(session.user.id);
+          console.log('User signed in:', session.user.email);
+        } catch (error) {
+          console.error('Error loading user profile:', error);
+          if (error.message?.includes('Invalid Refresh Token') || 
+              error.message?.includes('refresh_token_not_found')) {
+            await handleAuthError();
+          }
+        }
+      }
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, [handleAuthError]);
 
   const loadUserProfile = async (userId) => {
     try {
