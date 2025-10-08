@@ -208,12 +208,14 @@
 }
 
 .transaction-info h4 {
+  color: #6c5ce7 !important;
   margin: 0 0 4px 0;
   font-size: 1.2rem;
   font-weight: 700;
 }
 
 .payment-date {
+  color: #6c5ce7 !important;
   font-size: 0.9rem;
   opacity: 0.9;
 }

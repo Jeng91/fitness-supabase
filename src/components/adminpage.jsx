@@ -99,6 +99,28 @@ const AdminPage = () => {
         console.log('✅ Partners loaded:', partners?.length || 0, partners);
       }
 
+      // เชื่อมข้อมูลพาร์ทเนอร์กับข้อมูลฟิตเนส
+      let enrichedPartners = [];
+      if (partners && partners.length > 0) {
+        for (const partner of partners) {
+          // ดึงข้อมูลฟิตเนสของพาร์ทเนอร์
+          const { data: fitnessData, error: fitnessError } = await supabase
+            .from('tbl_fitness')
+            .select('fit_phone, fit_address, fit_name')
+            .eq('fit_user', partner.owner_name)
+            .single();
+
+          const enrichedPartner = {
+            ...partner,
+            fit_phone: fitnessData?.fit_phone || null,
+            fit_address: fitnessData?.fit_address || null,
+            fit_name: fitnessData?.fit_name || null
+          };
+
+          enrichedPartners.push(enrichedPartner);
+        }
+      }
+
       // ดึงข้อมูลฟิตเนสที่รออนุมัติ (สมมติใช้ status = 'pending')
       const { data: pendingFitness, error: pendingError } = await supabase
         .from('tbl_fitness_requests')
@@ -152,7 +174,7 @@ const AdminPage = () => {
 
       // จับคู่ข้อมูลฟิตเนสกับเจ้าของ
       const enrichedApprovedFitness = approvedFitness?.map(fitness => {
-        const owner = partners?.find(p => 
+        const owner = enrichedPartners?.find(p => 
           p.owner_name === fitness.fit_user || 
           p.owner_uid === fitness.owner_uid ||
           p.owner_id === fitness.owner_id
@@ -164,7 +186,7 @@ const AdminPage = () => {
       }) || [];
 
       const enrichedPendingFitness = pendingFitness?.map(request => {
-        const owner = partners?.find(p => 
+        const owner = enrichedPartners?.find(p => 
           p.owner_uid === request.owner_id ||
           p.owner_name === request.owner_name
         );
@@ -176,7 +198,7 @@ const AdminPage = () => {
 
       console.log('✅ Dashboard data loaded:', {
         users: users?.length || 0,
-        partners: partners?.length || 0,
+        partners: enrichedPartners?.length || 0,
         pendingFitness: enrichedPendingFitness?.length || 0,
         approvedFitness: enrichedApprovedFitness?.length || 0,
         bookings: bookings?.length || 0,
@@ -186,7 +208,7 @@ const AdminPage = () => {
       });
 
       // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
-      let finalPartners = partners || [];
+      let finalPartners = enrichedPartners || [];
       
       if (finalPartners.length === 0) {
         console.log('📝 No real partners found, adding sample data...');
@@ -196,6 +218,11 @@ const AdminPage = () => {
             owner_uid: 'DEMO001',
             owner_name: 'PJ Fitness Center',
             owner_email: 'pj@fitness.com',
+            owner_phone: '02-111-2222',
+            owner_address: '123 ถนนสุขุมวิท กรุงเทพฯ',
+            fit_phone: '089-123-4567',
+            fit_address: '123 ถนนสุขุมวิท กรุงเทพฯ',
+            fit_name: 'PJ Fitness Center',
             created_at: '2024-01-15T10:30:00Z',
             updated_at: '2024-01-15T10:30:00Z'
           },
@@ -204,6 +231,11 @@ const AdminPage = () => {
             owner_uid: 'DEMO002',
             owner_name: 'Healthy Life Gym',
             owner_email: 'healthy@life.com',
+            owner_phone: '02-333-4444',
+            owner_address: '456 ถนนพหลโยธิน กรุงเทพฯ',
+            fit_phone: '091-234-5678',
+            fit_address: '456 ถนนพหลโยธิน กรุงเทพฯ',
+            fit_name: 'Healthy Life Gym',
             created_at: '2024-02-20T14:20:00Z',
             updated_at: '2024-02-20T14:20:00Z'
           },
@@ -212,6 +244,11 @@ const AdminPage = () => {
             owner_uid: 'DEMO003', 
             owner_name: 'Champion Sport Club',
             owner_email: 'champion@sport.com',
+            owner_phone: '02-555-6666',
+            owner_address: '789 ถนนราชดำริ กรุงเทพฯ',
+            fit_phone: '093-345-6789',
+            fit_address: '789 ถนนราชดำริ กรุงเทพฯ',
+            fit_name: 'Champion Sport Club',
             created_at: '2024-03-10T09:15:00Z',
             updated_at: '2024-03-10T09:15:00Z'
           }
@@ -627,11 +664,124 @@ const UsersTab = ({ data }) => (
 // Partners Tab Component
 const PartnersTab = ({ data, onRefresh }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedPartner, setSelectedPartner] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    owner_name: '',
+    owner_email: '',
+    owner_phone: '',
+    owner_address: '',
+    fit_phone: '',
+    fit_address: '',
+    fit_name: ''
+  });
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await onRefresh();
     setIsRefreshing(false);
+  };
+
+  const handleViewDetails = (partner) => {
+    setSelectedPartner(partner);
+    setShowDetailModal(true);
+  };
+
+  const handleEdit = (partner) => {
+    setSelectedPartner(partner);
+    setEditForm({
+      owner_name: partner.owner_name || '',
+      owner_email: partner.owner_email || '',
+      owner_phone: partner.owner_phone || '',
+      owner_address: partner.owner_address || '',
+      fit_phone: partner.fit_phone || '',
+      fit_address: partner.fit_address || '',
+      fit_name: partner.fit_name || ''
+    });
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (partner) => {
+    setSelectedPartner(partner);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      // ลบข้อมูลจากฐานข้อมูล (ถ้าไม่ใช่ demo data)
+      if (!selectedPartner.owner_id?.includes('demo')) {
+        const { error } = await supabase
+          .from('tbl_owner')
+          .delete()
+          .eq('owner_id', selectedPartner.owner_id);
+
+        if (error) throw error;
+      }
+
+      alert('✅ ลบพาร์ทเนอร์สำเร็จ!');
+      setShowDeleteModal(false);
+      setSelectedPartner(null);
+      await onRefresh();
+    } catch (error) {
+      console.error('Error deleting partner:', error);
+      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // อัปเดตข้อมูลในฐานข้อมูล (ถ้าไม่ใช่ demo data)
+      if (!selectedPartner.owner_id?.includes('demo')) {
+        // อัปเดตข้อมูลเจ้าของใน tbl_owner
+        const { error: ownerError } = await supabase
+          .from('tbl_owner')
+          .update({
+            owner_name: editForm.owner_name,
+            owner_email: editForm.owner_email,
+            owner_phone: editForm.owner_phone,
+            owner_address: editForm.owner_address,
+            updated_at: new Date().toISOString()
+          })
+          .eq('owner_id', selectedPartner.owner_id);
+
+        if (ownerError) throw ownerError;
+
+        // อัปเดตข้อมูลฟิตเนสใน tbl_fitness
+        const { error: fitnessError } = await supabase
+          .from('tbl_fitness')
+          .update({
+            fit_name: editForm.fit_name,
+            fit_phone: editForm.fit_phone,
+            fit_address: editForm.fit_address,
+            fit_user: editForm.owner_name, // อัปเดตชื่อเจ้าของด้วย
+            updated_at: new Date().toISOString()
+          })
+          .eq('fit_user', selectedPartner.owner_name);
+
+        if (fitnessError) {
+          console.log('No fitness data to update or error:', fitnessError);
+        }
+      }
+
+      alert('✅ อัปเดตข้อมูลสำเร็จ!');
+      setShowEditModal(false);
+      setSelectedPartner(null);
+      await onRefresh();
+    } catch (error) {
+      console.error('Error updating partner:', error);
+      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`);
+    }
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
 
   return (
@@ -684,8 +834,24 @@ const PartnersTab = ({ data, onRefresh }) => {
                     <span className="status-badge active">ใช้งาน</span>
                   </td>
                   <td>
-                    <button className="btn-view">ดู</button>
-                    <button className="btn-edit">แก้ไข</button>
+                    <button 
+                      className="btn-view"
+                      onClick={() => handleViewDetails(partner)}
+                    >
+                      ดู
+                    </button>
+                    <button 
+                      className="btn-edit"
+                      onClick={() => handleEdit(partner)}
+                    >
+                      แก้ไข
+                    </button>
+                    <button 
+                      className="btn-delete"
+                      onClick={() => handleDelete(partner)}
+                    >
+                      ลบ
+                    </button>
                     <button className="btn-fitness" title="ดูฟิตเนสของพาร์ทเนอร์">🏋️</button>
                   </td>
                 </tr>
@@ -709,6 +875,196 @@ const PartnersTab = ({ data, onRefresh }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedPartner && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>📋 รายละเอียดพาร์ทเนอร์</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="partner-details">
+                <div className="detail-row">
+                  <label>🆔 ID:</label>
+                  <span>{selectedPartner.owner_uid || selectedPartner.owner_id}</span>
+                </div>
+                <div className="detail-row">
+                  <label>👤 ชื่อพาร์ทเนอร์:</label>
+                  <span>{selectedPartner.owner_name}</span>
+                </div>
+                <div className="detail-row">
+                  <label>📧 อีเมล:</label>
+                  <span>{selectedPartner.owner_email}</span>
+                </div>
+                <div className="detail-row">
+                  <label>📱 เบอร์โทรฟิตเนส:</label>
+                  <span>{selectedPartner.fit_phone || 'ไม่ระบุ'}</span>
+                </div>
+                <div className="detail-row">
+                  <label>☎️ เบอร์โทรเจ้าของ:</label>
+                  <span>{selectedPartner.owner_phone || 'ไม่ระบุ'}</span>
+                </div>
+                <div className="detail-row">
+                  <label>🏢 ชื่อฟิตเนส:</label>
+                  <span>{selectedPartner.fit_name || 'ไม่ระบุ'}</span>
+                </div>
+                <div className="detail-row">
+                  <label>📍 ที่อยู่ฟิตเนส:</label>
+                  <span>{selectedPartner.fit_address || selectedPartner.owner_address || 'ไม่ระบุ'}</span>
+                </div>
+                <div className="detail-row">
+                  <label>📅 วันที่สมัคร:</label>
+                  <span>{selectedPartner.created_at ? new Date(selectedPartner.created_at).toLocaleString('th-TH') : 'ไม่ระบุ'}</span>
+                </div>
+                <div className="detail-row">
+                  <label>🔄 อัปเดตล่าสุด:</label>
+                  <span>{selectedPartner.updated_at ? new Date(selectedPartner.updated_at).toLocaleString('th-TH') : 'ไม่ระบุ'}</span>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>
+                ปิด
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && selectedPartner && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>✏️ แก้ไขข้อมูลพาร์ทเนอร์</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleEditSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>👤 ชื่อพาร์ทเนอร์:</label>
+                  <input
+                    type="text"
+                    name="owner_name"
+                    value={editForm.owner_name}
+                    onChange={handleEditInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>📧 อีเมล:</label>
+                  <input
+                    type="email"
+                    name="owner_email"
+                    value={editForm.owner_email}
+                    onChange={handleEditInputChange}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>📱 เบอร์โทรเจ้าของ:</label>
+                  <input
+                    type="tel"
+                    name="owner_phone"
+                    value={editForm.owner_phone}
+                    onChange={handleEditInputChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>📍 ที่อยู่เจ้าของ:</label>
+                  <textarea
+                    name="owner_address"
+                    value={editForm.owner_address}
+                    onChange={handleEditInputChange}
+                    rows="2"
+                    placeholder="กรุณาใส่ที่อยู่เจ้าของ..."
+                  />
+                </div>
+                
+                <h4 style={{margin: '1.5rem 0 1rem 0', color: '#667eea', borderBottom: '2px solid #667eea', paddingBottom: '0.5rem'}}>
+                  🏢 ข้อมูลฟิตเนส
+                </h4>
+                
+                <div className="form-group">
+                  <label>🏢 ชื่อฟิตเนส:</label>
+                  <input
+                    type="text"
+                    name="fit_name"
+                    value={editForm.fit_name}
+                    onChange={handleEditInputChange}
+                    placeholder="กรุณาใส่ชื่อฟิตเนส..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>📞 เบอร์โทรฟิตเนส:</label>
+                  <input
+                    type="tel"
+                    name="fit_phone"
+                    value={editForm.fit_phone}
+                    onChange={handleEditInputChange}
+                    placeholder="กรุณาใส่เบอร์โทรฟิตเนส..."
+                  />
+                </div>
+                <div className="form-group">
+                  <label>📍 ที่อยู่ฟิตเนส:</label>
+                  <textarea
+                    name="fit_address"
+                    value={editForm.fit_address}
+                    onChange={handleEditInputChange}
+                    rows="2"
+                    placeholder="กรุณาใส่ที่อยู่ฟิตเนส..."
+                  />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="submit" className="btn-primary">
+                  💾 บันทึก
+                </button>
+                <button type="button" className="btn-secondary" onClick={() => setShowEditModal(false)}>
+                  ยกเลิก
+                </button>
+                
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && selectedPartner && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content modal-danger" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🗑️ ยืนยันการลบ</h3>
+              <button className="modal-close" onClick={() => setShowDeleteModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="delete-warning">
+                <div className="warning-icon">⚠️</div>
+                <div className="warning-text">
+                  <h4>คุณแน่ใจหรือไม่ที่จะลบพาร์ทเนอร์นี้?</h4>
+                  <p><strong>ชื่อ:</strong> {selectedPartner.owner_name}</p>
+                  <p><strong>อีเมล:</strong> {selectedPartner.owner_email}</p>
+                  <p className="warning-note">
+                    ⚠️ การลบนี้ไม่สามารถยกเลิกได้ และจะส่งผลต่อข้อมูลฟิตเนสที่เกี่ยวข้อง
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-danger" onClick={confirmDelete}>
+                🗑️ ลบถาวร
+              </button>
+              <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                ยกเลิก
+              </button>
+              
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
