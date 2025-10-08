@@ -2,6 +2,65 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import './PaymentApproval.css';
 
+// ฟังก์ชันวิเคราะห์ข้อมูลการจอง
+const getBookingTypeFromDescription = (description) => {
+  if (!description) return 'membership';
+  
+  const desc = description.toLowerCase();
+  if (desc.includes('รายวัน') || desc.includes('daily')) return 'daily';
+  if (desc.includes('รายเดือน') || desc.includes('monthly') || desc.includes('เดือน')) return 'monthly';
+  if (desc.includes('รายปี') || desc.includes('yearly') || desc.includes('ปี')) return 'yearly';
+  if (desc.includes('คลาส') || desc.includes('class')) return 'class';
+  return 'membership';
+};
+
+const getBookingPeriodFromDescription = (description) => {
+  if (!description) return '';
+  
+  const desc = description.toLowerCase();
+  if (desc.includes('1 วัน')) return '1 วัน';
+  if (desc.includes('1 เดือน')) return '1 เดือน';
+  if (desc.includes('2 เดือน')) return '2 เดือน';
+  if (desc.includes('3 เดือน')) return '3 เดือน';
+  if (desc.includes('6 เดือน')) return '6 เดือน';
+  if (desc.includes('1 ปี')) return '1 ปี';
+  
+  // ถอดข้อมูลจากตัวเลข
+  const monthMatch = desc.match(/(\d+)\s*เดือน/);
+  if (monthMatch) return `${monthMatch[1]} เดือน`;
+  
+  const dayMatch = desc.match(/(\d+)\s*วัน/);
+  if (dayMatch) return `${dayMatch[1]} วัน`;
+  
+  const yearMatch = desc.match(/(\d+)\s*ปี/);
+  if (yearMatch) return `${yearMatch[1]} ปี`;
+  
+  return 'ไม่ระบุ';
+};
+
+const extractFitnessNameFromDescription = (description) => {
+  if (!description) return 'PJ Fitness Center';
+  
+  // ลองดึงชื่อฟิตเนสจาก description
+  if (description.includes('ฟิตเนส')) {
+    const parts = description.split(' ');
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i].includes('ฟิตเนส') && parts[i-1]) {
+        return `${parts[i-1]} ${parts[i]}`;
+      }
+    }
+  }
+  
+  return 'PJ Fitness Center';
+};
+
+const extractPartnerNameFromDescription = (description) => {
+  if (!description) return 'PJ Fitness Partner';
+  
+  // สำหรับตอนนี้ใช้ชื่อเริ่มต้น อาจปรับปรุงในอนาคต
+  return extractFitnessNameFromDescription(description) + ' Management';
+};
+
 const PaymentApproval = () => {
   const [pendingPayments, setPendingPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +164,17 @@ const PaymentApproval = () => {
             payment_type: paymentToApprove.payment_type || 'qr_payment',
             original_payment_id: paymentToApprove.id,
             approved_by: user.user?.id,
+            
+            // ข้อมูลการจองฟิตเนส
+            booking_type: getBookingTypeFromDescription(paymentToApprove.description),
+            booking_period: getBookingPeriodFromDescription(paymentToApprove.description),
+            fitness_name: extractFitnessNameFromDescription(paymentToApprove.description),
+            partner_name: extractPartnerNameFromDescription(paymentToApprove.description),
+            
+            // การคำนวณรายได้ (20% system fee, 80% partner revenue)
+            system_fee: Math.round(paymentToApprove.amount * 0.20 * 100) / 100,
+            partner_revenue: Math.round(paymentToApprove.amount * 0.80 * 100) / 100,
+            
             booking_id: paymentToApprove.booking_id,
             membership_id: paymentToApprove.membership_id,
             notes: 'อนุมัติโดยแอดมิน - ตรวจสอบสลิปเรียบร้อย'
@@ -148,12 +218,32 @@ const PaymentApproval = () => {
         // เพิ่มข้อมูลไปยัง approved_payments ใน localStorage
         const approvedPayments = JSON.parse(localStorage.getItem('approved_payments') || '[]');
         approvedPayments.push({
-          ...paymentToApprove,
-          status: 'approved',
-          approved_by: user.user?.id || 'admin',
+          id: `approved_${Date.now()}`,
+          transaction_id: paymentToApprove.transaction_id,
+          user_id: paymentToApprove.user_id,
+          amount: paymentToApprove.amount,
+          description: paymentToApprove.description,
+          slip_url: paymentToApprove.slip_url,
+          slip_filename: paymentToApprove.slip_filename,
+          payment_type: paymentToApprove.payment_type || 'qr_payment',
+          original_payment_id: paymentToApprove.id,
+          
+          // ข้อมูลการจองฟิตเนส
+          booking_type: getBookingTypeFromDescription(paymentToApprove.description),
+          booking_period: getBookingPeriodFromDescription(paymentToApprove.description),
+          fitness_name: extractFitnessNameFromDescription(paymentToApprove.description),
+          partner_name: extractPartnerNameFromDescription(paymentToApprove.description),
+          
+          // การคำนวณรายได้
+          system_fee: Math.round(paymentToApprove.amount * 0.20 * 100) / 100,
+          partner_revenue: Math.round(paymentToApprove.amount * 0.80 * 100) / 100,
+          
+          approved_by: 'admin@system.com',
           approved_at: new Date().toISOString(),
           notes: 'อนุมัติโดยแอดมิน - ตรวจสอบสลิปเรียบร้อย'
         });
+        
+        localStorage.setItem('approved_payments', JSON.stringify(approvedPayments));
         localStorage.setItem('approved_payments', JSON.stringify(approvedPayments));
       }
 

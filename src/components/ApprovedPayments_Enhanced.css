@@ -1,0 +1,371 @@
+/* ApprovedPayments.css - Enhanced with Revenue Stats and Booking Details */
+.approved-payments-container {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: white;
+}
+
+.approved-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.approved-header h2 {
+  color: white;
+  font-size: 2em;
+  margin-bottom: 25px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* สถิติรายได้ */
+.revenue-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  background: rgba(255,255,255,0.15);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 20px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.stat-card.total-revenue {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.stat-card.system-fee {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.stat-card.partner-revenue {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.stat-card.transaction-count {
+  background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+  color: #333;
+}
+
+.stat-number {
+  display: block;
+  font-size: 1.8em;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+/* สถิติการจองตามประเภท */
+.booking-type-stats {
+  margin-bottom: 30px;
+}
+
+.booking-type-stats h3 {
+  margin-bottom: 15px;
+  text-align: center;
+  color: white;
+}
+
+.booking-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.booking-stat-card {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 15px;
+  text-align: center;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.booking-type-name {
+  font-weight: bold;
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.booking-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.booking-count {
+  font-size: 0.8em;
+  opacity: 0.9;
+}
+
+.booking-revenue {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #4ade80;
+}
+
+/* ตัวกรอง */
+.filters-section {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
+}
+
+.search-input, .date-select {
+  padding: 12px 15px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  font-size: 1em;
+  -webkit-backdrop-filter: blur(10px)  ;
+  backdrop-filter: blur(10px);
+}
+
+.search-input::placeholder {
+  color: rgba(255,255,255,0.7);
+}
+
+.search-input:focus, .date-select:focus {
+  outline: none;
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.2);
+}
+
+/* ตาราง */
+.payments-table-container {
+  background: rgba(255,255,255,0.95);
+  border-radius: 15px;
+  padding: 20px;
+  overflow-x: auto;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.payments-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #333;
+}
+
+.payments-table th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px 10px;
+  text-align: left;
+  font-weight: bold;
+  border-radius: 8px 8px 0 0;
+  font-size: 0.9em;
+}
+
+.payments-table td {
+  padding: 12px 10px;
+  border-bottom: 1px solid #e5e7eb;
+  vertical-align: top;
+}
+
+.payment-row:hover {
+  background-color: #f8fafc;
+}
+
+/* รหัสอ้างอิง */
+.transaction-id .tx-id {
+  font-family: 'Courier New', monospace;
+  background: #e0e7ff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  color: #3730a3;
+  font-weight: bold;
+}
+
+/* ข้อมูลลูกค้า */
+.customer-name {
+  font-weight: bold;
+  color: #1e40af;
+}
+
+.contact-info .email {
+  font-size: 0.85em;
+  color: #6b7280;
+}
+
+.contact-info .phone {
+  font-size: 0.85em;
+  color: #6b7280;
+}
+
+/* ประเภทการจอง */
+.booking-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.booking-period {
+  font-size: 0.8em;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* รายละเอียดฟิตเนส */
+.fitness-details .fitness-name {
+  font-weight: bold;
+  color: #059669;
+  margin-bottom: 2px;
+}
+
+.fitness-details .partner-name {
+  font-size: 0.8em;
+  color: #6b7280;
+  margin-bottom: 4px;
+}
+
+.fitness-details .description {
+  font-size: 0.85em;
+  color: #374151;
+  background: #f3f4f6;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-top: 4px;
+}
+
+/* จำนวนเงิน */
+.amount-total .amount {
+  font-size: 1.1em;
+  font-weight: bold;
+  color: #059669;
+}
+
+.system-fee .fee-amount {
+  font-weight: bold;
+  color: #dc2626;
+}
+
+.partner-revenue .revenue-amount {
+  font-weight: bold;
+  color: #16a34a;
+}
+
+/* ปุ่มดูสลิป */
+.view-slip-btn {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.8em;
+  font-weight: bold;
+  display: inline-block;
+  transition: all 0.3s ease;
+}
+
+.view-slip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.no-slip {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: 0.8em;
+}
+
+/* โหลดข้อมูล */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ไม่มีข้อมูล */
+.no-approved-payments {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 15px;
+  margin-top: 20px;
+}
+
+.empty-icon {
+  font-size: 4em;
+  margin-bottom: 20px;
+}
+
+.no-approved-payments h3 {
+  color: white;
+  margin-bottom: 10px;
+}
+
+.no-approved-payments p {
+  color: rgba(255,255,255,0.8);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .approved-payments-container {
+    padding: 15px;
+  }
+  
+  .revenue-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .booking-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .filters-section {
+    flex-direction: column;
+  }
+  
+  .search-input, .date-select {
+    width: 100%;
+  }
+  
+  .payments-table-container {
+    overflow-x: auto;
+  }
+  
+  .payments-table {
+    min-width: 800px;
+  }
+}

@@ -12,8 +12,23 @@ CREATE TABLE IF NOT EXISTS approved_payments (
   original_payment_id UUID REFERENCES pending_payments(id),
   approved_by UUID REFERENCES auth.users(id),
   approved_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- ข้อมูลการจองฟิตเนส
   booking_id UUID,
   membership_id UUID,
+  fitness_id UUID,
+  partner_id UUID,
+  
+  -- ประเภทการจอง
+  booking_type TEXT CHECK (booking_type IN ('daily', 'monthly', 'yearly', 'class', 'membership')),
+  booking_period TEXT, -- วันที่เริ่ม-สิ้นสุด หรือรายละเอียดช่วงเวลา
+  fitness_name TEXT,
+  partner_name TEXT,
+  
+  -- การคำนวณรายได้
+  system_fee DECIMAL(10,2) DEFAULT 0, -- ค่าธรรมเนียมระบบ
+  partner_revenue DECIMAL(10,2) DEFAULT 0, -- รายได้ฟิตเนส/พาร์ทเนอร์
+  
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -40,7 +55,7 @@ CREATE POLICY "Admins can view all approved payments" ON approved_payments
   FOR SELECT USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
+      WHERE profiles.user_uid = auth.uid() 
       AND profiles.useremail IN (
         'sriwarinthep@gmail.com',
         'admin@jmfitness.com',
@@ -54,7 +69,7 @@ CREATE POLICY "Admins can insert approved payments" ON approved_payments
   FOR INSERT WITH CHECK (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
+      WHERE profiles.user_uid = auth.uid() 
       AND profiles.useremail IN (
         'sriwarinthep@gmail.com',
         'admin@jmfitness.com',
@@ -68,7 +83,7 @@ CREATE POLICY "Admins can update approved payments" ON approved_payments
   FOR UPDATE USING (
     EXISTS (
       SELECT 1 FROM profiles 
-      WHERE profiles.id = auth.uid() 
+      WHERE profiles.user_uid = auth.uid() 
       AND profiles.useremail IN (
         'sriwarinthep@gmail.com',
         'admin@jmfitness.com',
@@ -91,21 +106,13 @@ CREATE TRIGGER update_approved_payments_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_approved_payments_updated_at();
 
--- สร้าง view สำหรับดูข้อมูลที่ join กับ profiles
-CREATE OR REPLACE VIEW approved_payments_with_profiles AS
-SELECT 
-  ap.*,
-  p.full_name,
-  p.useremail,
-  p.usertel,
-  admin_p.full_name as approved_by_name,
-  admin_p.useremail as approved_by_email
-FROM approved_payments ap
-LEFT JOIN profiles p ON ap.user_id = p.id
-LEFT JOIN profiles admin_p ON ap.approved_by = admin_p.id;
+-- หมายเหตุ: View approved_payments_with_profiles ได้ย้ายไปยัง approved_payments_view.sql แล้ว
+-- เพื่อหลีกเลี่ยงปัญหา view structure conflicts
 
--- Grant permissions สำหรับ view
-GRANT SELECT ON approved_payments_with_profiles TO authenticated;
+-- Grant permissions สำหรับตาราง
+GRANT SELECT ON approved_payments TO authenticated;
+GRANT INSERT ON approved_payments TO authenticated;
+GRANT UPDATE ON approved_payments TO authenticated;
 
 -- เพิ่มข้อมูลตัวอย่าง (สำหรับทดสอบ)
 -- INSERT INTO approved_payments (

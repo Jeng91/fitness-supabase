@@ -1,12 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../supabaseClient';
-import './ApprovedPayments.css';
+import './ApprovedPayments_Enhanced.css';
 
 const ApprovedPayments = () => {
   const [approvedPayments, setApprovedPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
+
+  // คำนวณสถิติรายได้
+  const revenueStats = useMemo(() => {
+    const stats = {
+      totalRevenue: 0,
+      systemFee: 0,
+      partnerRevenue: 0,
+      totalTransactions: approvedPayments.length,
+      bookingTypeStats: {
+        daily: { count: 0, revenue: 0 },
+        monthly: { count: 0, revenue: 0 },
+        yearly: { count: 0, revenue: 0 },
+        class: { count: 0, revenue: 0 },
+        membership: { count: 0, revenue: 0 }
+      }
+    };
+
+    approvedPayments.forEach(payment => {
+      const amount = parseFloat(payment.amount) || 0;
+      const systemFee = parseFloat(payment.system_fee) || (amount * 0.2);
+      const partnerRevenue = parseFloat(payment.partner_revenue) || (amount * 0.8);
+      const bookingType = payment.booking_type || 'membership';
+
+      stats.totalRevenue += amount;
+      stats.systemFee += systemFee;
+      stats.partnerRevenue += partnerRevenue;
+
+      if (stats.bookingTypeStats[bookingType]) {
+        stats.bookingTypeStats[bookingType].count += 1;
+        stats.bookingTypeStats[bookingType].revenue += amount;
+      }
+    });
+
+    return stats;
+  }, [approvedPayments]);
 
   useEffect(() => {
     fetchApprovedPayments();
@@ -119,14 +154,46 @@ const ApprovedPayments = () => {
     <div className="approved-payments-container">
       <div className="approved-header">
         <h2>✅ รายการชำระเงินที่อนุมัติแล้ว</h2>
-        <div className="approved-stats">
-          <div className="stat-card">
-            <span className="stat-number">{filteredPayments.length}</span>
-            <span className="stat-label">รายการ</span>
+        
+        {/* สถิติรายได้ */}
+        <div className="revenue-stats">
+          <div className="stat-card total-revenue">
+            <span className="stat-number">฿{formatAmount(revenueStats.totalRevenue)}</span>
+            <span className="stat-label">รายได้รวมทั้งหมด</span>
           </div>
-          <div className="stat-card total-amount">
-            <span className="stat-number">฿{formatAmount(getTotalAmount())}</span>
-            <span className="stat-label">ยอดรวม</span>
+          <div className="stat-card system-fee">
+            <span className="stat-number">฿{formatAmount(revenueStats.systemFee)}</span>
+            <span className="stat-label">รายได้ระบบ (20%)</span>
+          </div>
+          <div className="stat-card partner-revenue">
+            <span className="stat-number">฿{formatAmount(revenueStats.partnerRevenue)}</span>
+            <span className="stat-label">รายได้ฟิตเนส (80%)</span>
+          </div>
+          <div className="stat-card transaction-count">
+            <span className="stat-number">{revenueStats.totalTransactions}</span>
+            <span className="stat-label">รายการทั้งหมด</span>
+          </div>
+        </div>
+
+        {/* สถิติการจองตามประเภท */}
+        <div className="booking-type-stats">
+          <h3>📊 สถิติการจองตามประเภท</h3>
+          <div className="booking-stats-grid">
+            {Object.entries(revenueStats.bookingTypeStats).map(([type, stats]) => (
+              <div key={type} className="booking-stat-card">
+                <div className="booking-type-name">
+                  {type === 'daily' && '📅 รายวัน'}
+                  {type === 'monthly' && '📆 รายเดือน'}
+                  {type === 'yearly' && '🗓️ รายปี'}
+                  {type === 'class' && '🏋️ คลาส'}
+                  {type === 'membership' && '👥 สมาชิก'}
+                </div>
+                <div className="booking-stats">
+                  <span className="booking-count">{stats.count} รายการ</span>
+                  <span className="booking-revenue">฿{formatAmount(stats.revenue)}</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -170,10 +237,12 @@ const ApprovedPayments = () => {
                 <th>รหัสอ้างอิง</th>
                 <th>ลูกค้า</th>
                 <th>ติดต่อ</th>
-                <th>รายละเอียด</th>
-                <th>จำนวนเงิน</th>
+                <th>ประเภทการจอง</th>
+                <th>รายละเอียดฟิตเนส</th>
+                <th>ยอดชำระ</th>
+                <th>รายได้ระบบ</th>
+                <th>รายได้ฟิตเนส</th>
                 <th>วันที่อนุมัติ</th>
-                <th>อนุมัติโดย</th>
                 <th>สลิป</th>
               </tr>
             </thead>
@@ -181,49 +250,51 @@ const ApprovedPayments = () => {
               {filteredPayments.map((payment) => (
                 <tr key={payment.id} className="payment-row">
                   <td className="transaction-id">
-                    <span className="transaction-badge">
-                      #{payment.transaction_id}
-                    </span>
+                    <span className="tx-id">{payment.transaction_id?.substring(0, 16)}...</span>
                   </td>
+                  
                   <td className="customer-info">
-                    <div className="customer-name">
-                      {payment.full_name || 'ไม่ระบุ'}
-                    </div>
+                    <div className="customer-name">{payment.full_name || payment.user_profiles?.full_name || 'ไม่ระบุ'}</div>
                   </td>
+                  
                   <td className="contact-info">
-                    <div className="contact-details">
-                      <div className="email">📧 {payment.useremail || 'ไม่ระบุ'}</div>
-                      <div className="phone">📱 {payment.usertel || 'ไม่ระบุ'}</div>
+                    <div className="email">{payment.useremail || payment.user_profiles?.useremail || 'ไม่ระบุ'}</div>
+                    <div className="phone">{payment.usertel || payment.user_profiles?.usertel || 'ไม่ระบุ'}</div>
+                  </td>
+                  
+                  <td className="booking-type">
+                    <div className="booking-badge">
+                      {payment.booking_type === 'daily' && '📅 รายวัน'}
+                      {payment.booking_type === 'monthly' && '📆 รายเดือน'}
+                      {payment.booking_type === 'yearly' && '🗓️ รายปี'}
+                      {payment.booking_type === 'class' && '🏋️ คลาส'}
+                      {(payment.booking_type === 'membership' || !payment.booking_type) && '👥 สมาชิก'}
                     </div>
+                    <div className="booking-period">{payment.booking_period || 'ไม่ระบุ'}</div>
                   </td>
-                  <td className="description">
-                    <span className="description-text">
-                      {payment.description || 'ไม่ระบุ'}
-                    </span>
-                    <div className="payment-type">
-                      {payment.payment_type === 'qr_payment' ? '🏦 QR Payment' : 
-                       payment.payment_type === 'bank_transfer' ? '💳 โอนธนาคาร' : 
-                       '💰 ชำระเงินสด'}
-                    </div>
+                  
+                  <td className="fitness-details">
+                    <div className="fitness-name">{payment.fitness_name || 'PJ Fitness Center'}</div>
+                    <div className="partner-name">{payment.partner_name || 'PJ Fitness Partner'}</div>
+                    <div className="description">{payment.description}</div>
                   </td>
-                  <td className="amount">
-                    <span className="amount-value">
-                      ฿{formatAmount(payment.amount)}
-                    </span>
+                  
+                  <td className="amount-total">
+                    <span className="amount">฿{formatAmount(payment.amount)}</span>
                   </td>
+                  
+                  <td className="system-fee">
+                    <span className="fee-amount">฿{formatAmount(payment.system_fee || (payment.amount * 0.2))}</span>
+                  </td>
+                  
+                  <td className="partner-revenue">
+                    <span className="revenue-amount">฿{formatAmount(payment.partner_revenue || (payment.amount * 0.8))}</span>
+                  </td>
+                  
                   <td className="approved-date">
-                    {formatDate(payment.approved_at)}
+                    <span className="date">{formatDate(payment.approved_at || payment.created_at)}</span>
                   </td>
-                  <td className="approved-by">
-                    <div className="approver-info">
-                      <div className="approver-name">
-                        {payment.approved_by_name || 'แอดมิน'}
-                      </div>
-                      <div className="approver-email">
-                        {payment.approved_by_email || ''}
-                      </div>
-                    </div>
-                  </td>
+                  
                   <td className="slip-actions">
                     {payment.slip_url ? (
                       <a 
@@ -232,7 +303,7 @@ const ApprovedPayments = () => {
                         rel="noopener noreferrer"
                         className="view-slip-btn"
                       >
-                        🖼️ ดูสลิป
+                        📄 ดูสลิป
                       </a>
                     ) : (
                       <span className="no-slip">ไม่มีสลิป</span>
