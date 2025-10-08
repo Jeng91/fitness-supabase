@@ -326,7 +326,7 @@ const HomePage = () => {
                       <span className="price-label">เริ่มต้นที่</span>
                       <div className="fitness-price">
                         <span className="amount">{fitness.price}</span>
-                        <span className="currency"> บาท/คน</span>
+                        <span className="currency">บาท/วัน </span>
                       </div>
                     </div>
 
@@ -334,7 +334,7 @@ const HomePage = () => {
                     <div className="rating-badge-inline">
                       <span className="rating-score">9.6</span>
                       <div className="rating-text">
-                        <span>แสนงี่เซ</span>
+                        
                         <small>138 ความคิดเห็นจากผู้มักที่</small>
                       </div>
                     </div>
