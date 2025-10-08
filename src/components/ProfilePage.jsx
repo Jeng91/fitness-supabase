@@ -81,23 +81,14 @@ const ProfilePage = () => {
         setLoading(true);
         console.log('Fetching profile for user:', user.id);
         
-        // Set timeout to prevent infinite loading
-        const timeoutId = setTimeout(() => {
-          setLoading(false);
-          console.log('Profile loading timeout');
-        }, 10000); // 10 seconds timeout
-        
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('user_uid', user.id)
           .single();
 
-        clearTimeout(timeoutId);
-
         if (error) {
           if (error.code === 'PGRST116') {
-            // No profile found - create empty profile
             console.log('No profile found, will create when user saves');
             setProfile(null);
           } else {
@@ -106,43 +97,16 @@ const ProfilePage = () => {
         } else if (data) {
           console.log('Profile loaded:', data);
           setProfile(data);
-          
-          // Set form data with proper fallbacks
-          const newFormData = {
-            username: data.username || '',
-            useremail: data.useremail || user?.email || '',
-            userage: data.userage ? data.userage.toString() : '',
-            usertel: data.usertel || '',
-            profile_image: data.profile_image || '',
-            full_name: data.full_name || ''
-          };
-          
-          console.log('Setting form data:', newFormData);
-          setFormData(newFormData);
-        } else {
-          // No data returned but no error
-          console.log('No profile data found, creating empty profile');
-          setProfile(null);
-          setFormData({
-            username: '',
-            useremail: user?.email || '',
-            userage: '',
-            usertel: '',
-            profile_image: '',
-            full_name: ''
-          });
         }
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Profile fetch error:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    if (user) {
-      fetchProfile();
-    }
-  }, [user]);
+    fetchProfile();
+  }, [user?.id]); // ใช้ user?.id แทน user ทั้งตัว
 
   // useEffect สำหรับโหลด favorites
   useEffect(() => {

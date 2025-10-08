@@ -19,7 +19,7 @@ const BookingHistory = () => {
     if (user) {
       loadData();
     }
-  }, [user, activeTab, loadData]);
+  }, [user, activeTab]); // ลบ loadData ออกจาก dependency
 
   const checkUser = async () => {
     try {

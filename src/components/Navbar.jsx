@@ -9,49 +9,6 @@ const Navbar = () => {
   const [userProfile, setUserProfile] = useState(null);
   const [isScrolled, setIsScrolled] = useState(false);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      // Debug logging disabled for clean console
-      // console.log('🔍 Navbar - Current user from supabase.auth.getUser():', user);
-      setUser(user);
-      
-      if (user) {
-        // console.log('✅ User found, loading profile for user ID:', user.id);
-        await loadUserProfile(user.id);
-      } else {
-        // console.log('❌ No user found, clearing profile');
-        setUserProfile(null);
-      }
-    };
-    
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // console.log('🔄 Auth state changed:', event, session?.user || null);
-      setUser(session?.user || null);
-      if (session?.user) {
-        await loadUserProfile(session.user.id);
-      } else {
-        setUserProfile(null);
-      }
-    });
-
-    // Scroll effect
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      setIsScrolled(scrollTop > 50);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      subscription.unsubscribe();
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
   const loadUserProfile = async (userId) => {
     try {
       // Debug logging disabled for clean console
@@ -69,7 +26,7 @@ const Navbar = () => {
         return;
       }
 
-      // ถ้าไม่เจอใน profiles ตรวจสอบใน tbl_owner
+      // ถ้าไม่พบใน profiles ให้ค้นใน tbl_owner
       const { data: owner } = await supabase
         .from('tbl_owner')
         .select('*')
@@ -79,10 +36,9 @@ const Navbar = () => {
       if (owner) {
         // console.log('✅ Found profile in tbl_owner table:', owner);
         setUserProfile({
-          id: owner.owner_uid,
+          role: 'partner',
           full_name: owner.owner_name,
           email: owner.owner_email,
-          role: 'partner',
           ...owner
         });
       } else {
@@ -93,9 +49,51 @@ const Navbar = () => {
     }
   };
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      
+      if (user) {
+        await loadUserProfile(user.id);
+      } else {
+        setUserProfile(null);
+      }
+    };
+    
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      
+      if (currentUser) {
+        await loadUserProfile(currentUser.id);
+      } else {
+        setUserProfile(null);
+      }
+    });
+
+    return () => subscription?.unsubscribe();
+  }, []); // Empty dependency array
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      setIsScrolled(scrollTop > 50);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
   const handleLogout = async () => {
     try {
-      // console.log('🚪 Logging out user...');
       await supabase.auth.signOut();
       setUser(null);
       setUserProfile(null);

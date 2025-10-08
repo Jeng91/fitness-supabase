@@ -133,9 +133,9 @@ const ApprovedPayments = () => {
     return filtered;
   };
 
-  const getTotalAmount = () => {
-    return getFilteredPayments().reduce((sum, payment) => sum + Number(payment.amount), 0);
-  };
+  // const getTotalAmount = () => {
+  //   return getFilteredPayments().reduce((sum, payment) => sum + Number(payment.amount), 0);
+  // };
 
   if (loading) {
     return (

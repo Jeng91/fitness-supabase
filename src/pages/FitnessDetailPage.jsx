@@ -14,6 +14,36 @@ const FitnessDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [classesLoading, setClassesLoading] = useState(false);
 
+  // ฟังก์ชันสมัครคลาส
+  const handleClassEnrollment = (classData) => {
+    // สร้างข้อมูลการจองคลาสเพื่อส่งไปหน้าชำระเงิน
+    const classBookingData = {
+      fitnessId: fitnessData.fit_id,
+      fitnessName: fitnessData.fit_name,
+      classId: classData.class_id,
+      className: classData.class_name,
+      total_amount: classData.price,
+      booking_type: 'class',
+      description: `สมัครคลาส ${classData.class_name} ที่ ${fitnessData.fit_name}`,
+      classDetails: {
+        instructor: classData.instructor,
+        duration: classData.duration,
+        class_time: classData.class_time,
+        max_participants: classData.max_participants,
+        description: classData.description
+      },
+      images: {
+        primary: fitnessData.fit_image,
+        secondary: [fitnessData.fit_image2, fitnessData.fit_image3, fitnessData.fit_image4].filter(Boolean)
+      }
+    };
+    
+    // Navigate ไปหน้าชำระเงินพร้อมส่งข้อมูลคลาส
+    navigate('/payment', { 
+      state: { bookingData: classBookingData } 
+    });
+  };
+
   useEffect(() => {
     const loadFitnessDetail = async () => {
       try {
@@ -216,7 +246,10 @@ const FitnessDetailPage = () => {
                       </div>
                     </div>
                     
-                    <button className="btn-book-class">
+                    <button 
+                      className="btn-book-class"
+                      onClick={() => handleClassEnrollment(classItem)}
+                    >
                       📝 สมัครคลาสนี้
                     </button>
                     

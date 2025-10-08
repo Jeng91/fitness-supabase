@@ -112,10 +112,14 @@ const PaymentPage = () => {
       
       // ตรวจสอบประเภทการจอง
       const isMembershipBooking = bookingData.booking_type === 'membership';
+      const isClassEnrollment = bookingData.booking_type === 'class';
       
       if (isMembershipBooking) {
         // การสมัครสมาชิก
         await handleMembershipPayment();
+      } else if (isClassEnrollment) {
+        // การสมัครคลาส
+        await handleClassEnrollmentPayment();
       } else {
         // การจองบริการปกติ
         await handleRegularBookingPayment();
@@ -175,6 +179,61 @@ const PaymentPage = () => {
     setTimeout(() => {
       navigate('/');
     }, 2000);
+  };
+
+  const handleClassEnrollmentPayment = async () => {
+    // สร้างข้อมูลการชำระเงินสำหรับคลาส
+    const paymentData = {
+      total_amount: bookingData.total_amount,
+      payment_method: 'credit_card',
+      payment_status: 'completed',
+      transaction_id: `TXN_CLASS_${Date.now()}`,
+      gateway_response: {
+        card_last_four: paymentForm.cardNumber.slice(-4),
+        email: paymentForm.email,
+        processed_at: new Date().toISOString(),
+        payment_method: 'credit_card',
+        status: 'success',
+        class_enrollment: true,
+        class_name: bookingData.className
+      },
+      gateway_reference: `REF_CLASS_${Date.now()}`
+    };
+
+    console.log('💳 Creating class enrollment payment:', paymentData);
+
+    try {
+      // ที่นี่ควรเรียก API สำหรับสร้างการสมัครคลาส
+      // const classEnrollmentData = {
+      //   class_id: bookingData.classId,
+      //   fitness_id: bookingData.fitnessId,
+      //   amount: bookingData.total_amount,
+      //   enrollment_date: new Date().toISOString().split('T')[0],
+      //   status: 'enrolled'
+      // };
+      // const result = await createClassEnrollment(paymentData, classEnrollmentData);
+      
+      alert(`🎉 สมัครคลาสสำเร็จ!
+      
+🏋️ คลาส: ${bookingData.className}
+🏢 ฟิตเนส: ${bookingData.fitnessName}
+💰 จำนวนเงิน: ${bookingData.total_amount} บาท
+💳 หมายเลขอ้างอิง: ${paymentData.transaction_id}
+
+การสมัครคลาสของคุณได้รับการยืนยันแล้ว!`);
+
+      setIsProcessing(false);
+      
+      // กลับไปหน้าหลัก
+      setTimeout(() => {
+        navigate('/');
+      }, 2000);
+
+    } catch (error) {
+      console.error('Class enrollment payment error:', error);
+      alert('เกิดข้อผิดพลาดในการสมัครคลาส: ' + error.message);
+      setIsProcessing(false);
+    }
   };
 
   const handleRegularBookingPayment = async () => {
@@ -291,6 +350,35 @@ const PaymentPage = () => {
                   <span className="label">วันที่สิ้นสุดสมาชิก:</span>
                   <span className="value">{getEndDate()}</span>
                 </div>
+              </>
+            ) : bookingData.booking_type === 'class' ? (
+              <>
+                <div className="summary-item">
+                  <span className="label">ประเภท:</span>
+                  <span className="value">🎯 สมัครคลาส</span>
+                </div>
+                <div className="summary-item">
+                  <span className="label">ชื่อคลาส:</span>
+                  <span className="value">{bookingData.className}</span>
+                </div>
+                {bookingData.classDetails?.instructor && (
+                  <div className="summary-item">
+                    <span className="label">ผู้สอน:</span>
+                    <span className="value">{bookingData.classDetails.instructor}</span>
+                  </div>
+                )}
+                {bookingData.classDetails?.duration && (
+                  <div className="summary-item">
+                    <span className="label">ระยะเวลา:</span>
+                    <span className="value">{bookingData.classDetails.duration} นาที</span>
+                  </div>
+                )}
+                {bookingData.classDetails?.class_time && (
+                  <div className="summary-item">
+                    <span className="label">เวลาเรียน:</span>
+                    <span className="value">{bookingData.classDetails.class_time}</span>
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -423,9 +511,13 @@ const PaymentPage = () => {
                 <QRPayment 
                   paymentData={{
                     total_amount: bookingData.total_amount,
-                    description: `${bookingData.fitnessName} - ${bookingData.booking_type === 'membership' ? 
-                      (bookingData.membership_type === 'monthly' ? 'สมาชิกรายเดือน' : 'สมาชิกรายปี') : 
-                      'จองบริการรายวัน'}`
+                    description: `${bookingData.fitnessName} - ${
+                      bookingData.booking_type === 'membership' ? 
+                        (bookingData.membership_type === 'monthly' ? 'สมาชิกรายเดือน' : 'สมาชิกรายปี') : 
+                      bookingData.booking_type === 'class' ?
+                        `สมัครคลาส ${bookingData.className}` :
+                        'จองบริการรายวัน'
+                    }`
                   }}
                   onSuccess={(paymentResult) => {
                     alert(`🎉 ชำระเงินด้วย QR Code สำเร็จ!

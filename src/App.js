@@ -1,9 +1,10 @@
-﻿﻿import React, { useState, useEffect, useCallback } from 'react';
+﻿﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import supabase from './supabaseClient';
 import ProfilePage from './components/ProfilePage';
 import MainPartners from './components/MainPartners';
 import FitnessDetailModal from './components/FitnessDetailModal';
+import LoadingSpinner from './components/LoadingSpinner';
 
 
 function App() {
