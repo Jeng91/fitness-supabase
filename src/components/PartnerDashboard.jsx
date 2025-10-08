@@ -75,51 +75,9 @@ const PartnerDashboard = ({ ownerData }) => {
 
   return (
     <div className="partner-dashboard">
-      <h2>📊 ภาพรวมข้อมูล</h2>
+      <h2>📊 จัดการบัญชีธนาคาร</h2>
       
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-header">
-            <h3>👤 ข้อมูลส่วนตัว</h3>
-            <span className="status-icon">{getStatusIcon(dashboardStats.hasProfile)}</span>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ 
-                width: `${dashboardStats.profileComplete}%`,
-                backgroundColor: getCompletionColor(dashboardStats.profileComplete)
-              }}
-            ></div>
-          </div>
-          <p>ความสมบูรณ์: {dashboardStats.profileComplete}%</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <h3>🏋️ ข้อมูลฟิตเนส</h3>
-            <span className="status-icon">{getStatusIcon(dashboardStats.hasFitness)}</span>
-          </div>
-          <div className="progress-bar">
-            <div 
-              className="progress-fill" 
-              style={{ 
-                width: `${dashboardStats.fitnessComplete}%`,
-                backgroundColor: getCompletionColor(dashboardStats.fitnessComplete)
-              }}
-            ></div>
-          </div>
-          <p>ความสมบูรณ์: {dashboardStats.fitnessComplete}%</p>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-header">
-            <h3>🛠️ อุปกรณ์</h3>
-            <span className="stat-number">{dashboardStats.equipmentCount}</span>
-          </div>
-          <p>จำนวนอุปกรณ์ทั้งหมด</p>
-        </div>
-      </div>
+      
 
       {/* เพิ่ม Partner Bank Management Component */}
       <div className="bank-management-section">

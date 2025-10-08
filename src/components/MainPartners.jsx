@@ -162,15 +162,7 @@ const MainPartners = () => {
             onUpdate={handleFitnessUpdate}
           />
         );
-      case 'qr-scanner':
-        return (
-          <QRGenerator 
-            ownerData={ownerData}
-            onUpdate={handleFitnessUpdate}
-          />
-        );
-      default:
-        return <PartnerDashboard ownerData={ownerData} />;
+      
     }
   };
 
@@ -208,7 +200,7 @@ const MainPartners = () => {
           className={currentMenu === 'overview' ? 'active' : ''}
           onClick={() => setCurrentMenu('overview')}
         >
-          📊 ภาพรวม
+          📊 จัดการบัญชีธนาคาร
         </button>
         <button 
           className={currentMenu === 'fitness-info' ? 'active' : ''}
@@ -246,30 +238,15 @@ const MainPartners = () => {
         >
           🎯 จัดการคลาส
         </button>
-        <button 
-          className={currentMenu === 'payments' ? 'active' : ''}
-          onClick={() => setCurrentMenu('payments')}
-        >
-          💳 การชำระเงิน
-        </button>
-        <button 
-          className={currentMenu === 'reports' ? 'active' : ''}
-          onClick={() => setCurrentMenu('reports')}
-        >
-          📈 รายงาน
-        </button>
+       
+        
         <button 
           className={currentMenu === 'marketing' ? 'active' : ''}
           onClick={() => setCurrentMenu('marketing')}
         >
           📢 การตลาด
         </button>
-        <button 
-          className={currentMenu === 'qr-scanner' ? 'active' : ''}
-          onClick={() => setCurrentMenu('qr-scanner')}
-        >
-          📱 QR Generator
-        </button>
+        
       </div>
 
       <div className="partner-content">

@@ -1,9 +1,6 @@
 -- ตรวจสอบ database schema ครอบคลุมทุกตาราง
 -- Run this first to verify actual column names before applying RLS policies
 
-\echo "=== Checking database schema and table structure ==="
-
--- Check if tables exist
 SELECT 
   table_name,
   COUNT(*) as column_count
@@ -13,8 +10,6 @@ WHERE table_schema = 'public'
 GROUP BY table_name
 ORDER BY table_name;
 
--- Check all columns in tbl_owner
-\echo "\n=== tbl_owner columns ==="
 SELECT 
   column_name,
   data_type,
@@ -25,8 +20,7 @@ WHERE table_name = 'tbl_owner'
   AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- Check all columns in tbl_fitness
-\echo "\n=== tbl_fitness columns ==="
+
 SELECT 
   column_name,
   data_type,
@@ -37,8 +31,6 @@ WHERE table_name = 'tbl_fitness'
   AND table_schema = 'public'
 ORDER BY ordinal_position;
 
--- Check current RLS policies
-\echo "\n=== Current RLS policies ==="
 SELECT 
   tablename,
   policyname,
@@ -52,25 +44,21 @@ WHERE schemaname = 'public'
   AND tablename IN ('tbl_fitness', 'tbl_owner')
 ORDER BY tablename, policyname;
 
--- Check if RLS is enabled
-\echo "\n=== RLS status ==="
+
 SELECT 
   schemaname,
   tablename,
-  rowsecurity,
-  forcerowsecurity
+  rowsecurity
 FROM pg_tables 
 WHERE schemaname = 'public'
   AND tablename IN ('tbl_fitness', 'tbl_owner')
 ORDER BY tablename;
 
--- Check sample data to verify column content
-\echo "\n=== Sample data from tbl_owner (first 3 rows) ==="
+
 SELECT *
 FROM tbl_owner
 LIMIT 3;
 
-\echo "\n=== Sample data from tbl_fitness (first 3 rows) ==="
 SELECT *
 FROM tbl_fitness
 LIMIT 3;
