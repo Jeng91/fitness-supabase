@@ -88,12 +88,15 @@ const AdminPage = () => {
       }
 
       // ดึงข้อมูลพาร์ทเนอร์
+      console.log('🔍 Loading partners from tbl_owner...');
       const { data: partners, error: partnersError } = await supabase
         .from('tbl_owner')
         .select('*');
 
       if (partnersError) {
-        console.error('Error loading partners:', partnersError);
+        console.error('❌ Error loading partners:', partnersError);
+      } else {
+        console.log('✅ Partners loaded:', partners?.length || 0, partners);
       }
 
       // ดึงข้อมูลฟิตเนสที่รออนุมัติ (สมมติใช้ status = 'pending')
@@ -183,6 +186,38 @@ const AdminPage = () => {
       });
 
       // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
+      let finalPartners = partners || [];
+      
+      if (finalPartners.length === 0) {
+        console.log('📝 No real partners found, adding sample data...');
+        finalPartners = [
+          {
+            owner_id: 'demo-owner-001',
+            owner_uid: 'DEMO001',
+            owner_name: 'PJ Fitness Center',
+            owner_email: 'pj@fitness.com',
+            created_at: '2024-01-15T10:30:00Z',
+            updated_at: '2024-01-15T10:30:00Z'
+          },
+          {
+            owner_id: 'demo-owner-002', 
+            owner_uid: 'DEMO002',
+            owner_name: 'Healthy Life Gym',
+            owner_email: 'healthy@life.com',
+            created_at: '2024-02-20T14:20:00Z',
+            updated_at: '2024-02-20T14:20:00Z'
+          },
+          {
+            owner_id: 'demo-owner-003',
+            owner_uid: 'DEMO003', 
+            owner_name: 'Champion Sport Club',
+            owner_email: 'champion@sport.com',
+            created_at: '2024-03-10T09:15:00Z',
+            updated_at: '2024-03-10T09:15:00Z'
+          }
+        ];
+      }
+
       let finalBookings = bookings || [];
       let finalPayments = payments || [];
       
@@ -241,7 +276,7 @@ const AdminPage = () => {
       setDashboardData(prev => ({
         ...prev,
         users: users || [],
-        partners: partners || [],
+        partners: finalPartners || [],
         pendingFitness: enrichedPendingFitness || [],
         approvedFitness: enrichedApprovedFitness || [],
         bookings: finalBookings,
@@ -430,7 +465,10 @@ const AdminPage = () => {
           </button>
           <button 
             className={`tab-btn ${activeTab === 'partners' ? 'active' : ''}`}
-            onClick={() => setActiveTab('partners')}
+            onClick={() => {
+              setActiveTab('partners');
+              loadDashboardData(); // Refresh data when switching to partners tab
+            }}
           >
             🏢 จัดการพาร์ทเนอร์
           </button>
@@ -446,12 +484,13 @@ const AdminPage = () => {
           >
             📅 จัดการจอง
           </button>
+          {/* Fitness Management Tab 
           <button 
             className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
             onClick={() => setActiveTab('payments')}
           >
             💳 การชำระเงิน
-          </button>
+          </button>*/}
           <button 
             className={`tab-btn ${activeTab === 'approval' ? 'active' : ''}`}
             onClick={() => setActiveTab('approval')}
@@ -489,7 +528,7 @@ const AdminPage = () => {
       <main className="admin-main">
         {activeTab === 'dashboard' && <DashboardTab data={dashboardData} />}
         {activeTab === 'users' && <UsersTab data={dashboardData} />}
-        {activeTab === 'partners' && <PartnersTab data={dashboardData} />}
+        {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
         {activeTab === 'payments' && <PaymentAdmin />}
         {activeTab === 'approval' && <PaymentApproval />}
@@ -530,26 +569,7 @@ const DashboardTab = ({ data }) => (
       </div>
     </div>
     
-    <div className="dashboard-summary">
-      <div className="summary-card">
-        <h3>🎯 สรุประบบ</h3>
-        <ul>
-          <li>✅ ระบบจองและชำระเงินพร้อมใช้งาน</li>
-          <li>✅ ระบบรักษาความปลอดภัย RLS เปิดใช้งาน</li>
-          <li>✅ ฐานข้อมูลพร้อมใช้งาน</li>
-          <li>✅ การแบ่งรายได้ 20%/80% พร้อม</li>
-        </ul>
-      </div>
-      <div className="summary-card">
-        <h3>📊 สถิติเพิ่มเติม</h3>
-        <ul>
-          <li>🏋️ ฟิตเนสที่อนุมัติ: {data.approvedFitness?.length || 0} แห่ง</li>
-          <li>⏳ ฟิตเนสรออนุมัติ: {data.pendingFitness?.length || 0} แห่ง</li>
-          <li>💳 การชำระเงินสำเร็จ: {data.payments?.filter(p => p.payment_status === 'completed')?.length || 0} รายการ</li>
-          <li>💰 รายได้รวมทั้งหมด: ฿{(data.totalRevenue || 0).toLocaleString()}</li>
-        </ul>
-      </div>
-    </div>
+    
   </div>
 );
 
@@ -605,53 +625,93 @@ const UsersTab = ({ data }) => (
 );
 
 // Partners Tab Component
-const PartnersTab = ({ data }) => (
-  <div className="partners-content">
-    <h2>🏢 จัดการพาร์ทเนอร์</h2>
-    <div className="admin-stats">
-      <div className="stat-card">
-        <h3>จำนวนพาร์ทเนอร์ทั้งหมด</h3>
-        <span className="stat-number">{data?.partners?.length || 0}</span>
+const PartnersTab = ({ data, onRefresh }) => {
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await onRefresh();
+    setIsRefreshing(false);
+  };
+
+  return (
+    <div className="partners-content">
+      <div className="section-header">
+        <h2>🏢 จัดการพาร์ทเนอร์</h2>
+        <button 
+          className="btn-refresh" 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          {isRefreshing ? '🔄 กำลังโหลด...' : '🔄 รีเฟรช'}
+        </button>
       </div>
-    </div>
-    
-    <div className="data-table">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>ชื่อพาร์ทเนอร์</th>
-            <th>อีเมล</th>
-            <th>วันที่สมัคร</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.partners?.length > 0 ? (
-            data.partners.map((partner, index) => (
-              <tr key={partner.owner_uid || index}>
-                <td>{partner.owner_uid || `P${String(index + 1).padStart(3, '0')}`}</td>
-                <td>{partner.owner_name || 'ไม่ระบุ'}</td>
-                <td>{partner.owner_email || 'ไม่ระบุ'}</td>
-                <td>{partner.created_at ? new Date(partner.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
-                <td>
-                  <button className="btn-view">ดู</button>
-                  <button className="btn-edit">แก้ไข</button>
+      
+      <div className="admin-stats">
+        <div className="stat-card">
+          <h3>จำนวนพาร์ทเนอร์ทั้งหมด</h3>
+          <span className="stat-number">{data?.partners?.length || 0}</span>
+          <div className="stat-details">
+            {data?.partners?.length > 0 && (
+              <small>พบข้อมูลพาร์ทเนอร์ {data.partners.length} รายการ</small>
+            )}
+          </div>
+        </div>
+      </div>
+      
+      <div className="data-table">
+        <h3>รายการพาร์ทเนอร์</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>ชื่อพาร์ทเนอร์</th>
+              <th>อีเมล</th>
+              <th>วันที่สมัคร</th>
+              <th>สถานะ</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.partners?.length > 0 ? (
+              data.partners.map((partner, index) => (
+                <tr key={partner.owner_uid || partner.owner_id || index}>
+                  <td>{partner.owner_uid || partner.owner_id || `P${String(index + 1).padStart(3, '0')}`}</td>
+                  <td>{partner.owner_name || 'ไม่ระบุ'}</td>
+                  <td>{partner.owner_email || 'ไม่ระบุ'}</td>
+                  <td>{partner.created_at ? new Date(partner.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
+                  <td>
+                    <span className="status-badge active">ใช้งาน</span>
+                  </td>
+                  <td>
+                    <button className="btn-view">ดู</button>
+                    <button className="btn-edit">แก้ไข</button>
+                    <button className="btn-fitness" title="ดูฟิตเนสของพาร์ทเนอร์">🏋️</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <div className="empty-state">
+                    <div className="empty-icon">📭</div>
+                    <div className="empty-text">ไม่พบข้อมูลพาร์ทเนอร์</div>
+                    <div className="empty-subtext">
+                      อาจจะยังไม่มีพาร์ทเนอร์สมัครเข้าใช้งาน หรือข้อมูลยังไม่ถูกโหลด
+                    </div>
+                    <button className="btn-retry" onClick={handleRefresh}>
+                      ลองโหลดใหม่
+                    </button>
+                  </div>
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
-                ไม่พบข้อมูลพาร์ทเนอร์
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Fitness Tab Component
 const FitnessTab = ({ data, onApprove, onReject }) => {
