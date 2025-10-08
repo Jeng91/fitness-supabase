@@ -8,24 +8,62 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 
 function App() {
+  // ฟังก์ชันจัดการ Supabase API Error  
+  const handleSupabaseError = useCallback((error, operation = 'unknown') => {
+    console.error(`Supabase error in ${operation}:`, error);
+    
+    if (error.code === '406' || error.message?.includes('406')) {
+      console.warn('HTTP 406 Not Acceptable - retrying with different headers');
+      return { shouldRetry: true, retryDelay: 1000 };
+    }
+    
+    if (error.message?.includes('Invalid Refresh Token') || 
+        error.message?.includes('refresh_token_not_found')) {
+      handleAuthError();
+      return { shouldRetry: false };
+    }
+    
+    return { shouldRetry: false };
+  }, [handleAuthError]);
+
   // ฟังก์ชันจัดการ Auth Error
   const handleAuthError = useCallback(async () => {
     try {
-      // Clear local storage
-      localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
-      localStorage.clear();
+      // Clear all auth-related storage
+      const keysToRemove = [
+        'sb-ibtvipouiddtvsdsccfc-auth-token',
+        'supabase.auth.token',
+        'sb-auth-token'
+      ];
       
-      // Sign out user
-      await supabase.auth.signOut();
+      keysToRemove.forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      
+      // Clear all localStorage if needed
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes('supabase') || key.includes('sb-')) {
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Force clear session storage
+      sessionStorage.clear();
+      
+      // Sign out user with global scope
+      await supabase.auth.signOut({ scope: 'global' });
       
       // Reset states
       setUser(null);
       setUserProfile(null);
       setCurrentPage('หน้าหลัก');
       
-      console.log('Auth error handled, user signed out');
+      console.log('Auth error handled, all tokens cleared');
     } catch (error) {
       console.error('Error handling auth error:', error);
+      // Force reload as last resort
+      window.location.reload();
     }
   }, []);
 
@@ -72,13 +110,71 @@ function App() {
 
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อแอปเริ่มต้น
   useEffect(() => {
+    // Check and clean corrupted auth data on app start
+    const cleanCorruptedAuthData = () => {
+      try {
+        const authKeys = Object.keys(localStorage).filter(key => 
+          key.includes('supabase') || key.includes('sb-')
+        );
+        
+        for (const key of authKeys) {
+          try {
+            const value = localStorage.getItem(key);
+            if (value) {
+              const parsed = JSON.parse(value);
+              // Check if token is expired or corrupted
+              if (parsed?.expires_at && parsed.expires_at < Date.now() / 1000) {
+                console.log(`Removing expired auth key: ${key}`);
+                localStorage.removeItem(key);
+              }
+            }
+          } catch (e) {
+            console.log(`Removing corrupted auth key: ${key}`);
+            localStorage.removeItem(key);
+          }
+        }
+      } catch (error) {
+        console.error('Error cleaning auth data:', error);
+      }
+    };
+
+    cleanCorruptedAuthData();
+
     // Global error handler for unhandled promise rejections
     const handleUnhandledRejection = (event) => {
       console.error('Unhandled promise rejection:', event.reason);
-      if (event.reason?.message?.includes('Invalid Refresh Token') || 
-          event.reason?.message?.includes('refresh_token_not_found') ||
-          event.reason?.message?.includes('AuthApiError')) {
+      
+      const errorMessage = event.reason?.message || '';
+      const isAuthError = errorMessage.includes('refresh_token_not_found') ||
+                         errorMessage.includes('Invalid Refresh Token') ||
+                         errorMessage.includes('AuthApiError') ||
+                         event.reason?.code === 'refresh_token_not_found';
+      
+      if (isAuthError) {
+        console.log('Auth error detected in unhandled rejection, clearing auth');
+        event.preventDefault(); // Prevent error from showing in console
         handleAuthError();
+      }
+    };
+
+    // Global fetch interceptor for auth errors
+    const originalFetch = window.fetch;
+    window.fetch = async (...args) => {
+      try {
+        const response = await originalFetch(...args);
+        
+        if (response.status === 400 && args[0]?.includes('/auth/v1/token')) {
+          const responseText = await response.clone().text();
+          if (responseText.includes('refresh_token_not_found')) {
+            console.log('Refresh token error detected in fetch, clearing auth');
+            handleAuthError();
+          }
+        }
+        
+        return response;
+      } catch (error) {
+        console.error('Fetch error:', error);
+        throw error;
       }
     };
 
@@ -86,29 +182,43 @@ function App() {
 
     const checkUserSession = async () => {
       try {
-        // Force clear any cached authentication data
-        localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
-        sessionStorage.clear();
+        console.log('Checking user session...');
+        
+        // Clear any potentially corrupted auth data first
+        const authKeys = Object.keys(localStorage).filter(key => 
+          key.includes('supabase') || key.includes('sb-')
+        );
+        
+        if (authKeys.length > 0) {
+          console.log('Found existing auth keys, clearing...', authKeys);
+          authKeys.forEach(key => localStorage.removeItem(key));
+          sessionStorage.clear();
+        }
         
         // Force sign out any existing session
         await supabase.auth.signOut({ scope: 'global' });
+        
+        // Small delay to ensure cleanup
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
           console.error('Error getting user session:', error);
-          if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('refresh_token_not_found')) {
+          if (error.message?.includes('refresh_token_not_found') || 
+              error.message?.includes('Invalid Refresh Token')) {
+            console.log('Refresh token error detected, clearing auth state');
             await handleAuthError();
             return;
           }
         }
         
         if (user) {
+          console.log('User found:', user.email);
           setUser(user);
           await loadUserProfile(user.id);
         } else {
-          // ถ้าไม่มี user ให้แสดงหน้าหลัก
+          console.log('No user found, setting default state');
           setUser(null);
           setUserProfile(null);
           setCurrentPage('หน้าหลัก');
@@ -133,31 +243,43 @@ function App() {
         console.log('User signed out, cleared all data');
       } else if (event === 'TOKEN_REFRESHED') {
         console.log('Token refreshed successfully');
+        if (session?.user) {
+          setUser(session.user);
+          await loadUserProfile(session.user.id);
+        }
+      } else if (event === 'SIGNED_IN') {
+        console.log('User signed in:', session?.user?.email);
+        if (session?.user) {
+          setUser(session.user);
+          await loadUserProfile(session.user.id);
+        }
       } else if (session?.user) {
         try {
           setUser(session.user);
           await loadUserProfile(session.user.id);
-          console.log('User signed in:', session.user.email);
+          console.log('User session loaded:', session.user.email);
         } catch (error) {
           console.error('Error loading user profile:', error);
-          if (error.message?.includes('Invalid Refresh Token') || 
-              error.message?.includes('refresh_token_not_found')) {
+          if (error.message?.includes('refresh_token_not_found') || 
+              error.message?.includes('Invalid Refresh Token')) {
+            console.log('Token error in auth state change, clearing auth');
             await handleAuthError();
           }
         }
-      }
       }
     });
 
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      // Restore original fetch
+      window.fetch = originalFetch;
     };
-  }, [handleAuthError]);
+  }, [handleAuthError, handleSupabaseError]);
 
-  const loadUserProfile = async (userId) => {
+  const loadUserProfile = async (userId, retryCount = 0) => {
     try {
-      // console.log('Loading profile for user:', userId);
+      console.log('Loading profile for user:', userId);
 
       // ตรวจสอบ tbl_owner ก่อน
       const { data: owner, error: ownerError } = await supabase
@@ -165,6 +287,15 @@ function App() {
         .select('*')
         .eq('auth_user_id', userId)
         .single();
+
+      if (ownerError) {
+        const errorResult = handleSupabaseError(ownerError, 'loadUserProfile-owner');
+        if (errorResult.shouldRetry && retryCount < 3) {
+          console.log(`Retrying loadUserProfile for owner (attempt ${retryCount + 1})`);
+          await new Promise(resolve => setTimeout(resolve, errorResult.retryDelay));
+          return loadUserProfile(userId, retryCount + 1);
+        }
+      }
 
       if (owner && !ownerError) {
         // console.log('Found owner profile:', owner);
