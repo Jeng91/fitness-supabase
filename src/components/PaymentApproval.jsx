@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { supabase } from '../supabaseClient';
+import React, { useState, useEffect, useCallback } from 'react';
+import supabase from '../supabaseClient';
 import './PaymentApproval.css';
 
 // ฟังก์ชันวิเคราะห์ข้อมูลการจอง
@@ -66,23 +66,6 @@ const PaymentApproval = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
 
-  // ข้อมูลจำลองสำหรับทดสอบ
-  const mockPendingPayments = useMemo(() => [
-    {
-      id: '1',
-      transaction_id: 'txn_1728352900456_abc123',
-      amount: 1200,
-      description: 'ค่าสมาชิกฟิตเนส 2 เดือน',
-      slip_filename: 'slip_payment_001.jpg',
-      created_at: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-      user_profiles: {
-        full_name: 'สมชาย ใจดี',
-        email: 'somchai@email.com',
-        phone_number: '081-234-5678'
-      }
-    }
-  ], []);
-
   const fetchPendingPayments = useCallback(async () => {
     try {
       setLoading(true);
@@ -108,27 +91,28 @@ const PaymentApproval = () => {
         const pendingPayments = storedPayments.filter(p => 
           p.status === 'pending_approval' || p.status === 'pending'
         );
-        const allPayments = [...mockPendingPayments, ...pendingPayments];
-        setPendingPayments(allPayments);
+        setPendingPayments(pendingPayments);
       } else {
         // รวมข้อมูลจากฐานข้อมูลและ localStorage
         const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
         const pendingStoredPayments = storedPayments.filter(p => 
           p.status === 'pending_approval' || p.status === 'pending'
         );
-        const allPayments = [...(dbPayments || []), ...mockPendingPayments, ...pendingStoredPayments];
+        const allPayments = [...(dbPayments || []), ...pendingStoredPayments];
         setPendingPayments(allPayments);
       }
     } catch (error) {
       console.error('Error fetching payments:', error);
-      // ใช้ข้อมูลจำลองในกรณีที่เกิดข้อผิดพลาด
+      // ใช้ข้อมูลจาก localStorage ในกรณีที่เกิดข้อผิดพลาด
       const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-      const allPayments = [...mockPendingPayments, ...storedPayments];
-      setPendingPayments(allPayments);
+      const pendingPayments = storedPayments.filter(p => 
+        p.status === 'pending_approval' || p.status === 'pending'
+      );
+      setPendingPayments(pendingPayments);
     } finally {
       setLoading(false);
     }
-  }, [mockPendingPayments]);
+  }, []);
 
   useEffect(() => {
     fetchPendingPayments();
@@ -194,7 +178,6 @@ const PaymentApproval = () => {
             .eq('id', paymentId);
 
           if (!updateError) {
-            console.log('✅ อนุมัติการชำระเงินในฐานข้อมูลสำเร็จ');
             dbSuccess = true;
           }
         }
@@ -204,7 +187,6 @@ const PaymentApproval = () => {
 
       // หากฐานข้อมูลไม่สำเร็จ ใช้ localStorage
       if (!dbSuccess) {
-        console.log('📝 ใช้ localStorage แทน');
         
         // อัปเดต localStorage สำหรับ pending_payments
         const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
@@ -244,7 +226,6 @@ const PaymentApproval = () => {
         });
         
         localStorage.setItem('approved_payments', JSON.stringify(approvedPayments));
-        localStorage.setItem('approved_payments', JSON.stringify(approvedPayments));
       }
 
       // อัปเดต UI
@@ -282,9 +263,10 @@ const PaymentApproval = () => {
       // อัปเดต UI และ localStorage
       setPendingPayments(prev => {
         const updated = prev.filter(payment => payment.id !== paymentId);
-        // อัปเดต localStorage
-        const storedPayments = updated.filter(p => !mockPendingPayments.find(mock => mock.id === p.id));
-        localStorage.setItem('pending_payments', JSON.stringify(storedPayments));
+        // อัปเดต localStorage (กรองเฉพาะข้อมูลจาก localStorage)
+        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
+        const filteredStoredPayments = storedPayments.filter(p => p.id !== paymentId);
+        localStorage.setItem('pending_payments', JSON.stringify(filteredStoredPayments));
         return updated;
       });
 
@@ -333,17 +315,6 @@ const PaymentApproval = () => {
           <span className="pending-count">
             รออนุมัติ: {pendingPayments.length} รายการ
           </span>
-          <button 
-            className="debug-btn"
-            onClick={() => {
-              console.log('=== Payment Data Locations ===');
-              console.log('1. Supabase Database: pending_payments table');
-              console.log('2. Supabase Storage: payment-slips bucket');
-              console.log('3. localStorage backup:', JSON.parse(localStorage.getItem('pending_payments') || '[]'));
-            }}
-          >
-            🔍 Debug Data
-          </button>
         </div>
       </div>
 

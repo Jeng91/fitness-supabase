@@ -12,7 +12,6 @@ import ActivityManagement from './ActivityManagement';
 import PaymentManagement from './PaymentManagement';
 import RevenueReports from './RevenueReports';
 import MarketingTools from './MarketingTools';
-import QRGenerator from './QRGenerator';
 
 const MainPartners = () => {
   const navigate = useNavigate();
@@ -73,10 +72,10 @@ const MainPartners = () => {
 
   // Callback functions for components
   const handleFitnessUpdate = (data) => {
-    console.log('Fitness updated:', data);
+    // Handle fitness update
   };
   const handleEquipmentUpdate = (data) => {
-    console.log('Equipment updated:', data);
+    // Handle equipment update
   };
 
   if (loading) {
@@ -162,7 +161,8 @@ const MainPartners = () => {
             onUpdate={handleFitnessUpdate}
           />
         );
-      
+      default:
+        return <PartnerDashboard ownerData={ownerData} />;
     }
   };
 

@@ -11,8 +11,6 @@ const Navbar = () => {
 
   const loadUserProfile = async (userId) => {
     try {
-      // Debug logging disabled for clean console
-      // console.log('📝 Loading user profile for ID:', userId);
       // ตรวจสอบใน profiles ก่อน
       const { data: profile } = await supabase
         .from('profiles')
@@ -21,7 +19,6 @@ const Navbar = () => {
         .single();
 
       if (profile) {
-        // console.log('✅ Found profile in profiles table:', profile);
         setUserProfile(profile);
         return;
       }
@@ -34,15 +31,12 @@ const Navbar = () => {
         .single();
 
       if (owner) {
-        // console.log('✅ Found profile in tbl_owner table:', owner);
         setUserProfile({
           role: 'partner',
           full_name: owner.owner_name,
           email: owner.owner_email,
           ...owner
         });
-      } else {
-        // console.log('❌ No profile found in either table for user ID:', userId);
       }
     } catch (error) {
       console.error('❌ Error loading user profile:', error);
@@ -102,7 +96,6 @@ const Navbar = () => {
       localStorage.clear();
       sessionStorage.clear();
       
-      // console.log('✅ Logout successful, navigating to home');
       navigate('/');
     } catch (error) {
       console.error('❌ Logout error:', error);
@@ -111,8 +104,6 @@ const Navbar = () => {
 
   const handleForceLogout = async () => {
     try {
-      console.log('🔥 Force logout - clearing all auth state...');
-      
       // Force sign out
       await supabase.auth.signOut({ scope: 'global' });
       
@@ -131,7 +122,6 @@ const Navbar = () => {
       setUser(null);
       setUserProfile(null);
       
-      console.log('✅ Force logout complete');
       navigate('/');
       window.location.reload(); // Force reload
     } catch (error) {

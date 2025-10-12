@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
 import { createPayment, updateBookingStatus } from '../utils/bookingPaymentAPI';
@@ -51,9 +51,6 @@ const PaymentPage = () => {
     if (!bookingData) {
       alert('ไม่พบข้อมูลการจอง');
       navigate('/');
-    } else {
-      console.log('🔍 PaymentPage - BookingData:', bookingData);
-      console.log('🔍 PaymentPage - Booking ID:', bookingData.booking_id);
     }
   }, [bookingData, navigate]);
 
@@ -108,8 +105,6 @@ const PaymentPage = () => {
     setIsProcessing(true);
     
     try {
-      console.log('🔄 Processing payment for booking:', bookingData);
-      
       // ตรวจสอบประเภทการจอง
       const isMembershipBooking = bookingData.booking_type === 'membership';
       const isClassEnrollment = bookingData.booking_type === 'class';
@@ -150,16 +145,12 @@ const PaymentPage = () => {
       gateway_reference: `REF_MEMBER_${Date.now()}`
     };
 
-    console.log('💳 Creating membership payment record:', paymentData);
-
     // บันทึกข้อมูลการชำระเงินลง Database
     const paymentResult = await createMembershipPayment(paymentData, bookingData);
     
     if (!paymentResult.success) {
       throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินสมาชิกได้');
     }
-
-    console.log('✅ Membership payment created successfully:', paymentResult.data);
 
     // แสดงผลสำเร็จสำหรับสมาชิก
     alert(`🎉 สมัครสมาชิกสำเร็จ!
@@ -199,8 +190,6 @@ const PaymentPage = () => {
       },
       gateway_reference: `REF_CLASS_${Date.now()}`
     };
-
-    console.log('💳 Creating class enrollment payment:', paymentData);
 
     try {
       // ที่นี่ควรเรียก API สำหรับสร้างการสมัครคลาส
@@ -253,17 +242,12 @@ const PaymentPage = () => {
       },
       gateway_reference: `REF_${Date.now()}`
     };
-
-    console.log('💳 Creating payment record:', paymentData);
-
     // บันทึกข้อมูลการชำระเงินลง Database
     const paymentResult = await createPayment(paymentData);
     
     if (!paymentResult.success) {
       throw new Error(paymentResult.error || 'ไม่สามารถบันทึกข้อมูลการชำระเงินได้');
     }
-
-    console.log('✅ Payment created successfully:', paymentResult.data);
 
     // อัพเดทสถานะการจองเป็น confirmed
     const bookingUpdateResult = await updateBookingStatus(
@@ -274,8 +258,6 @@ const PaymentPage = () => {
 
     if (!bookingUpdateResult.success) {
       console.warn('⚠️ Warning: Payment saved but failed to update booking status:', bookingUpdateResult.error);
-    } else {
-      console.log('✅ Booking status updated to confirmed:', bookingUpdateResult.data);
     }
 
     // แสดงผลสำเร็จ

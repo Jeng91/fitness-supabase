@@ -138,9 +138,6 @@ export const deleteFitnessRequest = async (requestId) => {
 
 // ตัวอย่างการใช้งานใน React Component
 /*
-import React, { useState, useEffect } from 'react';
-import { submitFitnessRequest, getPartnerFitnessRequests } from './fitnessRequestAPI';
-
 const PartnerFitnessManagement = ({ partnerId }) => {
   const [requests, setRequests] = useState([]);
   const [formData, setFormData] = useState({

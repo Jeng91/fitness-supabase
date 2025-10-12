@@ -62,8 +62,6 @@ const LoginPage = () => {
     setMessage('');
 
     try {
-      console.log('Attempting to sign in with:', formData.email);
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
@@ -74,12 +72,10 @@ const LoginPage = () => {
         throw error;
       }
 
-      console.log('Auth successful, user:', data.user);
       setMessage('เข้าสู่ระบบสำเร็จ!');
 
       // ตรวจสอบ role และ redirect ทันที
       try {
-        console.log('🔍 Checking user role for:', data.user.id);
         
         // ตรวจสอบใน tbl_owner ก่อน (partner)
         const { data: owner, error: ownerError } = await supabase
@@ -88,10 +84,7 @@ const LoginPage = () => {
           .eq('auth_user_id', data.user.id)
           .single();
 
-        console.log('👥 Owner query result:', { owner, ownerError });
-
         if (owner && !ownerError) {
-          console.log('Partner found:', owner);
           navigate('/partner');
           return;
         }
@@ -103,16 +96,12 @@ const LoginPage = () => {
           .eq('user_uid', data.user.id)
           .single();
 
-        console.log('👤 Profile query result:', { profile, profileError });
-
         if (profile && !profileError) {
-          console.log('Regular user found:', profile);
           navigate('/'); // หน้าหลักสำหรับ user ทั่วไป
           return;
         }
 
         // ถ้าไม่เจอในทั้งสองตาราง ให้ไปหน้าหลัก
-        console.log('No profile found, redirecting to home');
         navigate('/');
 
       } catch (profileCheckError) {

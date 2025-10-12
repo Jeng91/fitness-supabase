@@ -59,10 +59,6 @@ const FitnessDetailModal = ({
         }
 
         // โหลดข้อมูลรายละเอียดเพิ่มเติมจาก field fit_moredetails
-        // Debug logging disabled for clean console
-        // if (process.env.NODE_ENV === 'development') {
-        //   console.log('🔍 Loading more details from fit_moredetails field:', fitnessData.fit_moredetails);
-        // }
         
         // ดึงข้อมูลจาก field fit_moredetails ในตาราง tbl_fitness
         const moreDetailsText = fitnessData.fit_moredetails || '';
@@ -81,9 +77,6 @@ const FitnessDetailModal = ({
         }
         
         // Debug logging disabled for clean console  
-        // if (process.env.NODE_ENV === 'development') {
-        //   console.log('📝 Processed more details:', processedMoreDetails);
-        // }
         setMoreDetailsData(processedMoreDetails);
 
       } catch (error) {

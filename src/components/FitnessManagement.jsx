@@ -8,9 +8,6 @@ const FitnessManagement = ({
   onUpdate,
   initialFitnessData = null 
 }) => {
-  console.log('🔍 FitnessManagement - ownerData received:', ownerData);
-  console.log('🔍 FitnessManagement - ownerData keys:', ownerData ? Object.keys(ownerData) : 'null');
-  
   // ฟังก์ชันปรับฟอร์แมตเวลา
   const formatTime = (timeString) => {
     if (!timeString) return timeString;
@@ -58,10 +55,7 @@ const FitnessManagement = ({
 
   // Load existing fitness data
   const loadExistingFitnessData = useCallback(async () => {
-    console.log('🔍 loadExistingFitnessData called with ownerData:', ownerData);
-    
     if (!ownerData?.owner_name) {
-      console.log('❌ No ownerData.owner_name available for loading fitness data');
       return;
     }
 
@@ -259,8 +253,6 @@ const FitnessManagement = ({
           .single();
       } else {
         // Update existing fitness
-        console.log('Updating fitness with ownerData:', ownerData);
-        
         if (!ownerData?.owner_name) {
           console.error('Error: ownerData.owner_name is undefined');
           alert('เกิดข้อผิดพลาด: ไม่พบข้อมูล owner_name');

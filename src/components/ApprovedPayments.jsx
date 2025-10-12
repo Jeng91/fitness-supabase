@@ -58,10 +58,8 @@ const ApprovedPayments = () => {
         .order('approved_at', { ascending: false });
 
       if (!error && dbPayments) {
-        console.log('✅ ดึงข้อมูลการชำระเงินที่อนุมัติแล้วสำเร็จ:', dbPayments);
         setApprovedPayments(dbPayments);
       } else {
-        console.log('📝 ใช้ข้อมูลจาก localStorage');
         // Fallback ไปยัง localStorage
         const localData = JSON.parse(localStorage.getItem('approved_payments') || '[]');
         setApprovedPayments(localData);

@@ -37,7 +37,7 @@ const AdminPage = () => {
 
   const checkAdminAuth = async () => {
     try {
-      console.log('Admin auth check skipped - using simple login');
+      // Auth check implementation
     } catch (error) {
       console.error('Auth check error:', error);
     }
@@ -75,8 +75,6 @@ const AdminPage = () => {
 
   const loadDashboardData = async () => {
     try {
-      console.log('🔄 Loading dashboard data...');
-
       // ดึงข้อมูลผู้ใช้
       const { data: users, error: usersError } = await supabase
         .from('profiles')
@@ -88,15 +86,12 @@ const AdminPage = () => {
       }
 
       // ดึงข้อมูลพาร์ทเนอร์
-      console.log('🔍 Loading partners from tbl_owner...');
       const { data: partners, error: partnersError } = await supabase
         .from('tbl_owner')
         .select('*');
 
       if (partnersError) {
         console.error('❌ Error loading partners:', partnersError);
-      } else {
-        console.log('✅ Partners loaded:', partners?.length || 0, partners);
       }
 
       // เชื่อมข้อมูลพาร์ทเนอร์กับข้อมูลฟิตเนส
@@ -104,7 +99,7 @@ const AdminPage = () => {
       if (partners && partners.length > 0) {
         for (const partner of partners) {
           // ดึงข้อมูลฟิตเนสของพาร์ทเนอร์
-          const { data: fitnessData, error: fitnessError } = await supabase
+          const { data: fitnessData } = await supabase
             .from('tbl_fitness')
             .select('fit_phone, fit_address, fit_name')
             .eq('fit_user', partner.owner_name)
@@ -196,22 +191,10 @@ const AdminPage = () => {
         };
       }) || [];
 
-      console.log('✅ Dashboard data loaded:', {
-        users: users?.length || 0,
-        partners: enrichedPartners?.length || 0,
-        pendingFitness: enrichedPendingFitness?.length || 0,
-        approvedFitness: enrichedApprovedFitness?.length || 0,
-        bookings: bookings?.length || 0,
-        payments: payments?.length || 0,
-        totalRevenue: totalRevenue,
-        systemRevenue: systemRevenue
-      });
-
       // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
       let finalPartners = enrichedPartners || [];
       
       if (finalPartners.length === 0) {
-        console.log('📝 No real partners found, adding sample data...');
         finalPartners = [
           {
             owner_id: 'demo-owner-001',
@@ -762,7 +745,7 @@ const PartnersTab = ({ data, onRefresh }) => {
           .eq('fit_user', selectedPartner.owner_name);
 
         if (fitnessError) {
-          console.log('No fitness data to update or error:', fitnessError);
+          // Log error if needed for debugging
         }
       }
 

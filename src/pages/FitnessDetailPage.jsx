@@ -142,7 +142,6 @@ const FitnessDetailPage = () => {
 
   const handleOpenImageGallery = (fitness) => {
     // สามารถเพิ่ม logic สำหรับ image gallery ได้
-    console.log('Open image gallery for:', fitness.name);
   };
 
   if (loading) {

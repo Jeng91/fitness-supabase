@@ -40,8 +40,6 @@ const PaymentAdmin = () => {
         verified_at: newStatus === 'success' ? new Date().toISOString() : null
       };
 
-      console.log('🔄 Updating payment status:', { paymentId, newStatus, updateData });
-
       const { error } = await supabase
         .from('qr_payments')
         .update(updateData)

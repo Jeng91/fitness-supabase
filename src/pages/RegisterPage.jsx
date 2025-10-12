@@ -55,8 +55,6 @@ const RegisterPage = () => {
     }
 
     try {
-      console.log('Attempting to register:', formData.email, formData.role);
-      
       // สมัครสมาชิกผ่าน Supabase Auth
       const { data, error } = await supabase.auth.signUp({
         email: formData.email,
@@ -73,8 +71,6 @@ const RegisterPage = () => {
         console.error('Registration error:', error);
         throw error;
       }
-
-      console.log('Registration successful:', data);
 
       if (data.user) {
         // สร้าง profile ใน database ตาม role

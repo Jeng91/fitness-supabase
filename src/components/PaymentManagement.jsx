@@ -22,7 +22,6 @@ const PaymentManagement = ({ ownerData, onUpdate }) => {
         .single();
 
       if (fitnessError || !fitnessData) {
-        console.log('ยังไม่มีข้อมูลฟิตเนส');
         setPayments([]);
         return;
       }

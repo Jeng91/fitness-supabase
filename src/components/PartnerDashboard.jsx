@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import supabase from '../supabaseClient';
 import PartnerBankManagement from './PartnerBankManagement';
 
 const PartnerDashboard = ({ ownerData }) => {
-  const [fitnessData, setFitnessData] = useState(null);
-  const [equipmentList, setEquipmentList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // โหลดข้อมูลฟิตเนสของ partner นี้
@@ -13,30 +10,7 @@ const PartnerDashboard = ({ ownerData }) => {
       if (!ownerData?.owner_uid) return;
 
       try {
-        // ดึงข้อมูลฟิตเนสของ partner นี้
-        const { data: fitness, error: fitnessError } = await supabase
-          .from('tbl_fitness')
-          .select('*')
-          .eq('owner_uid', ownerData.owner_uid)
-          .single();
-
-        if (fitness && !fitnessError) {
-          setFitnessData(fitness);
-          
-          // ดึงข้อมูลอุปกรณ์ของฟิตเนสนี้
-          const { data: equipment, error: equipError } = await supabase
-            .from('tbl_equipment')
-            .select('*')
-            .eq('fitness_id', fitness.fit_id);
-
-          if (!equipError) {
-            setEquipmentList(equipment || []);
-          }
-        }
-
-        // ดึงสถิติการจอง (ถ้ามีระบบจอง)
-        // TODO: เพิ่มการดึงข้อมูลการจองเมื่อมีตารางการจอง
-
+        // เมื่อจำเป็นจะโหลดข้อมูลเพิ่มเติม
       } catch (error) {
         console.error('Error loading partner dashboard data:', error);
       } finally {
@@ -50,28 +24,6 @@ const PartnerDashboard = ({ ownerData }) => {
   if (loading) {
     return <div className="dashboard-loading">กำลังโหลดข้อมูล...</div>;
   }
-
-  const dashboardStats = {
-    hasProfile: !!ownerData,
-    hasFitness: !!fitnessData?.fit_id,
-    equipmentCount: equipmentList?.length || 0,
-    profileComplete: ownerData ? 
-      (ownerData.owner_name && ownerData.owner_email ? 100 : 
-       (ownerData.owner_name || ownerData.owner_email ? 60 : 30)) : 0,
-    fitnessComplete: fitnessData ? 
-      (fitnessData.fit_name && fitnessData.fit_address ? 100 :
-       (fitnessData.fit_name || fitnessData.fit_address ? 60 : 30)) : 0
-  };
-
-  const getCompletionColor = (percentage) => {
-    if (percentage >= 80) return '#28a745'; // เขียว
-    if (percentage >= 50) return '#ffc107'; // เหลือง
-    return '#dc3545'; // แดง
-  };
-
-  const getStatusIcon = (completed) => {
-    return completed ? '✅' : '❌';
-  };
 
   return (
     <div className="partner-dashboard">
