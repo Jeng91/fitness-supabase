@@ -23,6 +23,15 @@ const ProfilePage = () => {
   });
   const [activeTab, setActiveTab] = useState('profile');
   const [favorites, setFavorites] = useState([]);
+  const [bookingData, setBookingData] = useState({
+    pendingPayments: [],
+    approvedPayments: [],
+    stats: {
+      upcoming: 0,
+      completed: 0,
+      cancelled: 0
+    }
+  });
 
   // โหลดรายการโปรด
   const loadFavorites = useCallback(async () => {
@@ -52,6 +61,66 @@ const ProfilePage = () => {
       }
     } catch (error) {
       console.error('Error loading favorites:', error);
+    }
+  }, [user?.id]);
+
+  // โหลดข้อมูลการจองและการชำระเงิน
+  const loadBookingData = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🔄 Loading booking data for user:', user.id);
+      
+      // ดึงข้อมูลการชำระเงินรอการอนุมัติ
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('pending_payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      // ดึงข้อมูลการชำระเงินที่อนุมัติแล้ว
+      const { data: approvedData, error: approvedError } = await supabase
+        .from('approved_payments')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('approved_at', { ascending: false });
+
+      console.log('📊 Pending payments:', pendingData);
+      console.log('✅ Approved payments:', approvedData);
+
+      if (!pendingError && !approvedError) {
+        // คำนวณสถิติ
+        const now = new Date();
+        const upcoming = approvedData?.filter(item => {
+          if (!item.booking_period) return false;
+          const bookingDate = new Date(item.booking_period);
+          return bookingDate > now;
+        }).length || 0;
+
+        const completed = approvedData?.filter(item => {
+          if (!item.booking_period) return true; // ถือว่าเสร็จสิ้นถ้าไม่มีวันที่
+          const bookingDate = new Date(item.booking_period);
+          return bookingDate <= now;
+        }).length || 0;
+
+        setBookingData({
+          pendingPayments: pendingData || [],
+          approvedPayments: approvedData || [],
+          stats: {
+            upcoming,
+            completed,
+            cancelled: 0 // จะต้องเพิ่มตารางการยกเลิกในอนาคต
+          }
+        });
+
+        console.log('📈 Stats calculated:', { upcoming, completed, pending: pendingData?.length || 0 });
+      }
+
+      if (pendingError) console.error('❌ Error loading pending payments:', pendingError);
+      if (approvedError) console.error('❌ Error loading approved payments:', approvedError);
+    } catch (error) {
+      console.error('❌ Error loading booking data:', error);
     }
   }, [user?.id]);
 
@@ -113,8 +182,9 @@ const ProfilePage = () => {
   useEffect(() => {
     if (user?.id) {
       loadFavorites();
+      loadBookingData(); // เพิ่มการโหลดข้อมูลการจอง
     }
-  }, [user?.id, loadFavorites]);
+  }, [user?.id, loadFavorites, loadBookingData]);
 
   // ลบรายการโปรด
   const removeFavorite = async (fitnessId) => {
@@ -590,41 +660,71 @@ const ProfilePage = () => {
 
         {activeTab === 'booking' && (
           <div className="tab-content">
-            <h2>สถานะการจอง</h2>
+            <div className="section-header">
+              <h2>สถานะการจอง</h2>
+              <button
+                onClick={loadBookingData}
+                className="refresh-btn"
+                title="รีเฟรชข้อมูลการจอง"
+              >
+                🔄 รีเฟรช
+              </button>
+            </div>
             <div className="booking-section">
               <div className="booking-stats">
                 <div className="stat-card">
                   <h3>การจองที่กำลังจะมาถึง</h3>
-                  <p className="stat-number">2</p>
+                  <p className="stat-number">{bookingData.stats.upcoming}</p>
                 </div>
                 <div className="stat-card">
                   <h3>การจองที่เสร็จสิ้น</h3>
-                  <p className="stat-number">15</p>
+                  <p className="stat-number">{bookingData.stats.completed}</p>
                 </div>
                 <div className="stat-card">
-                  <h3>การจองที่ยกเลิก</h3>
-                  <p className="stat-number">1</p>
+                  <h3>รอการอนุมัติ</h3>
+                  <p className="stat-number">{bookingData.pendingPayments.length}</p>
                 </div>
               </div>
               
               <div className="booking-list">
-                <h3>การจองล่าสุด</h3>
-                <div className="booking-item">
-                  <div className="booking-info">
-                    <h4>Personal Training</h4>
-                    <p>📅 15 ตุลาคม 2025 - 10:00 น.</p>
-                    <p>👨‍🏫 ครูโค้ช: จอห์น สมิธ</p>
-                  </div>
-                  <span className="status confirmed">ยืนยันแล้ว</span>
-                </div>
-                <div className="booking-item">
-                  <div className="booking-info">
-                    <h4>Group Fitness</h4>
-                    <p>📅 18 ตุลาคม 2025 - 18:00 น.</p>
-                    <p>👥 กลุ่ม: Yoga Class</p>
-                  </div>
-                  <span className="status pending">รอยืนยัน</span>
-                </div>
+                <h3>การชำระเงินรอการอนุมัติ</h3>
+                {bookingData.pendingPayments.length > 0 ? (
+                  bookingData.pendingPayments.map((payment) => (
+                    <div key={payment.id} className="booking-item">
+                      <div className="booking-info">
+                        <h4>{payment.description || 'การจองฟิตเนส'}</h4>
+                        <p>� จำนวนเงิน: {payment.amount} บาท</p>
+                        <p>📅 วันที่ส่ง: {new Date(payment.created_at).toLocaleDateString('th-TH')}</p>
+                        <p>�️ Transaction ID: {payment.transaction_id}</p>
+                      </div>
+                      <span className="status pending">รออนุมัติ</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-data">ไม่มีการชำระเงินรอการอนุมัติ</p>
+                )}
+
+                <h3>การจองที่อนุมัติแล้ว</h3>
+                {bookingData.approvedPayments.length > 0 ? (
+                  bookingData.approvedPayments.slice(0, 5).map((payment) => (
+                    <div key={payment.id} className="booking-item">
+                      <div className="booking-info">
+                        <h4>{payment.fitness_name || payment.description || 'การจองฟิตเนส'}</h4>
+                        <p>� จำนวนเงิน: {payment.amount} บาท</p>
+                        <p>📅 วันที่อนุมัติ: {new Date(payment.approved_at).toLocaleDateString('th-TH')}</p>
+                        {payment.booking_period && (
+                          <p>⏰ ช่วงเวลา: {payment.booking_period}</p>
+                        )}
+                        {payment.partner_name && (
+                          <p>🏢 ฟิตเนส: {payment.partner_name}</p>
+                        )}
+                      </div>
+                      <span className="status confirmed">อนุมัติแล้ว</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-data">ไม่มีการจองที่อนุมัติแล้ว</p>
+                )}
               </div>
             </div>
           </div>
