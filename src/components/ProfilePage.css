@@ -1,81 +1,42 @@
  /* ProfilePage.css */
 
-/* Top Navigation Bar */
-.top-navbar {
-  background: rgba(255, 255, 255, 0.95);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  padding: 0;
-}
-
-.navbar-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1rem 2rem;
-}
-
-.navbar-left .home-btn {
-  background: #667eea;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-size: 1rem;
-}
-
-.navbar-left .home-btn:hover {
-  background: #5a67d8;
-  transform: translateY(-1px);
-}
-
-.navbar-center h2 {
-  margin: 0;
-  color: #333;
-  font-size: 1.5rem;
-  font-weight: 600;
-}
-
-.navbar-right .logout-btn {
-  background: #e53e3e;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.navbar-right .logout-btn:hover {
-  background: #c53030;
-  transform: translateY(-1px);
-}
-
-/* Dark Mode for Top Navbar */
-body.dark-mode .top-navbar {
-  background: rgba(0, 0, 0, 0.8);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-body.dark-mode .navbar-center h2 {
-  color: #ffffff;
-}
-
 .profile-container {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   transition: all 0.3s ease;
+  padding-top: 0; /* Remove top padding since Navbar is now handled globally */
+}
+
+/* Profile Header */
+.profile-header {
+  background: rgba(255, 255, 255, 0.1);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.user-info {
+  background: rgba(255, 255, 255, 0.2);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  padding: 1.5rem 2rem;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Dark Mode */
@@ -86,6 +47,11 @@ body.dark-mode .profile-container {
 body.dark-mode .profile-header {
   background: rgba(0, 0, 0, 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .user-info {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 body.dark-mode .profile-nav {
@@ -1231,34 +1197,5 @@ body.dark-mode .review-summary {
   
   .navbar-center h2 {
     font-size: 1.2rem;
-  }
-  
-  .navbar-left .home-btn,
-  .navbar-right .logout-btn {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .navbar-content {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 1rem;
-  }
-  
-  .navbar-left .home-btn {
-    font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
-  }
-  
-  .navbar-center h2 {
-    font-size: 1.1rem;
-    order: -1;
-  }
-  
-  .navbar-right .logout-btn {
-    font-size: 0.8rem;
-    padding: 0.3rem 0.6rem;
   }
 }

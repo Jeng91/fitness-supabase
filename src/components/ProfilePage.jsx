@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
+import Navbar from './Navbar';
 import './ProfilePage.css';
 
 const ProfilePage = () => {
@@ -303,37 +304,10 @@ const ProfilePage = () => {
 
   return (
     <div className={`profile-container ${darkMode ? 'dark-mode' : ''}`}>
-      {/* Top Navigation Bar */}
-      <nav className="top-navbar">
-        <div className="navbar-content">
-          <div className="navbar-left">
-            <button 
-              onClick={() => navigate('/')} 
-              className="home-btn"
-              title="กลับไปหน้าหลัก"
-            >
-              ← PJ Fitness
-            </button>
-          </div>
-          <div className="navbar-center">
-            <h2>โปรไฟล์ของฉัน</h2>
-          </div>
-          <div className="navbar-right">
-            <button onClick={handleLogout} className="logout-btn">
-              ออกจากระบบ
-            </button>
-          </div>
-        </div>
-      </nav>
+      {/* Use Main Navbar */}
+      <Navbar />
 
-      {/* Header */}
-      <header className="profile-header">
-        <div className="header-content">
-          <div className="user-info">
-            <span>สวัสดี, {profile?.full_name || profile?.username || user?.email?.split('@')[0] || 'ผู้ใช้'}</span>
-          </div>
-        </div>
-      </header>
+    
 
       {/* Navigation Menu */}
       <nav className="profile-nav">
