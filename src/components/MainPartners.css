@@ -2545,12 +2545,12 @@
 }
 
 .search-box input {
-  width: 60%;
+  width: 70%;
   padding: 1rem 1.5rem;
   background: #667eea;
   border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 0px;
-  color: white;
+  border-radius: 10px;
+  color: rgb(0, 0, 0) !important;
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   transition: all 0.3s ease;
