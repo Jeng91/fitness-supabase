@@ -25,6 +25,7 @@ const AdminPage = () => {
     partners: [],
     pendingFitness: [],
     approvedFitness: [],
+    pendingPayments: [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
     bookings: [],
     payments: [],
     totalRevenue: 0,
@@ -135,6 +136,24 @@ const AdminPage = () => {
 
       if (fitnessError) {
         console.error('Error loading fitness data:', fitnessError);
+      }
+
+      // ดึงข้อมูลการชำระเงินรอการอนุมัติ
+      const { data: pendingPayments, error: pendingPaymentsError } = await supabase
+        .from('pending_payments')
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            usertel,
+            useremail
+          )
+        `)
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false });
+
+      if (pendingPaymentsError) {
+        console.error('Error loading pending payments:', pendingPaymentsError);
       }
 
       // ดึงข้อมูล bookings
@@ -299,6 +318,7 @@ const AdminPage = () => {
         partners: finalPartners || [],
         pendingFitness: enrichedPendingFitness || [],
         approvedFitness: enrichedApprovedFitness || [],
+        pendingPayments: pendingPayments || [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
         bookings: finalBookings,
         payments: finalPayments,
         totalRevenue: totalRevenue,
@@ -546,7 +566,7 @@ const AdminPage = () => {
 
       {/* Main Content */}
       <main className="admin-main">
-        {activeTab === 'dashboard' && <DashboardTab data={dashboardData} />}
+        {activeTab === 'dashboard' && <DashboardTab data={dashboardData} setActiveTab={setActiveTab} />}
         {activeTab === 'users' && <UsersTab data={dashboardData} />}
         {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
         {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
@@ -563,7 +583,7 @@ const AdminPage = () => {
 };
 
 // Dashboard Tab Component
-const DashboardTab = ({ data }) => (
+const DashboardTab = ({ data, setActiveTab }) => (
   <div className="dashboard-content">
     <h2>📊 ภาพรวมระบบ PJ Fitness</h2>
     <div className="dashboard-stats">
@@ -583,10 +603,90 @@ const DashboardTab = ({ data }) => (
         <div className="stat-label">รายการ</div>
       </div>
       <div className="stat-card">
+        <h3>⏳ รอการอนุมัติ</h3>
+        <div className="stat-number">{data.pendingPayments?.length || 0}</div>
+        <div className="stat-label">รายการ</div>
+      </div>
+      <div className="stat-card">
         <h3>💰 รายได้ระบบ</h3>
         <div className="stat-number">฿{(data.systemRevenue || 0).toLocaleString()}</div>
         <div className="stat-label">บาท (20%)</div>
       </div>
+    </div>
+    
+    {/* แสดงรายการชำระเงินรอการอนุมัติ */}
+    <div className="dashboard-section">
+      <h3>🔍 รายการชำระเงินรอการอนุมัติ</h3>
+      {data.pendingPayments?.length > 0 ? (
+        <div className="data-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Transaction ID</th>
+                <th>ผู้ใช้</th>
+                <th>จำนวนเงิน</th>
+                <th>รายละเอียด</th>
+                <th>วันที่ส่ง</th>
+                <th>สถานะ</th>
+                <th>จัดการ</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.pendingPayments.slice(0, 5).map((payment, index) => (
+                <tr key={payment.id || index}>
+                  <td>
+                    <span className="transaction-id">{payment.transaction_id}</span>
+                  </td>
+                  <td>
+                    <div className="user-info">
+                      <div>{payment.profiles?.full_name || 'ไม่ระบุ'}</div>
+                      <small>{payment.profiles?.useremail || ''}</small>
+                    </div>
+                  </td>
+                  <td>
+                    <span className="amount">฿{payment.amount?.toLocaleString()}</span>
+                  </td>
+                  <td>
+                    <div className="description">{payment.description || 'ไม่ระบุ'}</div>
+                  </td>
+                  <td>
+                    {new Date(payment.created_at).toLocaleDateString('th-TH')}
+                  </td>
+                  <td>
+                    <span className="status pending">รอการอนุมัติ</span>
+                  </td>
+                  <td>
+                    <button 
+                      className="btn-view"
+                      onClick={() => setActiveTab('approval')}
+                      title="ไปหน้าอนุมัติการชำระเงิน"
+                    >
+                      อนุมัติ
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {data.pendingPayments.length > 5 && (
+            <div className="table-footer">
+              <p>และอีก {data.pendingPayments.length - 5} รายการ...</p>
+              <button 
+                className="btn-view-all"
+                onClick={() => setActiveTab('approval')}
+              >
+                ดูทั้งหมด
+              </button>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="no-data">
+          <div className="no-data-icon">✅</div>
+          <h4>ไม่มีรายการชำระเงินรอการอนุมัติ</h4>
+          <p>ทุกการชำระเงินได้รับการอนุมัติเรียบร้อยแล้ว</p>
+        </div>
+      )}
     </div>
     
     

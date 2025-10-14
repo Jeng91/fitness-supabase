@@ -4,6 +4,7 @@ import Layout from './Layout';
 import { createPayment, updateBookingStatus } from '../utils/bookingPaymentAPI';
 import { createMembershipPayment } from '../utils/membershipAPI';
 import QRPayment from './QRPayment';
+import supabase from '../supabaseClient';
 import './PaymentPage.css';
 
 const PaymentPage = () => {
@@ -20,6 +21,13 @@ const PaymentPage = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errors, setErrors] = useState({});
   const [paymentMethod, setPaymentMethod] = useState('credit_card'); // 'credit_card' or 'qr_code'
+  
+  // เพิ่ม state สำหรับโปรโมชัน
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedPromo, setAppliedPromo] = useState(null);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [originalAmount, setOriginalAmount] = useState(0);
+  const [discountAmount, setDiscountAmount] = useState(0);
 
   // ฟังก์ชันคำนวณวันที่สิ้นสุด
   const calculateEndDate = (startDate, membershipType) => {
@@ -51,6 +59,9 @@ const PaymentPage = () => {
     if (!bookingData) {
       alert('ไม่พบข้อมูลการจอง');
       navigate('/');
+    } else {
+      // กำหนดราคาเดิม
+      setOriginalAmount(bookingData.total_amount);
     }
   }, [bookingData, navigate]);
 
@@ -68,6 +79,69 @@ const PaymentPage = () => {
         [name]: ''
       }));
     }
+  };
+
+  // ฟังก์ชันตรวจสอบรหัสโปรโมชัน
+  const validatePromoCode = async () => {
+    if (!promoCode.trim()) {
+      alert('กรุณาป้อนรหัสโปรโมชัน');
+      return;
+    }
+
+    setPromoLoading(true);
+    try {
+      // ค้นหาโปรโมชันที่ตรงกับรหัส
+      const { data: promotions, error } = await supabase
+        .from('tbl_promotions')
+        .select('*')
+        .eq('promo_code', promoCode.toUpperCase())
+        .eq('status', 'active')
+        .single();
+
+      if (error || !promotions) {
+        alert('รหัสโปรโมชันไม่ถูกต้องหรือหมดอายุแล้ว');
+        setPromoLoading(false);
+        return;
+      }
+
+      // ตรวจสอบวันที่หมดอายุ
+      const currentDate = new Date();
+      if (promotions.end_date && new Date(promotions.end_date) < currentDate) {
+        alert('รหัสโปรโมชันหมดอายุแล้ว');
+        setPromoLoading(false);
+        return;
+      }
+
+      // คำนวณส่วนลด
+      let discount = 0;
+      if (promotions.discount_percentage > 0) {
+        discount = Math.round((originalAmount * promotions.discount_percentage / 100) * 100) / 100;
+      } else if (promotions.discount_amount > 0) {
+        discount = Math.min(promotions.discount_amount, originalAmount);
+      }
+
+      setAppliedPromo(promotions);
+      setDiscountAmount(discount);
+      alert(`✅ ใช้โปรโมชันสำเร็จ! ลด ${discount} บาท`);
+
+    } catch (error) {
+      console.error('Error validating promo code:', error);
+      alert('เกิดข้อผิดพลาดในการตรวจสอบรหัสโปรโมชัน');
+    } finally {
+      setPromoLoading(false);
+    }
+  };
+
+  // ฟังก์ชันยกเลิกโปรโมชัน
+  const removePromoCode = () => {
+    setPromoCode('');
+    setAppliedPromo(null);
+    setDiscountAmount(0);
+  };
+
+  // คำนวณราคาสุดท้าย
+  const getFinalAmount = () => {
+    return Math.max(0, originalAmount - discountAmount);
   };
 
   const validateForm = () => {
@@ -379,9 +453,62 @@ const PaymentPage = () => {
               </>
             )}
             
+            {/* Promotion Code Section */}
+            <div className="promo-section">
+              <h4>🎁 รหัสโปรโมชัน</h4>
+              {!appliedPromo ? (
+                <div className="promo-input-group">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder="ป้อนรหัสโปรโมชัน"
+                    className="promo-input"
+                  />
+                  <button
+                    type="button"
+                    onClick={validatePromoCode}
+                    disabled={promoLoading}
+                    className="promo-btn"
+                  >
+                    {promoLoading ? '⏳' : '✅'} ใช้
+                  </button>
+                </div>
+              ) : (
+                <div className="applied-promo">
+                  <div className="promo-info">
+                    <span className="promo-title">🎉 {appliedPromo.title}</span>
+                    <span className="promo-discount">ลด {discountAmount} บาท</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={removePromoCode}
+                    className="remove-promo-btn"
+                  >
+                    ❌ ยกเลิก
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* Price Summary */}
+            <div className="price-summary">
+              <div className="summary-item">
+                <span className="label">ราคาเดิม:</span>
+                <span className="value">฿{originalAmount.toLocaleString()}</span>
+              </div>
+              
+              {appliedPromo && (
+                <div className="summary-item discount">
+                  <span className="label">ส่วนลด ({appliedPromo.promo_code}):</span>
+                  <span className="value">-฿{discountAmount.toLocaleString()}</span>
+                </div>
+              )}
+            </div>
+            
             <div className="summary-item total">
               <span className="label">ราคาทั้งหมด:</span>
-              <span className="value price">{bookingData.total_amount} บาท</span>
+              <span className="value price">฿{getFinalAmount().toLocaleString()}</span>
             </div>
           </div>
 
@@ -479,7 +606,7 @@ const PaymentPage = () => {
                 ) : (
                   <>
                     <span className="btn-icon">💳</span>
-                    ชำระเงิน {bookingData.total_amount} บาท
+                    ชำระเงิน ฿{getFinalAmount().toLocaleString()}
                   </>
                 )}
               </button>
@@ -492,8 +619,8 @@ const PaymentPage = () => {
               <div className="qr-payment-section">
                 <QRPayment 
                   paymentData={{
-                    total_amount: bookingData.total_amount,
-                    description: `${bookingData.fitnessName} - ${
+                    total_amount: getFinalAmount(),
+                    description: `${bookingData.fitnessName}${appliedPromo ? ` (ใช้โปรโมชัน ${appliedPromo.promo_code})` : ''} - ${
                       bookingData.booking_type === 'membership' ? 
                         (bookingData.membership_type === 'monthly' ? 'สมาชิกรายเดือน' : 'สมาชิกรายปี') : 
                       bookingData.booking_type === 'class' ?
