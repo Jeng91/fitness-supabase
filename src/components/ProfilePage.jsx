@@ -355,15 +355,6 @@ const ProfilePage = () => {
     );
   }
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  };
-
   if (loading) {
     return (
       <div className="profile-container">
@@ -888,7 +879,7 @@ const ProfilePage = () => {
             </div>
           </div>
         )}
-        </main>
+      </main>
       </div>
     </div>
   );

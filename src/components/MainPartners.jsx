@@ -182,75 +182,94 @@ const MainPartners = () => {
           <span className="current-page">ระบบพาร์ทเนอร์</span>
         </div>
         <div className="navbar-right">
+          <span className="owner-info">
+            {ownerData.owner_name} / {ownerData.owner_email}
+          </span>
           <button onClick={handleLogout} className="logout-btn">
             🚪 ออกจากระบบ
           </button>
         </div>
       </nav>
 
-      <div className="partner-header">
-        <h1>ระบบจัดการฟิตเนส</h1>
-        <div className="owner-info">
-          <span>ID : {ownerData.owner_name} / {ownerData.owner_email}</span>
-        </div>
-      </div>
+      {/* Content Container with Sidebar */}
+      <div className="partner-content-wrapper">
+        {/* Sidebar Navigation */}
+        <aside className="partner-sidebar">
+          <div className="sidebar-header">
+            <h3>เมนูจัดการ</h3>
+          </div>
+          <nav className="sidebar-nav">
+            <button 
+              className={`sidebar-item ${currentMenu === 'overview' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('overview')}
+            >
+              <span className="sidebar-icon">📊</span>
+              <span className="sidebar-text">จัดการบัญชีธนาคาร</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'fitness-info' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('fitness-info')}
+            >
+              <span className="sidebar-icon">🏋️</span>
+              <span className="sidebar-text">จัดการฟิตเนส</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'equipment' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('equipment')}
+            >
+              <span className="sidebar-icon">🏃</span>
+              <span className="sidebar-text">จัดการอุปกรณ์</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'members' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('members')}
+            >
+              <span className="sidebar-icon">👥</span>
+              <span className="sidebar-text">สมาชิก</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'bookings' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('bookings')}
+            >
+              <span className="sidebar-icon">📅</span>
+              <span className="sidebar-text">การจอง</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'pricing' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('pricing')}
+            >
+              <span className="sidebar-icon">💰</span>
+              <span className="sidebar-text">โปรโมชั่น</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'activities' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('activities')}
+            >
+              <span className="sidebar-icon">🎯</span>
+              <span className="sidebar-text">จัดการคลาส</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${currentMenu === 'marketing' ? 'active' : ''}`}
+              onClick={() => setCurrentMenu('marketing')}
+            >
+              <span className="sidebar-icon">📢</span>
+              <span className="sidebar-text">การตลาด</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+          </nav>
+        </aside>
 
-      <div className="partner-nav">
-        <button 
-          className={currentMenu === 'overview' ? 'active' : ''}
-          onClick={() => setCurrentMenu('overview')}
-        >
-          📊 จัดการบัญชีธนาคาร
-        </button>
-        <button 
-          className={currentMenu === 'fitness-info' ? 'active' : ''}
-          onClick={() => setCurrentMenu('fitness-info')}
-        >
-          🏋️ จัดการฟิตเนส
-        </button>
-        <button 
-          className={currentMenu === 'equipment' ? 'active' : ''}
-          onClick={() => setCurrentMenu('equipment')}
-        >
-          🏃 จัดการอุปกรณ์
-        </button>
-        <button 
-          className={currentMenu === 'members' ? 'active' : ''}
-          onClick={() => setCurrentMenu('members')}
-        >
-          👥 สมาชิก
-        </button>
-        <button 
-          className={currentMenu === 'bookings' ? 'active' : ''}
-          onClick={() => setCurrentMenu('bookings')}
-        >
-          📅 การจอง
-        </button>
-        <button 
-          className={currentMenu === 'pricing' ? 'active' : ''}
-          onClick={() => setCurrentMenu('pricing')}
-        >
-          💰 โปรโมชั่น
-        </button>
-        <button 
-          className={currentMenu === 'activities' ? 'active' : ''}
-          onClick={() => setCurrentMenu('activities')}
-        >
-          🎯 จัดการคลาส
-        </button>
-       
-        
-        <button 
-          className={currentMenu === 'marketing' ? 'active' : ''}
-          onClick={() => setCurrentMenu('marketing')}
-        >
-          📢 การตลาด
-        </button>
-        
-      </div>
-
-      <div className="partner-content">
-        {renderContent()}
+        {/* Main Content */}
+        <main className="partner-main">
+          {renderContent()}
+        </main>
       </div>
     </div>
   );

@@ -488,96 +488,115 @@ const AdminPage = () => {
         </div>
       </header>
 
-      {/* Navigation Tabs */}
-      <nav className="admin-nav admin-tabs">
-        <div className="admin-nav-content">
-          <button 
-            className={`tab-btn ${activeTab === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            📊 แดชบอร์ด
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-            onClick={() => setActiveTab('users')}
-          >
-            👥 จัดการผู้ใช้
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'partners' ? 'active' : ''}`}
-            onClick={() => {
-              setActiveTab('partners');
-              loadDashboardData(); // Refresh data when switching to partners tab
-            }}
-          >
-            🏢 จัดการพาร์ทเนอร์
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'fitness' ? 'active' : ''}`}
-            onClick={() => setActiveTab('fitness')}
-          >
-            🏋️ จัดการฟิตเนส
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'bookings' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bookings')}
-          >
-            📅 จัดการจอง
-          </button>
-          {/* Fitness Management Tab 
-          <button 
-            className={`tab-btn ${activeTab === 'payments' ? 'active' : ''}`}
-            onClick={() => setActiveTab('payments')}
-          >
-            💳 การชำระเงิน
-          </button>*/}
-          <button 
-            className={`tab-btn ${activeTab === 'approval' ? 'active' : ''}`}
-            onClick={() => setActiveTab('approval')}
-          >
-            🔍 อนุมัติการชำระเงิน
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'approved' ? 'active' : ''}`}
-            onClick={() => setActiveTab('approved')}
-          >
-            ✅ รายการที่อนุมัติแล้ว
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'bank' ? 'active' : ''}`}
-            onClick={() => setActiveTab('bank')}
-          >
-            🏦 บัญชีระบบ
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'partnerAccounts' ? 'active' : ''}`}
-            onClick={() => setActiveTab('partnerAccounts')}
-          >
-            🤝 บัญชีพาร์ทเนอร์
-          </button>
-          <button 
-            className={`tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
-            onClick={() => setActiveTab('reports')}
-          >
-            📈 รายงาน
-          </button>
-        </div>
-      </nav>
+      {/* Content Container with Sidebar */}
+      <div className="admin-content-wrapper">
+        {/* Sidebar Navigation */}
+        <aside className="admin-sidebar">
+          <div className="sidebar-header">
+            <h3>เมนูผู้ดูแลระบบ</h3>
+          </div>
+          <nav className="sidebar-nav">
+            <button 
+              className={`sidebar-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dashboard')}
+            >
+              <span className="sidebar-icon">📊</span>
+              <span className="sidebar-text">แดชบอร์ด</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('users')}
+            >
+              <span className="sidebar-icon">👥</span>
+              <span className="sidebar-text">จัดการผู้ใช้</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'partners' ? 'active' : ''}`}
+              onClick={() => {
+                setActiveTab('partners');
+                loadDashboardData();
+              }}
+            >
+              <span className="sidebar-icon">🏢</span>
+              <span className="sidebar-text">จัดการพาร์ทเนอร์</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'fitness' ? 'active' : ''}`}
+              onClick={() => setActiveTab('fitness')}
+            >
+              <span className="sidebar-icon">🏋️</span>
+              <span className="sidebar-text">จัดการฟิตเนส</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'bookings' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bookings')}
+            >
+              <span className="sidebar-icon">📅</span>
+              <span className="sidebar-text">จัดการจอง</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'approval' ? 'active' : ''}`}
+              onClick={() => setActiveTab('approval')}
+            >
+              <span className="sidebar-icon">🔍</span>
+              <span className="sidebar-text">อนุมัติการชำระเงิน</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'approved' ? 'active' : ''}`}
+              onClick={() => setActiveTab('approved')}
+            >
+              <span className="sidebar-icon">✅</span>
+              <span className="sidebar-text">รายการที่อนุมัติแล้ว</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'bank' ? 'active' : ''}`}
+              onClick={() => setActiveTab('bank')}
+            >
+              <span className="sidebar-icon">🏦</span>
+              <span className="sidebar-text">บัญชีระบบ</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'partnerAccounts' ? 'active' : ''}`}
+              onClick={() => setActiveTab('partnerAccounts')}
+            >
+              <span className="sidebar-icon">🤝</span>
+              <span className="sidebar-text">บัญชีพาร์ทเนอร์</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeTab === 'reports' ? 'active' : ''}`}
+              onClick={() => setActiveTab('reports')}
+            >
+              <span className="sidebar-icon">📈</span>
+              <span className="sidebar-text">รายงาน</span>
+              <span className="sidebar-arrow">›</span>
+            </button>
+          </nav>
+        </aside>
 
-      {/* Main Content */}
-      <main className="admin-main">
-        {activeTab === 'dashboard' && <DashboardTab data={dashboardData} setActiveTab={setActiveTab} />}
-        {activeTab === 'users' && <UsersTab data={dashboardData} />}
-        {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
-        {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
-        {activeTab === 'payments' && <PaymentAdmin />}
-        {activeTab === 'approval' && <PaymentApproval />}
-        {activeTab === 'approved' && <ApprovedPayments />}
-        {activeTab === 'bank' && <BankAccountTab />}
-        {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
-        {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
-        {activeTab === 'reports' && <ReportsTab />}
-      </main>
+        {/* Main Content */}
+        <main className="admin-main">
+          {activeTab === 'dashboard' && <DashboardTab data={dashboardData} setActiveTab={setActiveTab} />}
+          {activeTab === 'users' && <UsersTab data={dashboardData} />}
+          {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
+          {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
+          {activeTab === 'payments' && <PaymentAdmin />}
+          {activeTab === 'approval' && <PaymentApproval />}
+          {activeTab === 'approved' && <ApprovedPayments />}
+          {activeTab === 'bank' && <BankAccountTab />}
+          {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
+          {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
+          {activeTab === 'reports' && <ReportsTab />}
+        </main>
+      </div>
     </div>
   );
 };
