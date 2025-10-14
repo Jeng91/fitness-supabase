@@ -379,24 +379,30 @@ const ProfilePage = () => {
 
     
 
-      {/* Navigation Menu */}
-      <nav className="profile-nav">
-        <div className="nav-container">
-          {menuItems.map(item => (
-            <button
-              key={item.id}
-              className={`nav-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(item.id)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-text">{item.name}</span>
-            </button>
-          ))}
-        </div>
-      </nav>
+      {/* Content Container with Sidebar */}
+      <div className="profile-content">
+        {/* Sidebar Navigation */}
+        <aside className="profile-sidebar">
+          <div className="sidebar-header">
+            <h3>เมนูโปรไฟล์</h3>
+          </div>
+          <nav className="sidebar-nav">
+            {menuItems.map(item => (
+              <button
+                key={item.id}
+                className={`sidebar-item ${activeTab === item.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(item.id)}
+              >
+                <span className="sidebar-icon">{item.icon}</span>
+                <span className="sidebar-text">{item.name}</span>
+                <span className="sidebar-arrow">›</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-      {/* Main Content */}
-      <main className="profile-main">
+        {/* Main Content */}
+        <main className="profile-main">
         {activeTab === 'profile' && (
           <div className="tab-content">
             <div className="section-header">
@@ -882,7 +888,8 @@ const ProfilePage = () => {
             </div>
           </div>
         )}
-      </main>
+        </main>
+      </div>
     </div>
   );
 };
