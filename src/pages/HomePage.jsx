@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import Layout from '../components/Layout';
+import NearbyFitness from '../components/NearbyFitness';
 import '../App.css';
 
 const HomePage = () => {
@@ -233,6 +234,9 @@ const HomePage = () => {
 
   return (
     <Layout>
+      {/* ระบบค้นหาฟิตเนสใกล้เคียง */}
+      <NearbyFitness />
+      
       {/* Main Content */}
       <div className="home-content">
         <div className="fitness-section">

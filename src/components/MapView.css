@@ -1,0 +1,256 @@
+/* MapView.css - สไตล์สำหรับคอมโพเนนต์แผนที่ */
+
+.map-container {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  position: relative;
+  background: #f8f9fa;
+}
+
+.map-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+}
+
+.loading-content {
+  text-align: center;
+  color: #6c757d;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e9ecef;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-content p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.map-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fff5f5, #fed7d7);
+  border: 2px solid #feb2b2;
+  border-radius: 12px;
+}
+
+.error-content {
+  text-align: center;
+  color: #c53030;
+  max-width: 300px;
+}
+
+.error-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 16px;
+}
+
+.error-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.error-content p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.error-content small {
+  font-size: 12px;
+  color: #a0aec0;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.fitness-count-badge {
+  background: rgba(39, 174, 96, 0.95);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 14px;
+  box-shadow: 0 3px 12px rgba(39, 174, 96, 0.3);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Custom Google Maps Info Window Styles */
+.gm-style .gm-style-iw {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+}
+
+.gm-style .gm-style-iw-d {
+  overflow: visible !important;
+}
+
+.gm-style .gm-style-iw-c {
+  border-radius: 8px !important;
+  padding: 0 !important;
+}
+
+.gm-style .gm-style-iw-t::after {
+  background: white !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .map-overlay {
+    top: 12px;
+    right: 12px;
+  }
+  
+  .fitness-count-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .loading-content {
+    padding: 16px;
+  }
+  
+  .error-content {
+    padding: 16px;
+    max-width: 250px;
+  }
+  
+  .error-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+  
+  .error-content h3 {
+    font-size: 16px;
+  }
+}
+
+/* Animation effects */
+.map-container {
+  opacity: 0;
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fitness-count-badge {
+  transform: scale(0);
+  animation: bounceIn 0.5s ease 0.3s forwards;
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* สไตล์สำหรับ Google Maps controls */
+.gm-style .gm-style-cc {
+  display: none !important;
+}
+
+.gm-style .gmnoprint {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.gm-style .gmnoprint button {
+  border-radius: 4px !important;
+}
+
+/* ปรับแต่ง marker styles ผ่าน CSS */
+.custom-marker {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.custom-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+}
+
+.custom-marker.user-location {
+  background: #4285f4;
+}
+
+.custom-marker.fitness-location {
+  background: #27ae60;
+}
+
+.custom-marker.fitness-location.selected {
+  background: #e74c3c;
+  transform: scale(1.2);
+}
+
+/* สไปมอบไคล์ */
+@media (max-width: 480px) {
+  .map-container {
+    border-radius: 8px;
+  }
+  
+  .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border-width: 3px;
+  }
+  
+  .error-icon {
+    font-size: 32px;
+  }
+  
+  .fitness-count-badge {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
