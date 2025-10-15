@@ -45,6 +45,7 @@ const MainPartners = () => {
 
         setOwnerData({
           id: owner.owner_uid,
+          owner_id: owner.owner_uid, // ให้ทุกเมนูใช้ owner_id ได้
           full_name: owner.owner_name,
           email: owner.owner_email,
           role: 'partner',

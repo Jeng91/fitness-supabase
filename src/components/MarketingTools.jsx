@@ -110,6 +110,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const tableName = activeTab === 'campaigns' ? 'tbl_marketing_campaigns' : 'tbl_promotions';
       const itemData = {
         fit_id: fitnessData.fit_id,
+        owner_id: ownerData.owner_id,
         title: formData.title,
         description: formData.description,
         type: formData.type,
