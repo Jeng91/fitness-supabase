@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../supabaseClient';
+import './BookingManagement.css';
 
 const BookingManagement = ({ ownerData, onUpdate }) => {
   const [bookings, setBookings] = useState([]);
@@ -163,21 +163,23 @@ const BookingManagement = ({ ownerData, onUpdate }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <input
-          type="date"
-          value={filterDate}
-          onChange={(e) => setFilterDate(e.target.value)}
-        />
-        <select
-          value={filterStatus}
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">ทุกสถานะ</option>
-          <option value="pending">รอยืนยัน</option>
-          <option value="confirmed">ยืนยันแล้ว</option>
-          <option value="completed">เสร็จสิ้น</option>
-          <option value="cancelled">ยกเลิก</option>
-        </select>
+        <div className="filter-row">
+          <input
+            type="date"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+          <select
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="all">ทุกสถานะ</option>
+            <option value="pending">รอยืนยัน</option>
+            <option value="confirmed">ยืนยันแล้ว</option>
+            <option value="completed">เสร็จสิ้น</option>
+            <option value="cancelled">ยกเลิก</option>
+          </select>
+        </div>
       </div>
 
       {filteredBookings.length === 0 ? (

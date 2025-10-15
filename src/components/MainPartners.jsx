@@ -239,14 +239,7 @@ const MainPartners = () => {
               <span className="sidebar-text">การจอง</span>
               <span className="sidebar-arrow">›</span>
             </button>
-            <button 
-              className={`sidebar-item ${currentMenu === 'pricing' ? 'active' : ''}`}
-              onClick={() => setCurrentMenu('pricing')}
-            >
-              <span className="sidebar-icon">💰</span>
-              <span className="sidebar-text">โปรโมชั่น</span>
-              <span className="sidebar-arrow">›</span>
-            </button>
+
             <button 
               className={`sidebar-item ${currentMenu === 'activities' ? 'active' : ''}`}
               onClick={() => setCurrentMenu('activities')}

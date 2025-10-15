@@ -1,0 +1,63 @@
+.booking-controls {
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.filter-row input[type="date"],
+.filter-row select {
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid #c3b6f7;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.filter-row input[type="date"]:focus,
+.filter-row select:focus {
+  border: 1.5px solid #764ba2;
+}
+
+.filter-row select {
+  min-width: 160px;
+}
+
+.search-box {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.search-box input[type="text"] {
+  width: 200%;
+  max-width: 600px;
+  background: rgba(255,255,255,0.10);
+  border: 1.5px solid #c3b6f7;
+  border-radius: 10px;
+  color: #fff;
+  padding: 10px 16px;
+  font-size: 1rem;
+  outline: none;
+  transition: border 0.2s;
+}
+
+.search-box input[type="text"]:focus {
+  border: 1.5px solid #764ba2;
+}
+
+@media (max-width: 700px) {
+  .filter-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
