@@ -224,6 +224,7 @@ const MapView = ({
       });
     }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapInstance, fitnessLocations, selectedFitness, userLocation, onFitnessSelect]);
 
   // เปิดใช้ callback สำหรับ Info Window

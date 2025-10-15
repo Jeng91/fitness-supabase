@@ -12,19 +12,23 @@ const NearbyFitness = () => {
   const [statusMessage, setStatusMessage] = useState('');
   const [searchRadius, setSearchRadius] = useState(10); // กิโลเมตร
   const [sortBy, setSortBy] = useState('distance'); // 'distance', 'name', 'type'
-  const [permissionState, setPermissionState] = useState('unknown');
   const [selectedFitness, setSelectedFitness] = useState(null);
   const [showMap, setShowMap] = useState(false);
 
-  // ตรวจสอบสิทธิ์เข้าถึงตำแหน่งเมื่อโหลดคอมโพเนนต์
+  // ตรวจสอบสิทธิ์เข้าถึงตำแหน่งและค้นหาฟิตเนสทันทีเมื่อโหลดคอมโพเนนต์
   useEffect(() => {
-    const checkPermission = async () => {
+    const autoSearchFitness = async () => {
       if (locationAPI.isGeolocationSupported()) {
         const permission = await locationAPI.requestLocationPermission();
-        setPermissionState(permission);
+        
+        // ถ้าได้รับอนุญาตแล้ว หรือ ยังไม่เคยถาม ให้ค้นหาทันที
+        if (permission === 'granted' || permission === 'prompt' || permission === 'unknown') {
+          handleFindNearby(false); // ค้นหาตำแหน่งจริง
+        }
       }
     };
-    checkPermission();
+    autoSearchFitness();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ฟังก์ชันขอตำแหน่งและค้นหาฟิตเนส
@@ -143,35 +147,9 @@ const NearbyFitness = () => {
       <div className="nearby-header">
         <h2 className="nearby-title">
           <span className="location-icon">📍</span>
-          ค้นหาฟิตเนสใกล้เคียง
+          ฟิตเนสใกล้เคียง (รัศมี 10 กิโลเมตร)
         </h2>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => handleFindNearby(false)}
-            disabled={isLoading}
-            className="find-nearby-btn"
-          >
-            {isLoading ? (
-              <>
-                <span>⏳</span>
-                กำลังค้นหา...
-              </>
-            ) : (
-              <>
-                <span>🎯</span>
-                ค้นหาใกล้ฉัน
-              </>
-            )}
-          </button>
-          <button
-            onClick={() => handleFindNearby(true)}
-            disabled={isLoading}
-            className="find-nearby-btn"
-            style={{ background: 'linear-gradient(135deg, #f39c12, #e67e22)' }}
-          >
-            <span>🏫</span>
-            ใช้ตำแหน่ง Demo
-          </button>
           {nearbyFitness.length > 0 && (
             <button
               onClick={() => setShowMap(!showMap)}
@@ -182,11 +160,38 @@ const NearbyFitness = () => {
               {showMap ? 'รายการ' : 'แผนที่'}
             </button>
           )}
+          <button
+            onClick={() => handleFindNearby(false)}
+            disabled={isLoading}
+            className="find-nearby-btn"
+            style={{ background: 'linear-gradient(135deg, #27ae60, #229954)' }}
+          >
+            {isLoading ? (
+              <>
+                <span>⏳</span>
+                กำลังค้นหา...
+              </>
+            ) : (
+              <>
+                <span>🔄</span>
+                รีเฟรช
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => handleFindNearby(true)}
+            disabled={isLoading}
+            className="find-nearby-btn"
+            style={{ background: 'linear-gradient(135deg, #f39c12, #e67e22)' }}
+          >
+            <span>🏫</span>
+            Demo
+          </button>
         </div>
       </div>
 
-      {/* ตัวเลือกรัศมีการค้นหา */}
-      <div className="radius-selector">
+      {/* ตัวเลือกรัศมีการค้นหา - ซ่อนไว้ */}
+      <div className="radius-selector" style={{ display: 'none' }}>
         <label htmlFor="radius">รัศมีการค้นหา:</label>
         <input
           id="radius"
@@ -374,11 +379,21 @@ const NearbyFitness = () => {
       )}
 
       {/* คำแนะนำสำหรับผู้ใช้ใหม่ */}
-      {!userLocation && !isLoading && (
+      {!userLocation && !isLoading && locationStatus !== 'error' && (
         <div className="demo-notice">
-          <span className="demo-notice-icon">💡</span>
+          <span className="demo-notice-icon">🎯</span>
           <div className="demo-notice-text">
-            <strong>คำแนะนำ:</strong> กดปุ่ม "ค้นหาใกล้ฉัน" เพื่อใช้ตำแหน่งจริง หรือ "ใช้ตำแหน่ง Demo" เพื่อทดสอบระบบ
+            <strong>กำลังค้นหาฟิตเนสใกล้เคียง...</strong> ระบบจะขอสิทธิ์เข้าถึงตำแหน่งของคุณเพื่อค้นหาฟิตเนสในรัศมี 10 กิโลเมตร
+          </div>
+        </div>
+      )}
+
+      {/* แสดงข้อความเมื่อถูกปฏิเสธสิทธิ์ */}
+      {locationStatus === 'error' && (
+        <div className="demo-notice" style={{ background: '#fff5f5', borderColor: '#feb2b2' }}>
+          <span className="demo-notice-icon" style={{ color: '#e53e3e' }}>🚫</span>
+          <div className="demo-notice-text" style={{ color: '#c53030' }}>
+            <strong>ไม่สามารถเข้าถึงตำแหน่งได้:</strong> กรุณาอนุญาตการเข้าถึงตำแหน่งในเบราว์เซอร์ หรือกดปุ่ม "Demo" เพื่อทดสอบระบบ
           </div>
         </div>
       )}
