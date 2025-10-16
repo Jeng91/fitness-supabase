@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import supabase from '../supabaseClient';
+import './MarketingTools.css';
 
 const MarketingTools = ({ ownerData, onUpdate }) => {
   const [campaigns, setCampaigns] = useState([]);

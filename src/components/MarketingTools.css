@@ -1,0 +1,117 @@
+
+.marketing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.marketing-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px 0 rgba(80, 80, 160, 0.08);
+  padding: 14px 14px 10px 14px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid #e0e7ff;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.marketing-card:hover {
+  box-shadow: 0 4px 16px 0 rgba(80, 80, 160, 0.13);
+  border-color: #818cf8;
+}
+.marketing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.marketing-header h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #3730a3;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.status {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 10px;
+  background: #e0e7ff;
+  color: #3730a3;
+  border: 1px solid #c7d2fe;
+}
+.status.active { background: #d1fae5; color: #047857; border-color: #6ee7b7; }
+.status.draft { background: #fef9c3; color: #b45309; border-color: #fde68a; }
+.status.expired { background: #fee2e2; color: #b91c1c; border-color: #fecaca; }
+
+.marketing-content {
+  flex: 1;
+  margin-bottom: 6px;
+}
+.marketing-content .description {
+  color: #6366f1;
+  font-size: 0.97rem;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.marketing-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px 10px;
+  font-size: 0.93rem;
+}
+.marketing-details p {
+  margin: 0 0 2px 0;
+  color: #312e81;
+  font-size: 0.93rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.marketing-details code {
+  background: #ede9fe;
+  color: #7c3aed;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.93rem;
+}
+.marketing-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.marketing-actions .btn-secondary {
+  background: #e0e7ff;
+  color: #3730a3;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.marketing-actions .btn-secondary:hover {
+  background: #c7d2fe;
+}
+.marketing-actions .btn-danger {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.13s;
+}
+.marketing-actions .btn-danger:hover {
+  background: #fecaca;
+}
