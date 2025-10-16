@@ -727,7 +727,7 @@ const UsersTabWithModal = ({ data }) => {
             {data?.users?.length > 0 ? (
               data.users.map((user, index) => (
                 <tr key={user.user_uid || index}>
-                  <td>{user.user_uid || `U${String(index + 1).padStart(3, '0')}`}</td>
+                  <td>{user.user_uid ? user.user_uid.substring(0,6) : `U${String(index + 1).padStart(3, '0')}`}</td>
                   <td>{user.username || 'ไม่ระบุ'}</td>
                   <td>{user.useremail || 'ไม่ระบุ'}</td>
                   <td>{user.full_name || 'ไม่ระบุ'}</td>
