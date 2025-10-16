@@ -195,6 +195,137 @@
   background: linear-gradient(135deg, #fff, #fdfdfe);
 }
 
+/* Modern fitness card layout */
+.fitness-card.modern {
+  width: 384px;
+  min-height: 565px;
+  max-width: 100%;
+  margin: 0 auto 32px auto;
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px rgba(52, 152, 219, 0.08);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  position: relative;
+}
+
+.fitness-card-imgwrap {
+  width: 100%;
+  height: 320px;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  background: #f8f8f8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fitness-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+}
+
+.favorite-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  background: #fff;
+  border: 2px solid #ffb6b6;
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #e74c3c;
+  box-shadow: 0 2px 8px rgba(231,76,60,0.08);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+.favorite-btn:hover {
+  box-shadow: 0 4px 16px rgba(231,76,60,0.18);
+}
+
+.fitness-card-content {
+  padding: 32px 20px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+}
+
+.fitness-card-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.fitness-card-address {
+  font-size: 1rem;
+  color: #6c757d;
+  margin-bottom: 16px;
+}
+
+.fitness-card-price-rating {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 18px;
+}
+.fitness-card-price {
+  font-size: 1.1rem;
+  color: #2980b9;
+  font-weight: 600;
+}
+.price-label {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-right: 4px;
+}
+.price-value {
+  color: #2980b9;
+  font-weight: 700;
+}
+.fitness-card-rating {
+  text-align: right;
+}
+.rating-value {
+  font-size: 1.5rem;
+  color: #7d3c98;
+  font-weight: 700;
+  margin-right: 4px;
+}
+.rating-count {
+  font-size: 0.95rem;
+  color: #6c757d;
+}
+.fitness-card-detail-btn {
+  margin-top: 18px;
+  width: 100%;
+  padding: 12px 0;
+  background: linear-gradient(90deg, #7d3c98 0%, #2980b9 100%);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.08);
+  transition: background 0.2s;
+}
+.fitness-card-detail-btn:hover {
+  background: linear-gradient(90deg, #2980b9 0%, #7d3c98 100%);
+}
+
 .fitness-card-header {
   display: flex;
   justify-content: space-between;

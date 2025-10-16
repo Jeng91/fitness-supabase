@@ -317,8 +317,8 @@ const FitnessDetailModal = ({
                               alt={equipment.em_name}
                               className="equipment-showcase-image"
                               onError={(e) => {
-                                e.target.style.display = 'none';
-                                e.target.nextSibling.style.display = 'flex';
+                                if (e.target) e.target.style.display = 'none';
+                                if (e.target && e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                               }}
                             />
                           ) : (

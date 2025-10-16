@@ -110,36 +110,6 @@ function App() {
 
   // ตรวจสอบสถานะการเข้าสู่ระบบเมื่อแอปเริ่มต้น
   useEffect(() => {
-    // Check and clean corrupted auth data on app start
-    const cleanCorruptedAuthData = () => {
-      try {
-        const authKeys = Object.keys(localStorage).filter(key => 
-          key.includes('supabase') || key.includes('sb-')
-        );
-        
-        for (const key of authKeys) {
-          try {
-            const value = localStorage.getItem(key);
-            if (value) {
-              const parsed = JSON.parse(value);
-              // Check if token is expired or corrupted
-              if (parsed?.expires_at && parsed.expires_at < Date.now() / 1000) {
-                console.log(`Removing expired auth key: ${key}`);
-                localStorage.removeItem(key);
-              }
-            }
-          } catch (e) {
-            console.log(`Removing corrupted auth key: ${key}`);
-            localStorage.removeItem(key);
-          }
-        }
-      } catch (error) {
-        console.error('Error cleaning auth data:', error);
-      }
-    };
-
-    cleanCorruptedAuthData();
-
     // Global error handler for unhandled promise rejections
     const handleUnhandledRejection = (event) => {
       console.error('Unhandled promise rejection:', event.reason);
@@ -183,26 +153,7 @@ function App() {
     const checkUserSession = async () => {
       try {
         console.log('Checking user session...');
-        
-        // Clear any potentially corrupted auth data first
-        const authKeys = Object.keys(localStorage).filter(key => 
-          key.includes('supabase') || key.includes('sb-')
-        );
-        
-        if (authKeys.length > 0) {
-          console.log('Found existing auth keys, clearing...', authKeys);
-          authKeys.forEach(key => localStorage.removeItem(key));
-          sessionStorage.clear();
-        }
-        
-        // Force sign out any existing session
-        await supabase.auth.signOut({ scope: 'global' });
-        
-        // Small delay to ensure cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
         const { data: { user }, error } = await supabase.auth.getUser();
-        
         if (error) {
           console.error('Error getting user session:', error);
           if (error.message?.includes('refresh_token_not_found') || 
@@ -212,7 +163,6 @@ function App() {
             return;
           }
         }
-        
         if (user) {
           console.log('User found:', user.email);
           setUser(user);
@@ -845,15 +795,19 @@ function App() {
         console.error('Supabase signOut error:', error);
         throw error;
       }
-      
+
+      // ลบ token ที่เกี่ยวข้อง (ชื่อ key อาจต้องตรงกับของโปรเจกต์)
+      localStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
+      sessionStorage.removeItem('sb-ibtvipouiddtvsdsccfc-auth-token');
+
       console.log('Supabase signOut successful');
-      
+
       // Clear state manually เพื่อให้แน่ใจว่าออกจากระบบ
       setUser(null);
       setUserProfile(null);
       setMessage('ออกจากระบบสำเร็จ');
       setCurrentPage('หน้าหลัก');
-      
+
       // Clear form data
       setFormData({
         email: '',
@@ -862,9 +816,9 @@ function App() {
         fullName: '',
         role: 'user'
       });
-      
+
       console.log('All user data cleared, redirecting to หน้าหลัก');
-      
+
     } catch (error) {
       console.error('Logout error:', error);
       setMessage(`เกิดข้อผิดพลาด: ${error.message}`);

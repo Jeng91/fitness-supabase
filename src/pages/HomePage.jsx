@@ -242,7 +242,7 @@ const HomePage = () => {
         <div className="fitness-section">
           <div className="fitness-header">
             <div className="fitness-title">
-              <h2>ฟิตเนสที่อยู่ใกล้</h2>
+              <h2>ฟิตเนสทั้งหมด</h2>
               <p className="fitness-count">พบ {filteredFitnessData.length} แห่ง จากทั้งหมด {fitnessData.length} แห่ง</p>
             </div>
             <button 

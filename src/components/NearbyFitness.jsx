@@ -94,36 +94,7 @@ const NearbyFitness = () => {
     }
   };
 
-  // ฟังก์ชันเปิด Google Maps เพื่อดูเส้นทาง
-  const handleGetDirections = (fitness) => {
-    if (userLocation && fitness.coordinates) {
-      locationAPI.openDirections(
-        userLocation.lat,
-        userLocation.lng,
-        fitness.coordinates.lat,
-        fitness.coordinates.lng,
-        fitness.fit_name
-      );
-    }
-  };
-
-  // ฟังก์ชันเปิด Google Maps เพื่อดูตำแหน่ง
-  const handleViewLocation = (fitness) => {
-    if (fitness.coordinates) {
-      locationAPI.openLocationMap(
-        fitness.coordinates.lat,
-        fitness.coordinates.lng,
-        fitness.fit_name
-      );
-    }
-  };
-
-  // ฟังก์ชันการติดต่อ (โทร)
-  const handleContact = (phone) => {
-    if (phone) {
-      window.open(`tel:${phone}`, '_self');
-    }
-  };
+  // ...existing code...
 
   // ฟังก์ชันเลือกฟิตเนสจากแผนที่
   const handleFitnessSelectFromMap = (fitness) => {
@@ -206,11 +177,10 @@ const NearbyFitness = () => {
       </div>
 
       {/* แสดงสถานะ */}
-      {locationStatus && (
+      {locationStatus && locationStatus !== 'success' && (
         <div className={`location-status ${locationStatus}`}>
           <span>
             {locationStatus === 'requesting' && '⏳'}
-            {locationStatus === 'success' && '✅'}
             {locationStatus === 'error' && '❌'}
           </span>
           {statusMessage}
@@ -218,7 +188,8 @@ const NearbyFitness = () => {
       )}
 
       {/* ข้อมูลตำแหน่งผู้ใช้ */}
-      {userLocation && (
+      {/* location-info ถูกซ่อน */}
+      {false && (
         <div className="location-info">
           <h4>📍 ตำแหน่งของคุณ</h4>
           <div className="location-details">
@@ -289,78 +260,37 @@ const NearbyFitness = () => {
               {sortedFitness.map((fitness, index) => (
                 <div 
                   key={fitness.fit_id} 
-                  id={`fitness-card-${fitness.fit_id}`}
-                  className={`fitness-card ${selectedFitness?.fit_id === fitness.fit_id ? 'selected' : ''}`}
-                  onClick={() => setSelectedFitness(fitness)}
+                  className="fitness-card modern"
                 >
-                  <div className="fitness-card-header">
-                    <div className="fitness-basic-info">
-                      <h3>{fitness.fit_name}</h3>
-                      <span className="fitness-type">{fitness.fit_type || 'ฟิตเนส'}</span>
-                    </div>
-                    <div className="distance-badge">
-                      <span>📏</span>
-                      {fitness.distanceText}
-                    </div>
-                  </div>
-
-                  <div className="fitness-details">
-                    <div className="detail-item">
-                      <span className="detail-icon">📍</span>
-                      <span>{fitness.fit_address}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">📞</span>
-                      <span>{fitness.fit_phone || 'ไม่ระบุ'}</span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">⏰</span>
-                      <span>
-                        {fitness.fit_dateopen && fitness.fit_dateclose 
-                          ? `${fitness.fit_dateopen} - ${fitness.fit_dateclose}` 
-                          : 'ไม่ระบุเวลาเปิด-ปิด'
-                        }
-                      </span>
-                    </div>
-                    <div className="detail-item">
-                      <span className="detail-icon">💰</span>
-                      <span>ราคาเริ่มต้น {fitness.fit_price || 'ไม่ระบุ'} บาท</span>
-                    </div>
-                  </div>
-
-                  <div className="fitness-actions">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleGetDirections(fitness);
-                      }}
-                      className="action-btn primary"
-                    >
-                      <span>🗺️</span>
-                      นำทาง
+                  <div className="fitness-card-imgwrap">
+                    <img 
+                      src={fitness.fit_image || '/default-fitness.png'} 
+                      alt={fitness.fit_name}
+                      className="fitness-card-img"
+                      onError={e => e.target.style.display = 'none'}
+                    />
+                    <button className="favorite-btn" title="เพิ่มในรายการโปรด">
+                      <span role="img" aria-label="favorite">♡</span>
                     </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewLocation(fitness);
-                      }}
-                      className="action-btn secondary"
-                    >
-                      <span>📍</span>
-                      ดูแผนที่
+                  </div>
+                  <div className="fitness-card-content">
+                    <div className="fitness-card-title">{fitness.fit_name}</div>
+                    <div className="fitness-card-address">
+                      <span role="img" aria-label="address">📍</span> {fitness.fit_address}
+                    </div>
+                    <div className="fitness-card-price-rating">
+                      <div className="fitness-card-price">
+                        <span className="price-label">เริ่มต้นที่</span>
+                        <span className="price-value">{fitness.fit_price ? Number(fitness.fit_price).toFixed(2) : '-'} บาท/วัน</span>
+                      </div>
+                      <div className="fitness-card-rating">
+                        <span className="rating-value">{fitness.rating || '9.6'}</span>
+                        <span className="rating-count">{fitness.review_count || '138'} ความคิดเห็น</span>
+                      </div>
+                    </div>
+                    <button className="fitness-card-detail-btn" onClick={() => setSelectedFitness(fitness)}>
+                      ดูรายละเอียด
                     </button>
-                    {fitness.fit_phone && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleContact(fitness.fit_phone);
-                        }}
-                        className="action-btn outline"
-                      >
-                        <span>📞</span>
-                        โทร
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
