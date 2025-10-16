@@ -21,6 +21,41 @@ const ProfilePage = () => {
     profile_image: '',
     full_name: ''
   });
+  const [uploading, setUploading] = useState(false);
+  // อัปโหลดรูปโปรไฟล์ไป Supabase Storage
+  const handleProfileImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-profile-${Date.now()}.${fileExt}`;
+      const filePath = `profile-images/${fileName}`;
+      let { error: uploadError } = await supabase.storage
+        .from('profile-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+      if (uploadError) {
+        alert('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ: ' + uploadError.message);
+        setUploading(false);
+        return;
+      }
+      // Get public URL
+      const { data } = supabase.storage
+        .from('profile-images')
+        .getPublicUrl(fileName);
+      if (data?.publicUrl) {
+        setFormData(prev => ({ ...prev, profile_image: data.publicUrl }));
+      } else {
+        alert('ไม่สามารถดึง URL รูปภาพได้');
+      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
+    setUploading(false);
+  };
   const [activeTab, setActiveTab] = useState('profile');
   const [favorites, setFavorites] = useState([]);
   const [bookingData, setBookingData] = useState({
@@ -557,13 +592,24 @@ const ProfilePage = () => {
                 <div className="form-group">
                   <label>รูปโปรไฟล์ (URL)</label>
                   {editing ? (
-                    <input
-                      type="url"
-                      name="profile_image"
-                      value={formData.profile_image}
-                      onChange={handleInputChange}
-                      placeholder="กรอก URL รูปภาพ"
-                    />
+                    <>
+                      <input
+                        type="url"
+                        name="profile_image"
+                        value={formData.profile_image}
+                        onChange={handleInputChange}
+                        placeholder="กรอก URL รูปภาพ"
+                        style={{marginBottom: '8px'}}
+                      />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfileImageUpload}
+                        disabled={uploading}
+                        style={{marginTop: '4px'}}
+                      />
+                      {uploading && <span style={{marginLeft: '8px'}}>กำลังอัปโหลด...</span>}
+                    </>
                   ) : (
                     <div className="form-value">
                       {(formData.profile_image || profile?.profile_image) ? (
