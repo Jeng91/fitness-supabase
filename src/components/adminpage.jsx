@@ -139,22 +139,31 @@ const AdminPage = () => {
       }
 
       // ดึงข้อมูลการชำระเงินรอการอนุมัติ
-      const { data: pendingPayments, error: pendingPaymentsError } = await supabase
-        .from('pending_payments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            usertel,
-            useremail
-          )
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+        // ดึง pending_payments และ profiles แยก แล้ว join ฝั่ง client
+        const { data: pendingPayments, error: pendingPaymentsError } = await supabase
+          .from('pending_payments')
+          .select('*')
+          .eq('status', 'pending')
+          .order('created_at', { ascending: false });
 
-      if (pendingPaymentsError) {
-        console.error('Error loading pending payments:', pendingPaymentsError);
-      }
+        if (pendingPaymentsError) {
+          console.error('Error loading pending payments:', pendingPaymentsError);
+        }
+
+        // ดึง users/profiles ทั้งหมด (ใช้ users ที่ดึงมาก่อนหน้า)
+        // Join ข้อมูล user/profiles กับ pending_payments ด้วย user_id
+        let pendingPaymentsWithProfile = [];
+        if (pendingPayments && users) {
+          pendingPaymentsWithProfile = pendingPayments.map(payment => {
+            const userProfile = users.find(u => u.user_uid === payment.user_id);
+            return {
+              ...payment,
+              profile: userProfile || null
+            };
+          });
+        } else {
+          pendingPaymentsWithProfile = pendingPayments || [];
+        }
 
       // ดึงข้อมูล bookings
       const { data: bookings, error: bookingsError } = await supabase
@@ -211,106 +220,11 @@ const AdminPage = () => {
       }) || [];
 
       // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
-      let finalPartners = enrichedPartners || [];
-      
-      if (finalPartners.length === 0) {
-        finalPartners = [
-          {
-            owner_id: 'demo-owner-001',
-            owner_uid: 'DEMO001',
-            owner_name: 'PJ Fitness Center',
-            owner_email: 'pj@fitness.com',
-            owner_phone: '02-111-2222',
-            owner_address: '123 ถนนสุขุมวิท กรุงเทพฯ',
-            fit_phone: '089-123-4567',
-            fit_address: '123 ถนนสุขุมวิท กรุงเทพฯ',
-            fit_name: 'PJ Fitness Center',
-            created_at: '2024-01-15T10:30:00Z',
-            updated_at: '2024-01-15T10:30:00Z'
-          },
-          {
-            owner_id: 'demo-owner-002', 
-            owner_uid: 'DEMO002',
-            owner_name: 'Healthy Life Gym',
-            owner_email: 'healthy@life.com',
-            owner_phone: '02-333-4444',
-            owner_address: '456 ถนนพหลโยธิน กรุงเทพฯ',
-            fit_phone: '091-234-5678',
-            fit_address: '456 ถนนพหลโยธิน กรุงเทพฯ',
-            fit_name: 'Healthy Life Gym',
-            created_at: '2024-02-20T14:20:00Z',
-            updated_at: '2024-02-20T14:20:00Z'
-          },
-          {
-            owner_id: 'demo-owner-003',
-            owner_uid: 'DEMO003', 
-            owner_name: 'Champion Sport Club',
-            owner_email: 'champion@sport.com',
-            owner_phone: '02-555-6666',
-            owner_address: '789 ถนนราชดำริ กรุงเทพฯ',
-            fit_phone: '093-345-6789',
-            fit_address: '789 ถนนราชดำริ กรุงเทพฯ',
-            fit_name: 'Champion Sport Club',
-            created_at: '2024-03-10T09:15:00Z',
-            updated_at: '2024-03-10T09:15:00Z'
-          }
-        ];
-      }
+      let finalPartners = (enrichedPartners || []).filter(p => !(p.owner_id?.includes('demo') || p.owner_uid?.includes('DEMO')));
 
       let finalBookings = bookings || [];
       let finalPayments = payments || [];
-      
-      if (finalBookings.length === 0) {
-        finalBookings = [
-          {
-            booking_id: 'demo-booking-001',
-            user_id: 'demo-user-001',
-            fitness_id: 1,
-            booking_date: new Date().toISOString().split('T')[0],
-            total_amount: 1500,
-            booking_status: 'confirmed',
-            created_at: new Date().toISOString(),
-            notes: 'การจองตัวอย่างสำหรับ demo'
-          },
-          {
-            booking_id: 'demo-booking-002',
-            user_id: 'demo-user-002', 
-            fitness_id: 2,
-            booking_date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-            total_amount: 2000,
-            booking_status: 'pending',
-            created_at: new Date().toISOString(),
-            notes: 'การจองที่รอการยืนยัน'
-          }
-        ];
-      }
-
-      if (finalPayments.length === 0) {
-        finalPayments = [
-          {
-            payment_id: 'demo-payment-001',
-            booking_id: 'demo-booking-001',
-            user_id: 'demo-user-001',
-            total_amount: 1500,
-            system_fee: 300,
-            fitness_amount: 1200,
-            payment_method: 'credit_card',
-            payment_status: 'completed',
-            transaction_id: 'TXN_DEMO_001',
-            paid_at: new Date().toISOString(),
-            created_at: new Date().toISOString()
-          }
-        ];
-        
-        // คำนวณรายได้ใหม่จากข้อมูล demo
-        totalRevenue = finalPayments.reduce((sum, payment) => {
-          return payment.payment_status === 'completed' ? sum + (payment.total_amount || 0) : sum;
-        }, 0);
-        
-        systemRevenue = finalPayments.reduce((sum, payment) => {
-          return payment.payment_status === 'completed' ? sum + (payment.system_fee || 0) : sum;
-        }, 0);
-      }
+      // ใช้ข้อมูลจริงจาก Supabase เท่านั้น
 
       setDashboardData(prev => ({
         ...prev,
@@ -318,7 +232,7 @@ const AdminPage = () => {
         partners: finalPartners || [],
         pendingFitness: enrichedPendingFitness || [],
         approvedFitness: enrichedApprovedFitness || [],
-        pendingPayments: pendingPayments || [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
+  pendingPayments: pendingPaymentsWithProfile || [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
         bookings: finalBookings,
         payments: finalPayments,
         totalRevenue: totalRevenue,
@@ -714,54 +628,216 @@ const DashboardTab = ({ data, setActiveTab }) => (
 
 // Users Tab Component  
 const UsersTab = ({ data }) => (
-  <div className="users-content">
-    <h2>👥 จัดการผู้ใช้งาน</h2>
-    <div className="admin-stats">
-      <div className="stat-card">
-        <h3>จำนวนผู้ใช้ทั้งหมด</h3>
-        <span className="stat-number">{data?.users?.length || 0}</span>
+  <UsersTabWithModal data={data} />
+);
+
+// UsersTab with modal for view/edit
+const UsersTabWithModal = ({ data }) => {
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editForm, setEditForm] = useState({ username: '', useremail: '', full_name: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleView = (user) => {
+    setSelectedUser(user);
+    setShowDetailModal(true);
+  };
+  const handleEdit = (user) => {
+    setSelectedUser(user);
+    setEditForm({
+      username: user.username || '',
+      useremail: user.useremail || '',
+      full_name: user.full_name || ''
+    });
+    setShowEditModal(true);
+  };
+  const handleDelete = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditForm(prev => ({ ...prev, [name]: value }));
+  };
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setIsSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username: editForm.username,
+          useremail: editForm.useremail,
+          full_name: editForm.full_name,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_uid', selectedUser.user_uid);
+      if (error) throw error;
+      alert('✅ บันทึกข้อมูลสำเร็จ!');
+      setShowEditModal(false);
+      setSelectedUser(null);
+      window.location.reload();
+    } catch (err) {
+      alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    }
+    setIsSaving(false);
+  };
+  const handleDeleteConfirm = async () => {
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_uid', selectedUser.user_uid);
+      if (error) throw error;
+      alert('✅ ลบข้อมูลผู้ใช้สำเร็จ!');
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+      window.location.reload();
+    } catch (err) {
+      alert('❌ เกิดข้อผิดพลาด: ' + err.message);
+    }
+    setIsDeleting(false);
+  };
+  return (
+    <div className="users-content">
+      <h2>👥 จัดการผู้ใช้งาน</h2>
+      <div className="admin-stats">
+        <div className="stat-card">
+          <h3>จำนวนผู้ใช้ทั้งหมด</h3>
+          <span className="stat-number">{data?.users?.length || 0}</span>
+        </div>
       </div>
-    </div>
-    
-    <div className="data-table">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>ชื่อผู้ใช้</th>
-            <th>อีเมล</th>
-            <th>ชื่อเต็ม</th>
-            <th>วันที่สมัคร</th>
-            <th>จัดการ</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data?.users?.length > 0 ? (
-            data.users.map((user, index) => (
-              <tr key={user.user_uid || index}>
-                <td>{user.user_uid || `U${String(index + 1).padStart(3, '0')}`}</td>
-                <td>{user.username || 'ไม่ระบุ'}</td>
-                <td>{user.useremail || 'ไม่ระบุ'}</td>
-                <td>{user.full_name || 'ไม่ระบุ'}</td>
-                <td>{user.created_at ? new Date(user.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
-                <td>
-                  <button className="btn-view">ดู</button>
-                  <button className="btn-edit">แก้ไข</button>
+      <div className="data-table">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>ชื่อผู้ใช้</th>
+              <th>อีเมล</th>
+              <th>ชื่อเต็ม</th>
+              <th>วันที่สมัคร</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data?.users?.length > 0 ? (
+              data.users.map((user, index) => (
+                <tr key={user.user_uid || index}>
+                  <td>{user.user_uid || `U${String(index + 1).padStart(3, '0')}`}</td>
+                  <td>{user.username || 'ไม่ระบุ'}</td>
+                  <td>{user.useremail || 'ไม่ระบุ'}</td>
+                  <td>{user.full_name || 'ไม่ระบุ'}</td>
+                  <td>{user.created_at ? new Date(user.created_at).toLocaleDateString('th-TH') : 'ไม่ระบุ'}</td>
+                  <td>
+                    <button className="btn-view" onClick={() => handleView(user)}>ดู</button>
+                    <button className="btn-edit" onClick={() => handleEdit(user)}>แก้ไข</button>
+                    <button className="btn-delete" style={{background:'#ffd700',color:'#333'}} onClick={() => handleDelete(user)}>ลบ</button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
+                  ไม่พบข้อมูลผู้ใช้
                 </td>
               </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>
-                ไม่พบข้อมูลผู้ใช้
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+            )}
+          </tbody>
+        </table>
+      </div>
+      {/* Modal ดูข้อมูล */}
+      {showDetailModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
+          <div className="modal-content user-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>👤 ข้อมูลผู้ใช้งาน</h3>
+              <button className="modal-close" onClick={() => setShowDetailModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label>ID:</label>
+                <input type="text" value={selectedUser.user_uid} readOnly />
+              </div>
+              <div className="form-group">
+                <label>ชื่อผู้ใช้:</label>
+                <input type="text" value={selectedUser.username} readOnly />
+              </div>
+              <div className="form-group">
+                <label>อีเมล:</label>
+                <input type="text" value={selectedUser.useremail} readOnly />
+              </div>
+              <div className="form-group">
+                <label>ชื่อเต็ม:</label>
+                <input type="text" value={selectedUser.full_name} readOnly />
+              </div>
+              <div className="form-group">
+                <label>วันที่สมัคร:</label>
+                <input type="text" value={selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString('th-TH') : '-'} readOnly />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={() => setShowDetailModal(false)}>ปิด</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal แก้ไขข้อมูล */}
+      {showEditModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
+          <div className="modal-content user-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>✏️ แก้ไขข้อมูลผู้ใช้งาน</h3>
+              <button className="modal-close" onClick={() => setShowEditModal(false)}>×</button>
+            </div>
+            <form onSubmit={handleEditSubmit}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>ชื่อผู้ใช้:</label>
+                  <input type="text" name="username" value={editForm.username} onChange={handleEditInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>อีเมล:</label>
+                  <input type="email" name="useremail" value={editForm.useremail} onChange={handleEditInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>ชื่อเต็ม:</label>
+                  <input type="text" name="full_name" value={editForm.full_name} onChange={handleEditInputChange} required />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button className="btn-primary" type="submit" disabled={isSaving}>{isSaving ? 'กำลังบันทึก...' : 'บันทึก'}</button>
+                <button className="btn-secondary" type="button" onClick={() => setShowEditModal(false)}>ยกเลิก</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Modal ลบข้อมูล */}
+      {showDeleteModal && selectedUser && (
+        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
+          <div className="modal-content user-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⚠️ ลบข้อมูลผู้ใช้งาน</h3>
+              <button className="modal-close" onClick={() => setShowDeleteModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>คุณต้องการลบข้อมูลผู้ใช้ <b>{selectedUser.username}</b> นี้ใช่หรือไม่?</p>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-primary" type="button" onClick={handleDeleteConfirm} disabled={isDeleting}>{isDeleting ? 'กำลังลบ...' : 'ลบข้อมูล'}</button>
+              <button className="btn-secondary" type="button" onClick={() => setShowDeleteModal(false)}>ยกเลิก</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
+
 
 // Partners Tab Component
 const PartnersTab = ({ data, onRefresh }) => {
@@ -810,28 +886,6 @@ const PartnersTab = ({ data, onRefresh }) => {
     setShowDeleteModal(true);
   };
 
-  const confirmDelete = async () => {
-    try {
-      // ลบข้อมูลจากฐานข้อมูล (ถ้าไม่ใช่ demo data)
-      if (!selectedPartner.owner_id?.includes('demo')) {
-        const { error } = await supabase
-          .from('tbl_owner')
-          .delete()
-          .eq('owner_id', selectedPartner.owner_id);
-
-        if (error) throw error;
-      }
-
-      alert('✅ ลบพาร์ทเนอร์สำเร็จ!');
-      setShowDeleteModal(false);
-      setSelectedPartner(null);
-      await onRefresh();
-    } catch (error) {
-      console.error('Error deleting partner:', error);
-      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`);
-    }
-  };
-
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -874,6 +928,28 @@ const PartnersTab = ({ data, onRefresh }) => {
       await onRefresh();
     } catch (error) {
       console.error('Error updating partner:', error);
+      alert(`❌ เกิดข้อผิดพลาด: ${error.message}`);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      // ลบข้อมูลจากฐานข้อมูล (ถ้าไม่ใช่ demo data)
+      if (!selectedPartner.owner_id?.includes('demo')) {
+        const { error } = await supabase
+          .from('tbl_owner')
+          .delete()
+          .eq('owner_id', selectedPartner.owner_id);
+
+        if (error) throw error;
+      }
+
+      alert('✅ ลบพาร์ทเนอร์สำเร็จ!');
+      setShowDeleteModal(false);
+      setSelectedPartner(null);
+      await onRefresh();
+    } catch (error) {
+      console.error('Error deleting partner:', error);
       alert(`❌ เกิดข้อผิดพลาด: ${error.message}`);
     }
   };
@@ -1156,7 +1232,7 @@ const PartnersTab = ({ data, onRefresh }) => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn-danger" onClick={confirmDelete}>
+              <button className="btn-danger" onClick={handleDeleteConfirm}>
                 🗑️ ลบถาวร
               </button>
               <button className="btn-secondary" onClick={() => setShowDeleteModal(false)}>
@@ -1805,6 +1881,7 @@ const PartnerAccountsTab = () => {
             <div className="stat-card">
               <h4>⏳ รอดำเนินการ</h4>
               <div className="stat-number">
+               
                 {partnerTransfers.filter(t => t.transfer_status === 'pending').length}
               </div>
               <div className="stat-label">รายการ</div>
@@ -1815,6 +1892,7 @@ const PartnerAccountsTab = () => {
             <div className="summary-card">
               <h4>💰 มูลค่าการโอนรวม</h4>
               <div className="summary-amount">
+
                 ฿{partnerTransfers.reduce((sum, t) => sum + (t.total_amount || 0), 0).toLocaleString()}
               </div>
             </div>

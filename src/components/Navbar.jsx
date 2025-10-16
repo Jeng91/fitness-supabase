@@ -182,7 +182,17 @@ const Navbar = () => {
               </li>
             )}
             <li className="user-info">
-              <span className="user-avatar">👤</span>
+              {userProfile?.profile_image ? (
+                <img
+                  src={userProfile.profile_image}
+                  alt="avatar"
+                  className="user-avatar"
+                  style={{width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', marginRight: '8px'}}
+                  onError={e => {e.target.style.display = 'none'}}
+                />
+              ) : (
+                <span className="user-avatar">👤</span>
+              )}
               <span className="user-details">
                 {
                   userProfile?.full_name || 

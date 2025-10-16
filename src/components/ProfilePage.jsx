@@ -30,7 +30,7 @@ const ProfilePage = () => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-profile-${Date.now()}.${fileExt}`;
-      const filePath = `profile-images/${fileName}`;
+      // const filePath = `profile-images/${fileName}`; // ไม่ได้ใช้
       let { error: uploadError } = await supabase.storage
         .from('profile-images')
         .upload(fileName, file, {
@@ -780,43 +780,29 @@ const ProfilePage = () => {
               <div className="history-summary">
                 <div className="summary-card">
                   <h3>จำนวนครั้งที่เข้าใช้บริการ</h3>
-                  <p className="summary-number">42 ครั้ง</p>
+                  <p className="summary-number">{bookingData.approvedPayments.length} ครั้ง</p>
                 </div>
-                <div className="summary-card">
-                  <h3>เวลารวมทั้งหมด</h3>
-                  <p className="summary-number">68 ชั่วโมง</p>
-                </div>
+                {/* สามารถเพิ่มเวลารวมทั้งหมดได้ถ้ามีข้อมูล duration */}
               </div>
-              
               <div className="history-list">
                 <h3>ประวัติล่าสุด</h3>
-                <div className="history-item">
-                  <div className="history-date">12 ต.ค. 2025</div>
-                  <div className="history-details">
-                    <h4>Weight Training</h4>
-                    <p>⏱️ เวลา: 1.5 ชั่วโมง</p>
-                    <p>🏋️ อุปกรณ์: ห้องโรงยิม</p>
-                  </div>
-                  <div className="history-status">เสร็จสิ้น</div>
-                </div>
-                <div className="history-item">
-                  <div className="history-date">10 ต.ค. 2025</div>
-                  <div className="history-details">
-                    <h4>Cardio Session</h4>
-                    <p>⏱️ เวลา: 45 นาที</p>
-                    <p>🏃 อุปกรณ์: ลู่วิ่ง</p>
-                  </div>
-                  <div className="history-status">เสร็จสิ้น</div>
-                </div>
-                <div className="history-item">
-                  <div className="history-date">8 ต.ค. 2025</div>
-                  <div className="history-details">
-                    <h4>Yoga Class</h4>
-                    <p>⏱️ เวลา: 1 ชั่วโมง</p>
-                    <p>🧘 ห้อง: Yoga Studio</p>
-                  </div>
-                  <div className="history-status">เสร็จสิ้น</div>
-                </div>
+                {bookingData.approvedPayments.length > 0 ? (
+                  bookingData.approvedPayments.map((item) => (
+                    <div className="history-item" key={item.id}>
+                      <div className="history-date">
+                        {item.booking_period ? new Date(item.booking_period).toLocaleDateString('th-TH', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                      </div>
+                      <div className="history-details">
+                        <h4>{item.fitness_name || 'ไม่พบชื่อฟิตเนส'}</h4>
+                        <p>ประเภท: {item.booking_type === 'class' ? 'คลาส' : item.booking_type === 'membership' ? 'สมาชิก' : 'รายวัน'}</p>
+                        {/* สามารถเพิ่มรายละเอียดอื่น ๆ เช่น เวลา/อุปกรณ์/ห้อง ได้ถ้ามีข้อมูล */}
+                      </div>
+                      <div className="history-status">เสร็จสิ้น</div>
+                    </div>
+                  ))
+                ) : (
+                  <p className="no-data">ไม่มีประวัติการเข้าใช้บริการ</p>
+                )}
               </div>
             </div>
           </div>
