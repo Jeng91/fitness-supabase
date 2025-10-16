@@ -4,6 +4,38 @@ import imageCompression from 'browser-image-compression';
 import './EquipmentManagement.css';
 
 const EquipmentManagement = ({ ownerData, onUpdate }) => {
+  // รายการชื่ออุปกรณ์มาตรฐาน (ภาษาไทย/อังกฤษ)
+  const equipmentNameList = [
+    // อุปกรณ์คาร์ดิโอ
+    'ลู่วิ่งไฟฟ้า (Treadmill)',
+    'จักรยานออกกำลังกาย (ทั่วไป/นั่งตรง) (Upright Bike)',
+    'จักรยานออกกำลังกาย (เอนปั่น) (Recumbent Bike)',
+    'จักรยานออกกำลังกาย (สปินไบค์) (Spin Bike)',
+    'เครื่องเดินวงรี (Elliptical Trainer)',
+    'เครื่องกรรเชียงบก (Rowing Machine)',
+    'เครื่องเดินบันได (Stair Climber / Stair Stepper)',
+    // อุปกรณ์เวทเทรนนิ่ง
+    'ดัมเบล (Dumbbell)',
+    'บาร์เบล (Barbell)',
+    'แผ่นน้ำหนัก (Weight Plate)',
+    'ดัมเบลหูหิ้ว (Kettlebell)',
+    'เครื่องบริหารกล้ามเนื้ออก (เป็คเด็ค) (Pec Deck / Fly Machine)',
+    'เครื่องบริหารกล้ามเนื้อหลัง (Lat Pulldown / T-Bar Row)',
+    'เครื่องบริหารกล้ามเนื้อขา/สะโพก (Leg Press Machine)',
+    'เครื่องบริหารกล้ามเนื้อหน้าท้อง (Ab Crunch Machine)',
+    'เครื่องสมิธ (Smith Machine)',
+    'เคเบิ้ลครอส (Cable Cross Over Machine)',
+    'ม้านั่งยกน้ำหนัก (ปรับระดับ) (Adjustable Weight Bench)',
+    'ม้านั่งยกน้ำหนัก (แบบราบ) (Flat Bench)',
+    'โฮมยิม (Home Gym / Multi-Station)',
+    // อุปกรณ์เสริมและฟรีเวท
+    'เสื่อโยคะ/เสื่อออกกำลังกาย (Yoga Mat / Exercise Mat)',
+    'ลูกบอลออกกำลังกาย (Exercise Ball / Stability Ball)',
+    'เชือกกระโดด (Jump Rope)',
+    'ยางยืด/เชือกต้านทาน (Resistance Band)',
+    'โฟมโรลเลอร์ (Foam Roller)',
+    'บาร์โหน (Pull-up Bar)'
+  ];
   const [equipmentData, setEquipmentData] = useState([]);
   const [editingEquipment, setEditingEquipment] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -275,6 +307,19 @@ const EquipmentManagement = ({ ownerData, onUpdate }) => {
             <div className="modal-body">
               <div className="form-group">
                 <label>ชื่ออุปกรณ์</label>
+                <select
+                  value={editingEquipment.em_name || ''}
+                  onChange={e => setEditingEquipment(prev => ({
+                    ...prev,
+                    em_name: e.target.value
+                  }))}
+                  style={{ marginBottom: '0.5rem' }}
+                >
+                  <option value="">เลือกจากรายการ</option>
+                  {equipmentNameList.map(name => (
+                    <option key={name} value={name}>{name}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   value={editingEquipment.em_name || ''}
@@ -282,7 +327,8 @@ const EquipmentManagement = ({ ownerData, onUpdate }) => {
                     ...prev,
                     em_name: e.target.value
                   }))}
-                  placeholder="กรอกชื่ออุปกรณ์"
+                  placeholder="กรอกชื่ออุปกรณ์ (หรือพิมพ์เอง)"
+                  style={{ marginTop: '0.5rem' }}
                 />
               </div>
 
