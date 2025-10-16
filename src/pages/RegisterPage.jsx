@@ -80,10 +80,12 @@ const RegisterPage = () => {
             .from('tbl_owner')
             .insert([
               {
-                auth_user_id: data.user.id,
+                owner_uid: data.user.id,
                 owner_name: formData.fullName,
                 owner_email: formData.email,
-                owner_password: formData.password
+                owner_password: formData.password,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               }
             ]);
 
@@ -96,10 +98,12 @@ const RegisterPage = () => {
             .from('profiles')
             .insert([
               {
-                id: data.user.id,
+                user_uid: data.user.id,
+                username: formData.email.split('@')[0],
+                useremail: formData.email,
                 full_name: formData.fullName,
-                email: formData.email,
-                role: 'user'
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
               }
             ]);
 
@@ -197,11 +201,8 @@ const RegisterPage = () => {
               onChange={handleInputChange}
               disabled={isLoading}
             >
-              <div className='label-option'>
-                <option value="user">👤 ผู้ใช้ทั่วไป</option>
-                <option value="partner">🤝 พาร์ทเนอร์</option>
-              </div>
-              
+              <option value="user">👤 ผู้ใช้ทั่วไป</option>
+              <option value="partner">🤝 พาร์ทเนอร์</option>
             </select>
           </div>
           <button 

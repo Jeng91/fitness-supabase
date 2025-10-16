@@ -985,12 +985,12 @@
 
 /* Auto Save Status */
 .auto-save-status {
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 0.5rem;
   border-radius: 6px;
-  margin-bottom: 1rem;
+  margin-bottom: 0.5rem;
   text-align: center;
-  font-size: 0.9rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 400;
 }
 
 .auto-save-status.loading {
