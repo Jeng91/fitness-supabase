@@ -11,6 +11,9 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [sending, setSending] = useState(false);
 
+  // localOwner: use prop ownerData if provided, otherwise detect from logged-in user
+  const [localOwner, setLocalOwner] = useState(ownerData || null);
+
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -27,7 +30,9 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
   });
 
   const loadMarketingData = useCallback(async () => {
-    if (!ownerData?.owner_id) return;
+    const ownerUid = localOwner?.owner_uid;
+    const ownerAuthId = localOwner?.auth_user_id;
+    if (!ownerUid && !ownerAuthId) return;
 
     setLoading(true);
     try {
@@ -35,7 +40,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const { data: fitnessData, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('fit_id')
-        .eq('created_by', ownerData.owner_id)
+        .eq('created_by', ownerAuthId)
         .single();
 
       if (fitnessError || !fitnessData) {
@@ -74,11 +79,44 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  }, [ownerData?.owner_id]);
+  }, [localOwner?.owner_uid, localOwner?.auth_user_id]);
 
   useEffect(() => {
     loadMarketingData();
   }, [loadMarketingData]);
+
+  // If ownerData prop changes or isn't provided, try to auto-detect owner by auth user
+  useEffect(() => {
+    if (ownerData) {
+      setLocalOwner(ownerData);
+      return;
+    }
+
+    let mounted = true;
+    const detectOwner = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        const authUser = data?.user;
+        if (!authUser) return;
+
+        const { data: owner, error } = await supabase
+          .from('tbl_owner')
+          .select('*')
+          .eq('auth_user_id', authUser.id)
+          .single();
+
+        if (!error && owner && mounted) {
+          setLocalOwner(owner);
+        }
+      } catch (err) {
+        console.error('Error detecting owner in MarketingTools:', err);
+      }
+    };
+
+    detectOwner();
+
+    return () => { mounted = false; };
+  }, [ownerData]);
 
   const generatePromoCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -100,7 +138,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const { data: fitnessData, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('fit_id')
-        .eq('created_by', ownerData.owner_id)
+        .eq('created_by', localOwner.auth_user_id)
         .single();
 
       if (fitnessError || !fitnessData) {
@@ -111,7 +149,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const tableName = activeTab === 'campaigns' ? 'tbl_marketing_campaigns' : 'tbl_promotions';
       const itemData = {
         fit_id: fitnessData.fit_id,
-        owner_id: ownerData.owner_id,
+        owner_id: localOwner.owner_uid,
         title: formData.title,
         description: formData.description,
         type: formData.type,
