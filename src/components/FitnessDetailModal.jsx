@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import './FitnessDetailModal.css';
 
+
+
+
 const FitnessDetailModal = ({ 
   isOpen, 
   onClose, 
@@ -11,6 +14,10 @@ const FitnessDetailModal = ({
   onOpenImageGallery,
   isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
 }) => {
+  // เพิ่ม state สำหรับ modal แจ้งเตือนเข้าสู่ระบบ
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalMessage, setLoginModalMessage] = useState('');
+  const user = window.__PJ_USER__ || null;
   const navigate = useNavigate();
   const [shareNotification, setShareNotification] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
