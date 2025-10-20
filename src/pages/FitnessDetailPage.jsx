@@ -7,12 +7,16 @@ import '../App.css';
 import './FitnessDetailPage.css';
 
 const FitnessDetailPage = () => {
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [loginModalMessage, setLoginModalMessage] = useState('');
   const { id } = useParams();
   const navigate = useNavigate();
   const [fitnessData, setFitnessData] = useState(null);
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [classesLoading, setClassesLoading] = useState(false);
+  // รับ user จาก window (จะถูกส่งมาจาก App.js ในขั้นตอนถัดไป)
+  const user = window.__PJ_USER__ || null;
 
   // ฟังก์ชันสมัครคลาส
   const handleClassEnrollment = (classData) => {
@@ -162,6 +166,40 @@ const FitnessDetailPage = () => {
 
   return (
     <Layout>
+      {/* Login Required Modal */}
+      {showLoginModal && (
+        <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
+          <div className="login-required-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>🔐 กรุณาเข้าสู่ระบบ</h3>
+              <button className="close-btn" onClick={() => setShowLoginModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <p>{loginModalMessage}</p>
+              <div className="modal-actions">
+                <button 
+                  className="login-btn-modal"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/login');
+                  }}
+                >
+                  เข้าสู่ระบบ
+                </button>
+                <button 
+                  className="register-btn-modal"
+                  onClick={() => {
+                    setShowLoginModal(false);
+                    navigate('/register');
+                  }}
+                >
+                  สมัครสมาชิก
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Fitness Detail */}
       <div className="fitness-detail-page">
         <div className="detail-header">
@@ -179,12 +217,12 @@ const FitnessDetailPage = () => {
           onViewLocation={handleViewLocation}
           onOpenImageGallery={handleOpenImageGallery}
           isFullPage={true}
+          user={user}
         />
 
         {/* Classes Section */}
         <div className="classes-section">
           <h2 className="section-title">🎯 คลาสออกกำลังกาย</h2>
-          
           {classesLoading ? (
             <div className="classes-loading">กำลังโหลดคลาส...</div>
           ) : classes.length === 0 ? (
@@ -208,7 +246,6 @@ const FitnessDetailPage = () => {
                   <div className="class-content">
                     <h3 className="class-name">{classItem.class_name}</h3>
                     <p className="class-description">{classItem.description}</p>
-                    
                     <div className="class-details">
                       {classItem.class_time && (
                         <div className="detail-item">
@@ -217,13 +254,11 @@ const FitnessDetailPage = () => {
                           <span className="value">{formatTime(classItem.class_time)}</span>
                         </div>
                       )}
-                      
                       <div className="detail-item">
                         <span className="icon">⏱️</span>
                         <span className="label">ระยะเวลา:</span>
                         <span className="value">{classItem.duration} นาที</span>
                       </div>
-                      
                       {classItem.instructor && (
                         <div className="detail-item">
                           <span className="icon">👨‍🏫</span>
@@ -231,27 +266,23 @@ const FitnessDetailPage = () => {
                           <span className="value">{classItem.instructor}</span>
                         </div>
                       )}
-                      
                       <div className="detail-item">
                         <span className="icon">👥</span>
                         <span className="label">ผู้เข้าร่วม:</span>
                         <span className="value">สูงสุด {classItem.max_participants} คน</span>
                       </div>
-                      
                       <div className="detail-item">
                         <span className="icon">💰</span>
                         <span className="label">ราคา:</span>
                         <span className="value price">{classItem.price} บาท</span>
                       </div>
                     </div>
-                    
                     <button 
                       className="btn-book-class"
-                      onClick={() => handleClassEnrollment(classItem)}
+                      onClick={user ? () => handleClassEnrollment(classItem) : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อสมัครคลาสนี้'); setShowLoginModal(true); }}
                     >
                       📝 สมัครคลาสนี้
                     </button>
-                    
                   </div>
                 </div>
               ))}
@@ -259,10 +290,9 @@ const FitnessDetailPage = () => {
           )}
         </div>
       </div>
-
-      
     </Layout>
   );
-};
+
+}
 
 export default FitnessDetailPage;

@@ -216,12 +216,7 @@ const HomePage = () => {
   }, [fitnessData, searchTerm, priceFilter, sortBy]);
 
   const handleFitnessClick = (fitness) => {
-    // ตรวจสอบว่า user login แล้วหรือยัง
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-    
+    // อนุญาตให้ดูรายละเอียดฟิตเนสได้ทุกคน
     setSelectedFitness(fitness);
     navigate(`/fitness/${fitness.fit_id}`);
   };
