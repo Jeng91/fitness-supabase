@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import supabase from '../supabaseClient';
 import './PaymentApproval.css';
 
@@ -61,69 +61,18 @@ const extractPartnerNameFromDescription = (description) => {
   return extractFitnessNameFromDescription(description) + ' Management';
 };
 
-const PaymentApproval = () => {
-  const [pendingPayments, setPendingPayments] = useState([]);
-  const [loading, setLoading] = useState(true);
+// ลบ PaymentApproval ที่ซ้ำซ้อนออก
+const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
   const [processing, setProcessing] = useState(null);
-
-  const fetchPendingPayments = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // ดึงข้อมูลจากฐานข้อมูล
-      const { data: dbPayments, error } = await supabase
-        .from('pending_payments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            usertel,
-            useremail
-          )
-        `)
-        .in('status', ['pending', 'pending_approval'])
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Database error:', error);
-        // หากไม่สามารถดึงจากฐานข้อมูลได้ ใช้ข้อมูลจาก localStorage
-        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-        const pendingPayments = storedPayments.filter(p => 
-          p.status === 'pending_approval' || p.status === 'pending'
-        );
-        setPendingPayments(pendingPayments);
-      } else {
-        // รวมข้อมูลจากฐานข้อมูลและ localStorage
-        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-        const pendingStoredPayments = storedPayments.filter(p => 
-          p.status === 'pending_approval' || p.status === 'pending'
-        );
-        const allPayments = [...(dbPayments || []), ...pendingStoredPayments];
-        setPendingPayments(allPayments);
-      }
-    } catch (error) {
-      console.error('Error fetching payments:', error);
-      // ใช้ข้อมูลจาก localStorage ในกรณีที่เกิดข้อผิดพลาด
-      const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-      const pendingPayments = storedPayments.filter(p => 
-        p.status === 'pending_approval' || p.status === 'pending'
-      );
-      setPendingPayments(pendingPayments);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchPendingPayments();
-  }, [fetchPendingPayments]);
 
   const handleApprovePayment = async (paymentId, transactionId) => {
     try {
       setProcessing(paymentId);
       
-      // ดึงข้อมูลการชำระเงินที่จะอนุมัติ
-      const paymentToApprove = pendingPayments.find(p => p.id === paymentId);
+  // ดึงข้อมูลการชำระเงินที่จะอนุมัติ
+  const paymentToApprove = pendingPayments.find(p => p.id === paymentId);
+  // ใช้ user_uid จาก profile ถ้ามี
+  const approvedUserId = paymentToApprove?.profile?.user_uid || paymentToApprove.user_id;
       
       if (!paymentToApprove) {
         alert('ไม่พบข้อมูลการชำระเงิน');
@@ -140,7 +89,7 @@ const PaymentApproval = () => {
           .from('approved_payments')
           .insert([{
             transaction_id: paymentToApprove.transaction_id,
-            user_id: paymentToApprove.user_id,
+            user_id: approvedUserId,
             amount: paymentToApprove.amount,
             description: paymentToApprove.description,
             slip_url: paymentToApprove.slip_url,
@@ -228,16 +177,19 @@ const PaymentApproval = () => {
         localStorage.setItem('approved_payments', JSON.stringify(approvedPayments));
       }
 
-      // อัปเดต UI
-      setPendingPayments(prev => prev.filter(p => p.id !== paymentId));
+  // อัปเดต UI: ไม่ต้อง setPendingPayments เพราะใช้ props
       
       alert(`✅ อนุมัติการชำระเงิน #${transactionId} เรียบร้อยแล้ว`);
+  if (setActiveTab) setActiveTab('approved');
+  if (onRefresh) onRefresh();
       
     } catch (error) {
       console.error('Error approving payment:', error);
       alert('เกิดข้อผิดพลาดในการอนุมัติ กรุณาลองใหม่อีกครั้ง');
     } finally {
       setProcessing(null);
+  // รีเฟรชข้อมูลหลังอนุมัติ
+  if (onRefresh) onRefresh();
     }
   };
 
@@ -260,22 +212,18 @@ const PaymentApproval = () => {
         console.error('Database update error:', error);
       }
 
-      // อัปเดต UI และ localStorage
-      setPendingPayments(prev => {
-        const updated = prev.filter(payment => payment.id !== paymentId);
-        // อัปเดต localStorage (กรองเฉพาะข้อมูลจาก localStorage)
-        const storedPayments = JSON.parse(localStorage.getItem('pending_payments') || '[]');
-        const filteredStoredPayments = storedPayments.filter(p => p.id !== paymentId);
-        localStorage.setItem('pending_payments', JSON.stringify(filteredStoredPayments));
-        return updated;
-      });
+      // อัปเดต UI และ localStorage: ไม่ต้อง setPendingPayments เพราะใช้ props
 
       alert(`❌ ปฏิเสธการชำระเงินเรียบร้อยแล้ว`);
+  if (setActiveTab) setActiveTab('approved');
+  if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error rejecting payment:', error);
       alert('เกิดข้อผิดพลาดในการปฏิเสธ');
     } finally {
       setProcessing(null);
+  // รีเฟรชข้อมูลหลังปฏิเสธ
+  if (onRefresh) onRefresh();
     }
   };
 
@@ -296,16 +244,6 @@ const PaymentApproval = () => {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="payment-approval-container">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>กำลังโหลดข้อมูล...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="payment-approval-container">
@@ -344,19 +282,19 @@ const PaymentApproval = () => {
                 <div className="detail-row">
                   <span className="label">ลูกค้า:</span>
                   <span className="value">
-                    {payment.profiles?.full_name || payment.user_profiles?.full_name || 'ไม่ระบุ'}
+                    {payment.profile?.full_name || 'ไม่ระบุ'}
                   </span>
                 </div>
                 <div className="detail-row">
                   <span className="label">อีเมล:</span>
                   <span className="value">
-                    {payment.profiles?.useremail || payment.user_profiles?.email || 'ไม่ระบุ'}
+                    {payment.profile?.useremail || 'ไม่ระบุ'}
                   </span>
                 </div>
                 <div className="detail-row">
                   <span className="label">เบอร์โทร:</span>
                   <span className="value">
-                    {payment.profiles?.usertel || payment.user_profiles?.phone_number || 'ไม่ระบุ'}
+                    {payment.profile?.usertel || 'ไม่ระบุ'}
                   </span>
                 </div>
                 <div className="detail-row">

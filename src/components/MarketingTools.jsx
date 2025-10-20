@@ -35,7 +35,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const { data: fitnessData, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('fit_id')
-        .eq('owner_id', ownerData.owner_id)
+        .eq('created_by', ownerData.owner_id)
         .single();
 
       if (fitnessError || !fitnessData) {
@@ -100,7 +100,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const { data: fitnessData, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('fit_id')
-        .eq('owner_id', ownerData.owner_id)
+        .eq('created_by', ownerData.owner_id)
         .single();
 
       if (fitnessError || !fitnessData) {
@@ -194,7 +194,7 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       const { data: fitnessData } = await supabase
         .from('tbl_fitness')
         .select('fit_id')
-        .eq('owner_id', ownerData.owner_id)
+        .eq('created_by', ownerData.owner_id)
         .single();
 
       if (!fitnessData) {

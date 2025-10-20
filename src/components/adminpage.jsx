@@ -36,6 +36,13 @@ const AdminPage = () => {
     checkAdminAuth();
   }, []);
 
+  // Reload dashboardData เมื่อเปลี่ยน tab เป็น 'approval'
+  useEffect(() => {
+    if (activeTab === 'approval') {
+      loadDashboardData();
+    }
+  }, [activeTab]);
+
   const checkAdminAuth = async () => {
     try {
       // Auth check implementation
@@ -143,7 +150,7 @@ const AdminPage = () => {
         const { data: pendingPayments, error: pendingPaymentsError } = await supabase
           .from('pending_payments')
           .select('*')
-          .eq('status', 'pending')
+          .in('status', ['pending', 'pending_approval'])
           .order('created_at', { ascending: false });
 
         if (pendingPaymentsError) {
@@ -155,7 +162,10 @@ const AdminPage = () => {
         let pendingPaymentsWithProfile = [];
         if (pendingPayments && users) {
           pendingPaymentsWithProfile = pendingPayments.map(payment => {
-            const userProfile = users.find(u => u.user_uid === payment.user_id);
+            // Match user จากทุก key ที่เป็นไปได้
+            const userProfile = users.find(u => 
+              u.user_uid === payment.user_id
+            );
             return {
               ...payment,
               profile: userProfile || null
@@ -503,7 +513,7 @@ const AdminPage = () => {
           {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
           {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
           {activeTab === 'payments' && <PaymentAdmin />}
-          {activeTab === 'approval' && <PaymentApproval />}
+          {activeTab === 'approval' && <PaymentApproval pendingPayments={dashboardData.pendingPayments} onRefresh={loadDashboardData} setActiveTab={setActiveTab} />}
           {activeTab === 'approved' && <ApprovedPayments />}
           {activeTab === 'bank' && <BankAccountTab />}
           {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
