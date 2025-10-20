@@ -147,25 +147,31 @@ const MarketingTools = ({ ownerData, onUpdate }) => {
       }
 
       const tableName = activeTab === 'campaigns' ? 'tbl_marketing_campaigns' : 'tbl_promotions';
-      const itemData = {
+      // Build itemData: campaigns table doesn't have 'type' column, promotions may have it
+      const baseItem = {
         fit_id: fitnessData.fit_id,
         owner_id: localOwner.owner_uid,
         title: formData.title,
         description: formData.description,
-        type: formData.type,
         target_audience: formData.target_audience,
         start_date: formData.start_date,
         end_date: formData.end_date,
-        status: formData.status,
-        ...(activeTab === 'campaigns' ? {
-          email_subject: formData.email_subject,
-          email_content: formData.email_content
-        } : {
-          discount_percentage: parseFloat(formData.discount_percentage) || 0,
-          discount_amount: parseFloat(formData.discount_amount) || 0,
-          promo_code: formData.promo_code
-        })
+        status: formData.status
       };
+
+      const itemData = activeTab === 'campaigns'
+        ? {
+            ...baseItem,
+            email_subject: formData.email_subject,
+            email_content: formData.email_content
+          }
+        : {
+            ...baseItem,
+            type: formData.type,
+            discount_percentage: parseFloat(formData.discount_percentage) || 0,
+            discount_amount: parseFloat(formData.discount_amount) || 0,
+            promo_code: formData.promo_code
+          };
 
       let result;
       if (editing) {
