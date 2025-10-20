@@ -1,3 +1,185 @@
+/* ปุ่มคัดลอกและ PromptPay ในหน้าบัญชีธนาคาร */
+.btn-copy, .btn-promptpay {
+  padding: 0.5rem 1.1rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 0.2rem 0.5rem 0.2rem;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+  outline: none;
+  display: inline-block;
+}
+.btn-copy {
+  background: #f8f8ff;
+  color: #667eea;
+  border: 1px solid #d1d5db;
+}
+.btn-copy:hover {
+  background: #e6e6fa;
+  color: #764ba2;
+}
+.btn-promptpay {
+  background: linear-gradient(135deg, #00bfae 0%, #667eea 100%);
+  color: #fff;
+}
+.btn-promptpay:hover {
+  background: linear-gradient(135deg, #667eea 0%, #00bfae 100%);
+}
+/* ปุ่มมาตรฐานในระบบ Admin */
+.btn-view, .btn-edit, .btn-delete, .btn-approve, .btn-reject, .btn-fitness, .btn-refresh, .btn-retry, .btn-cancel, .btn-danger, .btn-primary, .btn-secondary {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 0.2rem 0.5rem 0.2rem;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+  outline: none;
+  display: inline-block;
+}
+.btn-view {
+  background: #17a2b8;
+  color: #fff;
+}
+.btn-view:hover {
+  background: #138496;
+}
+.btn-edit {
+  background: #ffc107;
+  color: #212529;
+}
+.btn-edit:hover {
+  background: #e0a800;
+}
+.btn-delete, .btn-danger {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-delete:hover, .btn-danger:hover {
+  background: #c82333;
+}
+.btn-approve {
+  background: #28a745;
+  color: #fff;
+}
+.btn-approve:hover {
+  background: #218838;
+}
+.btn-reject {
+  background: #fd7e14;
+  color: #fff;
+}
+.btn-reject:hover {
+  background: #e8590c;
+}
+.btn-fitness {
+  background: #764ba2;
+  color: #fff;
+}
+.btn-fitness:hover {
+  background: #667eea;
+}
+.btn-refresh {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+.btn-refresh:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+.btn-retry {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+.btn-retry:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+.btn-cancel {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+.btn-cancel:hover {
+  background: #cbd5e0;
+}
+.btn-primary {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: linear-gradient(90deg, #764ba2 0%, #667eea 100%);
+}
+.btn-secondary {
+  background: #f8f8ff;
+  color: #667eea;
+  border: 1px solid #d1d5db;
+}
+.btn-secondary:hover {
+  background: #e6e6fa;
+}
+/* ปุ่มรีโหลดใหม่ใน empty-state พาร์ทเนอร์ */
+.btn-retry {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+  transition: background 0.2s;
+  margin-top: 1.2rem;
+}
+.btn-retry:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+/* Partner Table Empty State */
+.partner-table-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  background: rgba(247, 250, 252, 0.8);
+  border-radius: 16px;
+  border: 2px dashed #cbd5e0;
+  margin: 2rem 0;
+}
+.partner-table-empty-icon {
+  font-size: 4rem;
+  color: #667eea;
+  margin-bottom: 1rem;
+}
+.partner-table-empty h4 {
+  color: #2d3748;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+.partner-table-empty p {
+  color: #718096;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+.partner-table-empty button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+  transition: background 0.2s;
+}
+.partner-table-empty button:hover {
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
 /* User Modal Styles */
 .modal-overlay {
   position: fixed;

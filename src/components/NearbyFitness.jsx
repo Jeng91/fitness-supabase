@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import locationAPI from '../utils/locationAPI';
 import MapView from './MapView';
 import './NearbyFitness.css';
+import { useNavigate } from 'react-router-dom';
 
 const NearbyFitness = () => {
   const [userLocation, setUserLocation] = useState(null);
@@ -14,6 +15,7 @@ const NearbyFitness = () => {
   const [sortBy, setSortBy] = useState('distance'); // 'distance', 'name', 'type'
   const [selectedFitness, setSelectedFitness] = useState(null);
   const [showMap, setShowMap] = useState(false);
+  const navigate = useNavigate();
 
   // ตรวจสอบสิทธิ์เข้าถึงตำแหน่งและค้นหาฟิตเนสทันทีเมื่อโหลดคอมโพเนนต์
   useEffect(() => {
@@ -290,6 +292,14 @@ const NearbyFitness = () => {
                     </div>
                     <button className="fitness-card-detail-btn" onClick={() => setSelectedFitness(fitness)}>
                       ดูรายละเอียด
+                    </button>
+                    {/* เพิ่มปุ่มลิ้งค์ไปหน้ารายละเอียดฟิตเนส */}
+                    <button
+                      className="fitness-card-detail-btn"
+                      style={{ marginTop: '8px', background: '#667eea', color: '#fff' }}
+                      onClick={() => navigate(`/fitness-detail/${fitness.fit_id}`)}
+                    >
+                      ไปหน้ารายละเอียดฟิตเนส
                     </button>
                   </div>
                 </div>
