@@ -3,21 +3,25 @@ import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import './FitnessDetailModal.css';
 
+const FitnessDetailModal = (props) => {
+  const { 
+    isOpen, 
+    onClose, 
+    fitnessData,
+    onViewLocation,
+    onOpenImageGallery,
+    isFullPage = false, // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
+    user = null // รับ user จาก props เท่านั้น
+  } = props;
 
+  // DEBUG: ตรวจสอบค่า user ที่ได้รับ
+  console.log('FitnessDetailModal user:', user);
+  const isLoggedIn = !!user?.id;
+  console.log('FitnessDetailModal isLoggedIn:', isLoggedIn);
 
-
-const FitnessDetailModal = ({ 
-  isOpen, 
-  onClose, 
-  fitnessData,
-  onViewLocation,
-  onOpenImageGallery,
-  isFullPage = false // เพิ่ม prop สำหรับตรวจสอบว่าเป็นหน้าเต็มหรือไม่
-}) => {
   // เพิ่ม state สำหรับ modal แจ้งเตือนเข้าสู่ระบบ
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [loginModalMessage, setLoginModalMessage] = useState('');
-  const user = window.__PJ_USER__ || null;
   const navigate = useNavigate();
   const [shareNotification, setShareNotification] = useState('');
   const [selectedDate, setSelectedDate] = useState('');
@@ -149,12 +153,14 @@ const FitnessDetailModal = ({
 
   // ฟังก์ชันสำหรับจัดการการจอง
   const handleBookingClick = () => {
+  console.log('handleBookingClick - user:', user, 'isLoggedIn:', isLoggedIn);
     setIsBookingMode(!isBookingMode);
   };
 
   // ฟังก์ชันสำหรับยืนยันการจอง
   const handleConfirmBooking = () => {
     try {
+  console.log('handleConfirmBooking - user:', user, 'isLoggedIn:', isLoggedIn);
       if (!selectedDate) {
         alert('กรุณาเลือกวันที่ที่ต้องการจอง');
         return;
@@ -441,9 +447,9 @@ const FitnessDetailModal = ({
               
               {/* Daily Booking Button */}
               {!isBookingMode ? (
-                <button 
-                  className="membership-btn daily" 
-                  onClick={handleBookingClick}
+                <button
+                  className="membership-btn daily"
+                  onClick={isLoggedIn ? handleBookingClick : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อจองบริการรายวัน'); setShowLoginModal(true); }}
                 >
                   <span className="membership-price">{fitnessData.fit_price || fitnessData.price || 69}</span>
                   <span className="membership-unit">บาท/วัน</span>
@@ -476,14 +482,9 @@ const FitnessDetailModal = ({
                     />
                   </div>
                   <div className="booking-actions">
-                    <button 
-                      className="confirm-booking-btn" 
-                      onClick={handleConfirmBooking}
-                      style={{
-                        pointerEvents: 'auto',
-                        cursor: 'pointer',
-                        zIndex: 999
-                      }}
+                    <button
+                      className="confirm-booking-btn"
+                      onClick={isLoggedIn ? handleConfirmBooking : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อยืนยันการจอง'); setShowLoginModal(true); }}
                     >
                       ✅ ยืนยันการจอง
                     </button>
@@ -500,9 +501,9 @@ const FitnessDetailModal = ({
               {(fitnessData.fit_price_memberm || fitnessData.priceMonthly) && (
                 <div className="membership-container">
                   {!isMembershipBookingMode.monthly ? (
-                    <button 
-                      className="membership-btn monthly" 
-                      onClick={() => setIsMembershipBookingMode({...isMembershipBookingMode, monthly: true})}
+                    <button
+                      className="membership-btn monthly"
+                      onClick={isLoggedIn ? () => setIsMembershipBookingMode({...isMembershipBookingMode, monthly: true}) : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อสมัครสมาชิกแบบรายเดือน'); setShowLoginModal(true); }}
                     >
                       <span className="membership-price">{fitnessData.fit_price_memberm || fitnessData.priceMonthly}</span>
                       <span className="membership-unit">บาท/เดือน (สมาชิก)</span>
@@ -528,9 +529,9 @@ const FitnessDetailModal = ({
                         />
                       </div>
                       <div className="membership-actions">
-                        <button 
-                          className="confirm-membership-btn" 
-                          onClick={() => handleMembershipBookingWithDate('monthly', fitnessData.fit_price_memberm || fitnessData.priceMonthly, membershipStartDate.monthly)}
+                        <button
+                          className="confirm-membership-btn"
+                          onClick={isLoggedIn ? () => handleMembershipBookingWithDate('monthly', fitnessData.fit_price_memberm || fitnessData.priceMonthly, membershipStartDate.monthly) : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อยืนยันการจองรายเดือน'); setShowLoginModal(true); }}
                         >
                           ✅ ยืนยันการจองรายเดือน
                         </button>
@@ -552,9 +553,9 @@ const FitnessDetailModal = ({
               {(fitnessData.fit_price_membery || fitnessData.priceYearly) && (
                 <div className="membership-container">
                   {!isMembershipBookingMode.yearly ? (
-                    <button 
-                      className="membership-btn yearly" 
-                      onClick={() => setIsMembershipBookingMode({...isMembershipBookingMode, yearly: true})}
+                    <button
+                      className="membership-btn yearly"
+                      onClick={isLoggedIn ? () => setIsMembershipBookingMode({...isMembershipBookingMode, yearly: true}) : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อสมัครสมาชิกแบบรายปี'); setShowLoginModal(true); }}
                     >
                       <span className="membership-price">{fitnessData.fit_price_membery || fitnessData.priceYearly}</span>
                       <span className="membership-unit">บาท/ปี (สมาชิก)</span>
@@ -580,9 +581,9 @@ const FitnessDetailModal = ({
                         />
                       </div>
                       <div className="membership-actions">
-                        <button 
-                          className="confirm-membership-btn" 
-                          onClick={() => handleMembershipBookingWithDate('yearly', fitnessData.fit_price_membery || fitnessData.priceYearly, membershipStartDate.yearly)}
+                        <button
+                          className="confirm-membership-btn"
+                          onClick={isLoggedIn ? () => handleMembershipBookingWithDate('yearly', fitnessData.fit_price_membery || fitnessData.priceYearly, membershipStartDate.yearly) : () => { setLoginModalMessage('กรุณาเข้าสู่ระบบเพื่อยืนยันการจองรายปี'); setShowLoginModal(true); }}
                         >
                           ✅ ยืนยันการจองรายปี
                         </button>
@@ -600,7 +601,6 @@ const FitnessDetailModal = ({
                   )}
                 </div>
               )}
-              
               
 
               
@@ -629,6 +629,41 @@ const FitnessDetailModal = ({
             </div>
           </div>
         </div>
+
+        {/* Login Required Modal */}
+        {showLoginModal && (
+          <div className="modal-overlay" onClick={() => setShowLoginModal(false)}>
+            <div className="login-required-modal" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>🔐 กรุณาเข้าสู่ระบบ</h3>
+                <button className="close-btn" onClick={() => setShowLoginModal(false)}>×</button>
+              </div>
+              <div className="modal-body">
+                <p>{loginModalMessage}</p>
+                <div className="modal-actions">
+                  <button
+                    className="login-btn-modal"
+                    onClick={() => {
+                      setShowLoginModal(false);
+                      window.location.href = '/login';
+                    }}
+                  >
+                    เข้าสู่ระบบ
+                  </button>
+                  <button
+                    className="register-btn-modal"
+                    onClick={() => {
+                      setShowLoginModal(false);
+                      window.location.href = '/register';
+                    }}
+                  >
+                    สมัครสมาชิก
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -15,8 +15,36 @@ const FitnessDetailPage = () => {
   const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [classesLoading, setClassesLoading] = useState(false);
-  // รับ user จาก window (จะถูกส่งมาจาก App.js ในขั้นตอนถัดไป)
-  const user = window.__PJ_USER__ || null;
+  // user จาก Supabase auth (subscribe เพื่อให้ค่าอัปเดตหลัง login/signin)
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUser = async () => {
+      try {
+        const { data } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        setUser(data?.user ?? null);
+        console.log('FitnessDetailPage fetched user:', data?.user ?? null);
+      } catch (err) {
+        console.error('Error fetching auth user in FitnessDetailPage:', err);
+      }
+    };
+
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('FitnessDetailPage auth state:', event, session?.user?.id);
+      if (session?.user) setUser(session.user);
+      else setUser(null);
+    });
+
+    return () => {
+      isMounted = false;
+      try { subscription.unsubscribe(); } catch (e) { /* ignore */ }
+    };
+  }, []);
 
   // ฟังก์ชันสมัครคลาส
   const handleClassEnrollment = (classData) => {
@@ -147,6 +175,9 @@ const FitnessDetailPage = () => {
   const handleOpenImageGallery = (fitness) => {
     // สามารถเพิ่ม logic สำหรับ image gallery ได้
   };
+
+  // DEBUG: ตรวจสอบค่า user
+  console.log('FitnessDetailPage user:', user);
 
   if (loading) {
     return (

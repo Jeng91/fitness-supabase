@@ -1,10 +1,13 @@
-﻿﻿import React, { useState, useEffect, useCallback, useMemo } from 'react';
+﻿﻿
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import './App.css';
 import supabase from './supabaseClient';
 import ProfilePage from './components/ProfilePage';
 import MainPartners from './components/MainPartners';
 import FitnessDetailModal from './components/FitnessDetailModal';
 import LoadingSpinner from './components/LoadingSpinner';
+
+
 
 
 function App() {
@@ -67,6 +70,19 @@ function App() {
     }
   }, []);
 
+    // Refresh user state อัตโนมัติเมื่อ user เป็น null และไม่ใช่หน้า login/register
+  useEffect(() => {
+    if (!user && currentPage !== 'เข้าสู่ระบบ' && currentPage !== 'สมัครสมาชิก') {
+      checkUserSession();
+    }
+  }, [user, currentPage]);
+  // Refresh user state ทุกครั้งที่เข้า fitness-detail
+  useEffect(() => {
+    if (currentPage === 'fitness-detail') {
+      checkUserSession();
+    }
+  }, [currentPage]);
+  
   // ฟังก์ชันปรับฟอร์แมตเวลา
   const formatTime = (timeString) => {
     if (!timeString) return timeString;
@@ -745,38 +761,8 @@ function App() {
         role: 'user'
       });
 
-      // ตรวจสอบประเภทผู้ใช้หลัง login
-      setTimeout(async () => {
-        const currentUser = await supabase.auth.getUser();
-        if (currentUser.data?.user) {
-          // ตรวจสอบ tbl_owner ก่อน
-          const { data: owner } = await supabase
-            .from('tbl_owner')
-            .select('*')
-            .eq('auth_user_id', currentUser.data.user.id)
-            .single();
-
-          if (owner) {
-            setCurrentPage('mainpartners');
-            return;
-          }
-
-          // ถ้าไม่ใช่ partner ให้ตรวจสอบ profiles
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('user_uid', currentUser.data.user.id)
-            .single();
-
-          if (profile) {
-            setCurrentPage('โปรไฟล์');
-            return;
-          }
-
-          // ถ้าไม่เจอในทั้งสองตาราง ให้ไปหน้าโปรไฟล์
-          setCurrentPage('โปรไฟล์');
-        }
-      }, 1000);
+      // reload หน้าเว็บหลัง login สำเร็จ เพื่อ refresh user state
+      window.location.reload();
 
     } catch (error) {
       console.error('Login error:', error);
@@ -1376,6 +1362,7 @@ function App() {
                 onViewLocation={handleViewLocation}
                 onOpenImageGallery={handleOpenImageGallery}
                 isFullPage={true}
+                user={user}
               />
             )}
           </div>
