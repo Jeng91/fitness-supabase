@@ -1,5 +1,6 @@
 /* ปุ่มคัดลอกและ PromptPay ในหน้าบัญชีธนาคาร */
-.btn-copy, .btn-promptpay {
+.btn-copy, .btn-promptpay,
+.btn-copy-account, .btn-copy-promptpay {
   padding: 0.5rem 1.1rem;
   border: none;
   border-radius: 8px;
@@ -7,26 +8,28 @@
   font-weight: 600;
   cursor: pointer;
   margin: 0 0.2rem 0.5rem 0.2rem;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.12s;
   box-shadow: 0 2px 8px rgba(102,126,234,0.08);
   outline: none;
   display: inline-block;
 }
-.btn-copy {
+.btn-copy, .btn-copy-account {
   background: #f8f8ff;
   color: #667eea;
   border: 1px solid #d1d5db;
 }
-.btn-copy:hover {
+.btn-copy:hover, .btn-copy-account:hover {
   background: #e6e6fa;
   color: #764ba2;
+  transform: translateY(-2px);
 }
-.btn-promptpay {
+.btn-promptpay, .btn-copy-promptpay {
   background: linear-gradient(135deg, #00bfae 0%, #667eea 100%);
   color: #fff;
 }
-.btn-promptpay:hover {
+.btn-promptpay:hover, .btn-copy-promptpay:hover {
   background: linear-gradient(135deg, #667eea 0%, #00bfae 100%);
+  transform: translateY(-2px);
 }
 /* ปุ่มมาตรฐานในระบบ Admin */
 .btn-view, .btn-edit, .btn-delete, .btn-approve, .btn-reject, .btn-fitness, .btn-refresh, .btn-retry, .btn-cancel, .btn-danger, .btn-primary, .btn-secondary {
