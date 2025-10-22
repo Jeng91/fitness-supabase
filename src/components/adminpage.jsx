@@ -230,7 +230,12 @@ const AdminPage = () => {
       }) || [];
 
       // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
-      let finalPartners = (enrichedPartners || []).filter(p => !(p.owner_id?.includes('demo') || p.owner_uid?.includes('DEMO')));
+      // ป้องกันกรณีที่ owner_id/owner_uid ไม่ใช่ string (หรือเป็น null)
+      let finalPartners = (enrichedPartners || []).filter(p => {
+        const ownerId = p.owner_id == null ? '' : String(p.owner_id);
+        const ownerUid = p.owner_uid == null ? '' : String(p.owner_uid);
+        return !(ownerId.includes('demo') || ownerUid.includes('DEMO'));
+      });
 
       let finalBookings = bookings || [];
       let finalPayments = payments || [];
@@ -355,7 +360,7 @@ const AdminPage = () => {
           <p className="admin-subtitle">ระบบจัดการ PJ Fitness</p>
           
           {message && (
-            <div className={`admin-message ${message.includes('สำเร็จ') ? 'success' : 'error'}`}>
+            <div className={`admin-message ${String(message).includes('สำเร็จ') ? 'success' : 'error'}`}>
               {message}
             </div>
           )}
@@ -899,8 +904,9 @@ const PartnersTab = ({ data, onRefresh }) => {
   const handleEditSubmit = async (e) => {
     e.preventDefault();
     try {
-      // อัปเดตข้อมูลในฐานข้อมูล (ถ้าไม่ใช่ demo data)
-      if (!selectedPartner.owner_id?.includes('demo')) {
+  // อัปเดตข้อมูลในฐานข้อมูล (ถ้าไม่ใช่ demo data)
+  const selOwnerIdStr = selectedPartner?.owner_id == null ? '' : String(selectedPartner.owner_id);
+  if (!selOwnerIdStr.includes('demo')) {
         // อัปเดตข้อมูลเจ้าของใน tbl_owner
         const { error: ownerError } = await supabase
           .from('tbl_owner')
@@ -944,8 +950,9 @@ const PartnersTab = ({ data, onRefresh }) => {
 
   const handleDeleteConfirm = async () => {
     try {
-      // ลบข้อมูลจากฐานข้อมูล (ถ้าไม่ใช่ demo data)
-      if (!selectedPartner.owner_id?.includes('demo')) {
+  // ลบข้อมูลจากฐานข้อมูล (ถ้าไม่ใช่ demo data)
+  const delOwnerIdStr = selectedPartner?.owner_id == null ? '' : String(selectedPartner.owner_id);
+  if (!delOwnerIdStr.includes('demo')) {
         const { error } = await supabase
           .from('tbl_owner')
           .delete()
