@@ -9,6 +9,20 @@ const PaymentAdmin = () => {
     fetchPayments();
   }, []);
 
+  // Realtime subscription for pending_payments
+  useEffect(() => {
+    const channel = supabase.channel('public:pending_payments')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'pending_payments' }, payload => {
+        // Refresh list when pending_payments changes
+        fetchPayments();
+      })
+      .subscribe();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, []);
+
   const fetchPayments = async () => {
     try {
       // Fetch pending payments from canonical schema
@@ -128,7 +142,7 @@ const PaymentAdmin = () => {
             <div className="payment-actions">
               {/* If the pending payment has a slip (bank transfer), allow viewing */}
               {payment.slip_url && (
-                <button onClick={() => window.open(payment.slip_url, '_blank')} className="btn-view">👁️ ดูสลิป</button>
+                <button onClick={() => viewQRCode(payment)} className="btn-view">👁️ ดูสลิป</button>
               )}
 
               {payment.status === 'pending' && (
