@@ -5723,3 +5723,33 @@
   color: #1e3c72;
   margin-bottom: 1.5rem;
 }
+
+/* Sub-tab buttons (used inside panels) */
+.sub-tab-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.sub-tab-btn {
+  padding: 0.45rem 0.9rem;
+  border-radius: 8px;
+  background: #f8f8ff;
+  color: #334155;
+  border: 1px solid #e6eefb;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.15s, transform 0.12s, box-shadow 0.12s;
+}
+
+.sub-tab-btn:hover {
+  background: #eef2ff;
+  transform: translateY(-1px);
+}
+
+.sub-tab-btn.active {
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 6px 18px rgba(102,126,234,0.12);
+}
