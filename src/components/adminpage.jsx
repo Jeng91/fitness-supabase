@@ -1559,11 +1559,36 @@ const BookingsTab = ({ data }) => (
 // Bank Account Tab Component
 const BankAccountTab = () => {
   const copyToClipboard = (text, type) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert(`✅ คัดลอก${type}เรียบร้อยแล้ว: ${text}`);
-    }).catch(() => {
-      alert('❌ ไม่สามารถคัดลอกได้');
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert(`✅ คัดลอก ${type} เรียบร้อยแล้ว: ${text}`);
+      }).catch(() => {
+        // fallback below
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          document.body.removeChild(ta);
+          alert(`✅ คัดลอก ${type} เรียบร้อยแล้ว: ${text}`);
+        } catch (e) {
+          alert('❌ ไม่สามารถคัดลอกได้');
+        }
+      });
+    } else {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert(`✅ คัดลอก ${type} เรียบร้อยแล้ว: ${text}`);
+      } catch (e) {
+        alert('❌ ไม่สามารถคัดลอกได้');
+      }
+    }
   };
 
   return (
