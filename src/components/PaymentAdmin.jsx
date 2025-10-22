@@ -11,14 +11,11 @@ const PaymentAdmin = () => {
 
   const fetchPayments = async () => {
     try {
+      // Fetch pending payments from canonical schema
       const { data, error } = await supabase
-        .from('qr_payments')
-        .select(`
-          *,
-          profiles:user_id (
-            full_name,
-            email
-          )
+        .from('pending_payments')
+        .select(`*
+          , profiles:user_id (full_name, email)
         `)
         .order('created_at', { ascending: false });
 
@@ -33,31 +30,34 @@ const PaymentAdmin = () => {
 
   const updatePaymentStatus = async (paymentId, newStatus) => {
     try {
-      const updateData = { 
-        status: newStatus,
-        paid_at: newStatus === 'success' ? new Date().toISOString() : null,
-        verified_by: 'admin', // เพิ่มข้อมูลว่าใครยืนยัน
-        verified_at: newStatus === 'success' ? new Date().toISOString() : null
-      };
+      if (newStatus === 'approved' || newStatus === 'approve') {
+        // call RPC to approve pending payment atomically
+        const adminUser = supabase.auth.user();
+        const adminId = adminUser?.id || null;
 
-      const { error } = await supabase
-        .from('qr_payments')
-        .update(updateData)
-        .eq('qr_payment_id', paymentId);
+        const { data, error } = await supabase.rpc('approve_pending_payment', { p_pending_id: paymentId, p_admin_id: adminId });
+        if (error) throw error;
+        if (data && data.status === 'error') {
+          throw new Error(data.message || 'RPC returned error');
+        }
 
-      if (error) throw error;
-      
+        alert('✅ ยืนยันการชำระเงินเรียบร้อยแล้ว');
+      } else {
+        // For reject, just update pending_payments.status to 'rejected'
+        const { error } = await supabase
+          .from('pending_payments')
+          .update({ status: 'rejected', rejected_at: new Date().toISOString() })
+          .eq('id', paymentId);
+        if (error) throw error;
+        alert('❌ ปฏิเสธการชำระเงินเรียบร้อยแล้ว');
+      }
+
       // Refresh payments
       fetchPayments();
-      
-      const statusText = newStatus === 'success' ? 'ยืนยันการชำระเงิน' : 
-                        newStatus === 'failed' ? 'ปฏิเสธการชำระเงิน' : newStatus;
-      
-      alert(`✅ ${statusText}เรียบร้อยแล้ว`);
-      
+
     } catch (error) {
       console.error('Error updating payment:', error);
-      alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ');
+      alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + (error.message || error));
     }
   };
 
@@ -105,47 +105,42 @@ const PaymentAdmin = () => {
       
       <div className="payment-list">
         {payments.map((payment) => (
-          <div key={payment.qr_payment_id} className="payment-card">
+          <div key={payment.id} className="payment-card">
             <div className="payment-header">
               <span className={`status ${payment.status}`}>
-                {payment.status === 'pending' && '⏳ รอชำระ'}
-                {payment.status === 'success' && '✅ ชำระแล้ว'}
-                {payment.status === 'failed' && '❌ ล้มเหลว'}
+                {payment.status === 'pending' && '⏳ รออนุมัติ'}
+                {payment.status === 'approved' && '✅ อนุมัติแล้ว'}
+                {payment.status === 'rejected' && '❌ ถูกปฏิเสธ'}
               </span>
               <span className="amount">{formatCurrency(payment.amount)}</span>
             </div>
-            
+
             <div className="payment-details">
               <p><strong>Transaction ID:</strong> {payment.transaction_id}</p>
               <p><strong>ลูกค้า:</strong> {payment.profiles?.full_name || 'ไม่ระบุ'}</p>
               <p><strong>อีเมล:</strong> {payment.profiles?.email || 'ไม่ระบุ'}</p>
               <p><strong>วันที่สร้าง:</strong> {formatDate(payment.created_at)}</p>
-              {payment.paid_at && (
-                <p><strong>วันที่ชำระ:</strong> {formatDate(payment.paid_at)}</p>
-              )}
-              {payment.verified_by && (
-                <p><strong>ยืนยันโดย:</strong> {payment.verified_by}</p>
+              {payment.approved_at && (
+                <p><strong>วันที่อนุมัติ:</strong> {formatDate(payment.approved_at)}</p>
               )}
             </div>
-            
+
             <div className="payment-actions">
-              <button 
-                onClick={() => viewQRCode(payment)}
-                className="btn-view"
-              >
-                👁️ ดู QR Code
-              </button>
-              
+              {/* If the pending payment has a slip (bank transfer), allow viewing */}
+              {payment.slip_url && (
+                <button onClick={() => window.open(payment.slip_url, '_blank')} className="btn-view">👁️ ดูสลิป</button>
+              )}
+
               {payment.status === 'pending' && (
                 <>
                   <button 
-                    onClick={() => updatePaymentStatus(payment.qr_payment_id, 'success')}
+                    onClick={() => updatePaymentStatus(payment.id, 'approved')}
                     className="btn-success"
                   >
-                    ✅ ยืนยันการชำระ
+                    ✅ อนุมัติ
                   </button>
                   <button 
-                    onClick={() => updatePaymentStatus(payment.qr_payment_id, 'failed')}
+                    onClick={() => updatePaymentStatus(payment.id, 'rejected')}
                     className="btn-failed"
                   >
                     ❌ ปฏิเสธ
