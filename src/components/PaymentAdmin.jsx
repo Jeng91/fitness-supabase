@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 const PaymentAdmin = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState({});
 
   useEffect(() => {
     fetchPayments();
@@ -43,6 +44,8 @@ const PaymentAdmin = () => {
   };
 
   const updatePaymentStatus = async (paymentId, newStatus) => {
+    // mark processing
+    setProcessing(prev => ({ ...prev, [paymentId]: true }));
     try {
       if (newStatus === 'approved' || newStatus === 'approve') {
         // call RPC to approve pending payment atomically
@@ -66,12 +69,20 @@ const PaymentAdmin = () => {
         alert('❌ ปฏิเสธการชำระเงินเรียบร้อยแล้ว');
       }
 
-      // Refresh payments
-      fetchPayments();
+  // Refresh payments
+  await fetchPayments();
 
     } catch (error) {
       console.error('Error updating payment:', error);
       alert('❌ เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + (error.message || error));
+    }
+    finally {
+      // clear processing
+      setProcessing(prev => {
+        const copy = { ...prev };
+        delete copy[paymentId];
+        return copy;
+      });
     }
   };
 
@@ -150,14 +161,16 @@ const PaymentAdmin = () => {
                   <button 
                     onClick={() => updatePaymentStatus(payment.id, 'approved')}
                     className="btn-success"
+                    disabled={!!processing[payment.id]}
                   >
-                    ✅ อนุมัติ
+                    {processing[payment.id] ? 'กำลังประมวลผล...' : '✅ อนุมัติ'}
                   </button>
                   <button 
                     onClick={() => updatePaymentStatus(payment.id, 'rejected')}
                     className="btn-failed"
+                    disabled={!!processing[payment.id]}
                   >
-                    ❌ ปฏิเสธ
+                    {processing[payment.id] ? 'กรุณารอสักครู่' : '❌ ปฏิเสธ'}
                   </button>
                 </>
               )}

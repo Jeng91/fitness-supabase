@@ -8,6 +8,8 @@ import MainPartners from './components/MainPartners';
 import FitnessDetailPage from './pages/FitnessDetailPage';
 import AdminPage from './components/adminpage';
 import PaymentPage from './components/PaymentPage';
+import PaymentHistory from './components/PaymentHistory';
+import FitnessRevenue from './components/FitnessRevenue';
 
 const AppRouter = () => {
   return (
@@ -21,6 +23,8 @@ const AppRouter = () => {
         <Route path="/fitness/:id" element={<FitnessDetailPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/history" element={<PaymentHistory />} />
+        <Route path="/revenue" element={<FitnessRevenue />} />
         {/* Catch all route */}
         <Route path="*" element={<HomePage />} />
       </Routes>

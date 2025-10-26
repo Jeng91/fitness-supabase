@@ -71,8 +71,6 @@ const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
       
   // ดึงข้อมูลการชำระเงินที่จะอนุมัติ
   const paymentToApprove = pendingPayments.find(p => p.id === paymentId);
-  // ใช้ user_uid จาก profile ถ้ามี
-  const approvedUserId = paymentToApprove?.profile?.user_uid || paymentToApprove.user_id;
       
       if (!paymentToApprove) {
         alert('ไม่พบข้อมูลการชำระเงิน');
@@ -84,54 +82,25 @@ const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
       let dbSuccess = false;
       
       try {
-        // 1. เพิ่มข้อมูลไปยัง approved_payments
-        const { data: approvedData, error: approvedError } = await supabase
-          .from('approved_payments')
-          .insert([{
-            transaction_id: paymentToApprove.transaction_id,
-            user_id: approvedUserId,
-            amount: paymentToApprove.amount,
-            description: paymentToApprove.description,
-            slip_url: paymentToApprove.slip_url,
-            slip_filename: paymentToApprove.slip_filename,
-            payment_type: paymentToApprove.payment_type || 'qr_payment',
-            original_payment_id: paymentToApprove.id,
-            approved_by: user.user?.id,
-            
-            // ข้อมูลการจองฟิตเนส
-            booking_type: getBookingTypeFromDescription(paymentToApprove.description),
-            booking_period: getBookingPeriodFromDescription(paymentToApprove.description),
-            fitness_name: extractFitnessNameFromDescription(paymentToApprove.description),
-            partner_name: extractPartnerNameFromDescription(paymentToApprove.description),
-            
-            // การคำนวณรายได้ (20% system fee, 80% partner revenue)
-            system_fee: Math.round(paymentToApprove.amount * 0.20 * 100) / 100,
-            partner_revenue: Math.round(paymentToApprove.amount * 0.80 * 100) / 100,
-            
-            booking_id: paymentToApprove.booking_id,
-            membership_id: paymentToApprove.membership_id,
-            notes: 'อนุมัติโดยแอดมิน - ตรวจสอบสลิปเรียบร้อย'
-          }])
-          .select()
-          .single();
+        // Use server-side RPC to approve pending payment atomically
+        const adminId = user.user?.id || null;
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('approve_pending_payment', { p_pending_id: paymentId, p_admin_id: adminId });
 
-        if (!approvedError && approvedData) {
-          // 2. อัปเดตสถานะใน pending_payments
-          const { error: updateError } = await supabase
-            .from('pending_payments')
-            .update({
-              status: 'approved',
-              approved_by: user.user?.id,
-              approved_at: new Date().toISOString()
-            })
-            .eq('id', paymentId);
+        if (rpcError) {
+          // If RPC returns an error, log and fall back to client path
+          console.error('RPC error approving payment:', rpcError);
+          throw rpcError;
+        }
 
-          if (!updateError) {
-            dbSuccess = true;
-          }
+        // rpcResult is expected to be JSON with status 'ok' on success
+        if (rpcResult && (rpcResult.status === 'ok' || rpcResult.status === 'success')) {
+          dbSuccess = true;
+        } else {
+          // Not OK: attempt fallback handled below
+          console.warn('RPC did not return ok:', rpcResult);
         }
       } catch (dbError) {
-        console.error('❌ Database error:', dbError);
+        console.error('❌ Error calling approve_pending_payment RPC:', dbError);
       }
 
       // หากฐานข้อมูลไม่สำเร็จ ใช้ localStorage
