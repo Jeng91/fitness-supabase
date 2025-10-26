@@ -1016,46 +1016,43 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
       {/* Detail Modal */}
       {showDetailModal && selectedPartner && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
+          <div className="modal-content user-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>📋 รายละเอียดพาร์ทเนอร์</h3>
               <button className="modal-close" onClick={() => setShowDetailModal(false)}>×</button>
             </div>
             <div className="modal-body">
-              <div className="partner-details">
-                <div className="detail-row">
-                  <label>🆔 ID:</label>
-                  <span>{selectedPartner.owner_uid || selectedPartner.owner_id}</span>
-                </div>
-                <div className="detail-row">
-                  <label>👤 ชื่อพาร์ทเนอร์:</label>
-                  <span>{selectedPartner.owner_name}</span>
-                </div>
-                <div className="detail-row">
-                  <label>📧 อีเมล:</label>
-                  <span>{selectedPartner.owner_email}</span>
-                </div>
-                <div className="detail-row">
-                  <label>📱 เบอร์โทรฟิตเนส:</label>
-                  <span>{selectedPartner.fit_phone || 'ไม่ระบุ'}</span>
-                </div>
-                {/* owner_phone removed: not present in DB */}
-                <div className="detail-row">
-                  <label>🏢 ชื่อฟิตเนส:</label>
-                  <span>{selectedPartner.fit_name || 'ไม่ระบุ'}</span>
-                </div>
-                <div className="detail-row">
-                  <label>📍 ที่อยู่ฟิตเนส:</label>
-                  <span>{selectedPartner.fit_address || selectedPartner.owner_address || 'ไม่ระบุ'}</span>
-                </div>
-                <div className="detail-row">
-                  <label>📅 วันที่สมัคร:</label>
-                  <span>{selectedPartner.created_at ? new Date(selectedPartner.created_at).toLocaleString('th-TH') : 'ไม่ระบุ'}</span>
-                </div>
-                <div className="detail-row">
-                  <label>🔄 อัปเดตล่าสุด:</label>
-                  <span>{selectedPartner.updated_at ? new Date(selectedPartner.updated_at).toLocaleString('th-TH') : 'ไม่ระบุ'}</span>
-                </div>
+              <div className="form-group">
+                <label>ID:</label>
+                <input type="text" value={selectedPartner.owner_uid || selectedPartner.owner_id || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>👤 ชื่อพาร์ทเนอร์:</label>
+                <input type="text" value={selectedPartner.owner_name || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>📧 อีเมล:</label>
+                <input type="text" value={selectedPartner.owner_email || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>📱 เบอร์โทรฟิตเนส:</label>
+                <input type="text" value={selectedPartner.fit_phone || selectedPartner.fit_contact || 'ไม่ระบุ'} readOnly />
+              </div>
+              <div className="form-group">
+                <label>🏢 ชื่อฟิตเนส:</label>
+                <input type="text" value={selectedPartner.fit_name || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>📍 ที่อยู่ฟิตเนส:</label>
+                <input type="text" value={selectedPartner.fit_address || selectedPartner.owner_address || ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>📅 วันที่สมัคร:</label>
+                <input type="text" value={selectedPartner.created_at ? new Date(selectedPartner.created_at).toLocaleString('th-TH') : ''} readOnly />
+              </div>
+              <div className="form-group">
+                <label>🔄 อัปเดตล่าสุด:</label>
+                <input type="text" value={selectedPartner.updated_at ? new Date(selectedPartner.updated_at).toLocaleString('th-TH') : ''} readOnly />
               </div>
             </div>
             <div className="modal-footer">
