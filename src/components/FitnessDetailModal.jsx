@@ -378,11 +378,11 @@ const FitnessDetailModal = (props) => {
             </div>
             
             {/* Thumbnail Images */}
-            <div className="thumbnail-images">
+              <div className="thumbnail-images">
               {[fitnessData.fit_image2, fitnessData.fit_image3, fitnessData.fit_image4].map((img, index) => 
                 img && (
                   <img 
-                    key={index}
+                    key={img || `thumb-${index}`}
                     src={img} 
                     alt={`รูปเสริม ${index + 1}`} 
                     className="thumbnail-image"
@@ -441,8 +441,8 @@ const FitnessDetailModal = (props) => {
               
               {moreDetailsData && moreDetailsData.length > 0 ? (
                 <div className="more-details-list">
-                  {moreDetailsData.map((detail, index) => (
-                    <div key={index} className="more-detail-item">
+                  {moreDetailsData.map((detail) => (
+                    <div key={detail.id || detail.title} className="more-detail-item">
                       <div className="detail-bullet">•</div>
                       <div className="detail-text">{detail.title}</div>
                     </div>

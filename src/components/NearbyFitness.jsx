@@ -114,6 +114,41 @@ const NearbyFitness = () => {
 
   const sortedFitness = sortFitnessResults(nearbyFitness, sortBy);
 
+  // หากพบผลลัพธ์ ให้ตรวจสอบหาฟิตเนสที่ใกล้ที่สุดแล้วเลือกอัตโนมัติ
+  useEffect(() => {
+    try {
+      if (!userLocation || !nearbyFitness || nearbyFitness.length === 0) return;
+      // ถ้ามีการเลือกอยู่แล้ว ให้ไม่ทับ
+      if (selectedFitness) return;
+
+      const nearest = sortFitnessResults(nearbyFitness, 'distance')[0];
+      const AUTO_DISTANCE_KM = 0.2; // ระยะอัตโนมัติ: 200 เมตร
+
+      if (nearest) {
+        // กรณีที่มีเพียงรายการเดียว หรือ ฟิตเนสที่ใกล้ที่สุดอยู่ใกล้กว่าเงื่อนไข ให้แสดงอัตโนมัติ
+        if (nearbyFitness.length === 1 || nearest.distance <= AUTO_DISTANCE_KM) {
+          setSelectedFitness(nearest);
+          // เลื่อนการ์ดเข้ามาในมุมมอง และไฮไลต์ชั่วคราว
+          setTimeout(() => {
+            const el = document.getElementById(`fitness-card-${nearest.fit_id}`);
+            if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              el.style.boxShadow = '0 8px 24px rgba(102,126,234,0.18)';
+              el.style.border = '2px solid rgba(102,126,234,0.3)';
+              setTimeout(() => {
+                el.style.boxShadow = '';
+                el.style.border = '';
+              }, 3000);
+            }
+          }, 250);
+        }
+      }
+    } catch (err) {
+      console.error('Auto-select nearest fitness error:', err);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nearbyFitness, userLocation]);
+
   return (
     <div className="nearby-fitness-container">
       {/* Header */}
@@ -261,9 +296,10 @@ const NearbyFitness = () => {
               {/* รายการฟิตเนส */}
               {sortedFitness.map((fitness, index) => (
                 <div 
-                  key={fitness.fit_id} 
-                  className="fitness-card modern"
-                >
+                    key={fitness.fit_id} 
+                    id={`fitness-card-${fitness.fit_id}`}
+                    className="fitness-card modern"
+                  >
                   <div className="fitness-card-imgwrap">
                     <img 
                       src={fitness.fit_image || '/default-fitness.png'} 
