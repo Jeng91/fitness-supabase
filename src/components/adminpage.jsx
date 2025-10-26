@@ -773,8 +773,7 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
   const [editForm, setEditForm] = useState({
     owner_name: '',
     owner_email: '',
-    owner_phone: '',
-    owner_address: '',
+    // owner_phone and owner_address removed — not stored on tbl_owner in this schema
     fit_phone: '',
     fit_address: '',
     fit_name: ''
@@ -825,17 +824,45 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
     }
   };
 
-  const handleEdit = (partner) => {
+  const handleEdit = async (partner) => {
     setSelectedPartner(partner);
-    setEditForm({
+    // Pre-fill owner fields we have
+    setEditForm(prev => ({
+      ...prev,
       owner_name: partner.owner_name || '',
-      owner_email: partner.owner_email || '',
-      owner_phone: partner.owner_phone || '',
-      owner_address: partner.owner_address || '',
-      fit_phone: partner.fit_phone || '',
-      fit_address: partner.fit_address || '',
-      fit_name: partner.fit_name || ''
-    });
+      owner_email: partner.owner_email || ''
+    }));
+
+    // Try to fetch related tbl_fitness row to prefill fit fields
+    try {
+      const { data: byOwner, error: byOwnerErr } = await supabase
+        .from('tbl_fitness')
+        .select('*')
+        .eq('owner_id', partner.owner_id)
+        .limit(1);
+      let fitnessRow = null;
+      if (!byOwnerErr && byOwner && byOwner.length > 0) fitnessRow = byOwner[0];
+      else {
+        const { data: byUser, error: byUserErr } = await supabase
+          .from('tbl_fitness')
+          .select('*')
+          .eq('fit_user', partner.owner_name)
+          .limit(1);
+        if (!byUserErr && byUser && byUser.length > 0) fitnessRow = byUser[0];
+      }
+
+      if (fitnessRow) {
+        setEditForm(prev => ({
+          ...prev,
+          fit_name: fitnessRow.fit_name || prev.fit_name,
+          fit_phone: fitnessRow.fit_phone || fitnessRow.fit_contact || prev.fit_phone,
+          fit_address: fitnessRow.fit_address || fitnessRow.fit_location || prev.fit_address
+        }));
+      }
+    } catch (err) {
+      console.error('Error fetching fitness for edit:', err);
+    }
+
     setShowEditModal(true);
   };
 
@@ -850,14 +877,12 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
   // อัปเดตข้อมูลในฐานข้อมูล (ถ้าไม่ใช่ demo data)
   const selOwnerIdStr = selectedPartner?.owner_id == null ? '' : String(selectedPartner.owner_id);
   if (!selOwnerIdStr.includes('demo')) {
-        // อัปเดตข้อมูลเจ้าของใน tbl_owner
+        // อัปเดตข้อมูลเจ้าของใน tbl_owner (owner_phone/owner_address not stored here)
         const { error: ownerError } = await supabase
           .from('tbl_owner')
           .update({
             owner_name: editForm.owner_name,
             owner_email: editForm.owner_email,
-            owner_phone: editForm.owner_phone,
-            owner_address: editForm.owner_address,
             updated_at: new Date().toISOString()
           })
           .eq('owner_id', selectedPartner.owner_id);
@@ -871,7 +896,7 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
             fit_name: editForm.fit_name,
             fit_phone: editForm.fit_phone,
             fit_address: editForm.fit_address,
-            fit_user: editForm.owner_name, // อัปเดตชื่อเจ้าของด้วย
+            fit_user: editForm.owner_name, // keep owner reference
             updated_at: new Date().toISOString()
           })
           .eq('fit_user', selectedPartner.owner_name);
@@ -1094,25 +1119,7 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
                     required
                   />
                 </div>
-                <div className="form-group">
-                  <label>📱 เบอร์โทรเจ้าของ:</label>
-                  <input
-                    type="tel"
-                    name="owner_phone"
-                    value={editForm.owner_phone}
-                    onChange={handleEditInputChange}
-                  />
-                </div>
-                <div className="form-group">
-                  <label>📍 ที่อยู่เจ้าของ:</label>
-                  <textarea
-                    name="owner_address"
-                    value={editForm.owner_address}
-                    onChange={handleEditInputChange}
-                    rows="2"
-                    placeholder="กรุณาใส่ที่อยู่เจ้าของ..."
-                  />
-                </div>
+                {/* owner_phone and owner_address removed from edit form (not in DB) */}
                 
                 <h4 style={{margin: '1.5rem 0 1rem 0', color: '#667eea', borderBottom: '2px solid #667eea', paddingBottom: '0.5rem'}}>
                   🏢 ข้อมูลฟิตเนส
@@ -1300,50 +1307,55 @@ const BankAccountTab = () => {
       <h2>🏦 บัญชีธนาคารระบบ</h2>
       <div className="section">
         <div className="bank-info-grid">
-          {Object.entries(SYSTEM_BANK_ACCOUNTS).map(([key, account]) => (
-            <div key={key} className="bank-card">
-              <div className="bank-header">
-                <h3>💰 {account.purpose}</h3>
-                <span className={`bank-type ${key}`}>บัญชีหลัก</span>
+          {/* Render only the primary system account (main) */}
+          {(() => {
+            const account = SYSTEM_BANK_ACCOUNTS.main;
+            if (!account) return null;
+            return (
+              <div className="bank-card">
+                <div className="bank-header">
+                  <h3>💰 {account.purpose}</h3>
+                  <span className={`bank-type main`}>บัญชีหลัก</span>
+                </div>
+                <div className="bank-details">
+                  <div className="detail-row">
+                    <span className="label">🏦 ธนาคาร:</span>
+                    <span className="value">{account.bankName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">💳 เลขบัญชี:</span>
+                    <span className="value account-number">{account.accountNumber}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">👤 ชื่อบัญชี:</span>
+                    <span className="value">{account.accountName}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">📱 PromptPay:</span>
+                    <span className="value promptpay">{account.promptpayId}</span>
+                  </div>
+                  <div className="detail-row">
+                    <span className="label">📊 ประเภท:</span>
+                    <span className="value">{account.accountType}</span>
+                  </div>
+                </div>
+                <div className="bank-actions">
+                  <button 
+                    className="btn-copy-account"
+                    onClick={() => copyToClipboard(account.accountNumber, 'เลขบัญชี')}
+                  >
+                    📋 คัดลอกเลขบัญชี
+                  </button>
+                  <button 
+                    className="btn-copy-promptpay"
+                    onClick={() => copyToClipboard(account.promptpayId, 'PromptPay')}
+                  >
+                    📱 คัดลอก PromptPay
+                  </button>
+                </div>
               </div>
-              <div className="bank-details">
-                <div className="detail-row">
-                  <span className="label">🏦 ธนาคาร:</span>
-                  <span className="value">{account.bankName}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">💳 เลขบัญชี:</span>
-                  <span className="value account-number">{account.accountNumber}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">👤 ชื่อบัญชี:</span>
-                  <span className="value">{account.accountName}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">📱 PromptPay:</span>
-                  <span className="value promptpay">{account.promptpayId}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="label">📊 ประเภท:</span>
-                  <span className="value">{account.accountType}</span>
-                </div>
-              </div>
-              <div className="bank-actions">
-                <button 
-                  className="btn-copy-account"
-                  onClick={() => copyToClipboard(account.accountNumber, 'เลขบัญชี')}
-                >
-                  📋 คัดลอกเลขบัญชี
-                </button>
-                <button 
-                  className="btn-copy-promptpay"
-                  onClick={() => copyToClipboard(account.promptpayId, 'PromptPay')}
-                >
-                  📱 คัดลอก PromptPay
-                </button>
-              </div>
-            </div>
-          ))}
+            );
+          })()}
         </div>
         
         <div className="revenue-info">

@@ -506,6 +506,39 @@
   color: #2d3748;
   font-size: 1.2rem;
   font-weight: 700;
+
+/* Unified detail-row styling for admin pages (improves label/value presentation) */
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(102,126,234,0.03), rgba(118,75,162,0.02));
+  border: 1px solid rgba(226,232,240,0.6);
+  margin-bottom: 0.65rem;
+}
+.detail-row .label, .detail-row span:first-child {
+  min-width: 140px;
+  color: #4a5568;
+  font-weight: 700;
+  display: block;
+}
+.detail-row .value, .detail-row span:last-child {
+  flex: 1 1 auto;
+  color: #2d3748;
+  background: #ffffff;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid rgba(226,232,240,0.8);
+}
+.detail-row .value.small, .detail-row span:last-child.small {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.95rem;
+}
+
+/* Make last detail-row have slightly less bottom margin when used in stacked lists */
+.detail-row:last-child { margin-bottom: 0.4rem; }
   margin-bottom: 0.5rem;
 }
 
