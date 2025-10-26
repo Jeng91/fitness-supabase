@@ -237,25 +237,35 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 10px solid #00aaff;
+  gap: 1rem;
+  padding: 0.9rem 1rem; /* more vertical space for readability */
+  border-radius: 8px;   /* rectangular box look */
+  background: #ffffff;  /* white box */
+  border: 1px solid rgba(0, 170, 255, 0.12); /* subtle tint matching blue brand */
+  box-shadow: 0 1px 0 rgba(16,24,40,0.03);
+  margin-bottom: 1rem; /* increased spacing between lines */
 }
 
 .detail-row:last-child {
-  border-bottom: none;
+  margin-bottom: 0.7rem;
 }
 
 .detail-row .label {
   font-weight: 600;
   color: #495057;
-  min-width: 100px;
+  min-width: 120px;
 }
 
 .detail-row .value {
   color: #212529;
   text-align: right;
   word-break: break-word;
-  max-width: 250px;
+  max-width: 100%;
+}
+
+/* Extra spacing between bank-details and the action buttons */
+.bank-actions, .slip-actions {
+  margin-top: 1rem;
 }
 
 .slip-link {
