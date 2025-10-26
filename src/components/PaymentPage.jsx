@@ -65,6 +65,43 @@ const PaymentPage = () => {
     }
   }, [bookingData, navigate]);
 
+  // ถ้ามี promotion ติดมากับ bookingData (มาจากปุ่ม "รับโปรโมชั่น") ให้พยายามใช้อัตโนมัติ
+  useEffect(() => {
+    const applyPromoObject = (promo) => {
+      if (!promo) return;
+      try {
+        const currentDate = new Date();
+        if (promo.status && promo.status !== 'active') {
+          console.warn('Promo in bookingData is not active:', promo);
+          return;
+        }
+        if (promo.end_date && new Date(promo.end_date) < currentDate) {
+          console.warn('Promo in bookingData is expired:', promo);
+          return;
+        }
+
+        // คำนวณส่วนลดตามโครงสร้างเดียวกับ validatePromoCode
+        let discount = 0;
+        const base = bookingData?.total_amount || originalAmount || 0;
+        if (promo.discount_percentage > 0) {
+          discount = Math.round((base * promo.discount_percentage / 100) * 100) / 100;
+        } else if (promo.discount_amount > 0) {
+          discount = Math.min(promo.discount_amount, base);
+        }
+
+        setAppliedPromo(promo);
+        setDiscountAmount(discount);
+      } catch (err) {
+        console.error('Error applying promo from bookingData:', err);
+      }
+    };
+
+    if (bookingData && bookingData.promotion) {
+      applyPromoObject(bookingData.promotion);
+    }
+    // only run when bookingData changes
+  }, [bookingData, originalAmount]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setPaymentForm(prev => ({
