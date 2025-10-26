@@ -170,7 +170,9 @@
 @keyframes glow {
   from { box-shadow: 0 0 20px rgba(255, 152, 0, 0.5); }
   to { box-shadow: 0 0 30px rgba(255, 152, 0, 0.8); }
-}dding-bottom: 16px;
+}
+.padding {
+  padding: 16px;
   border-bottom: 2px solid #f0f0f0;
 }
 
@@ -697,4 +699,4 @@
   margin: 0;
   color: #c53030;
   font-weight: 500;
-}
+}}

@@ -237,8 +237,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 0;
-  border-bottom: 1px solid #f1f3f4;
+  padding: 10px 0;
+  border-bottom: 10px solid #00aaff;
 }
 
 .detail-row:last-child {
