@@ -91,6 +91,32 @@ const PaymentPage = () => {
           return;
         }
 
+        // ถ้าผู้ใช้ล็อกอิน ให้ตรวจสอบว่าเคย claim หรือยัง (single-use)
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          const userId = userData?.user?.id;
+          if (userId) {
+            const { data: existingClaims, error: claimErr } = await supabase
+              .from('tbl_promo_claims')
+              .select('claim_id')
+              .eq('promo_id', promoRecord.promo_id || promoRecord.id)
+              .eq('user_id', userId)
+              .limit(1);
+
+            if (claimErr) {
+              console.warn('Error checking promo claims:', claimErr);
+            }
+
+            if (existingClaims && existingClaims.length > 0) {
+              // user already claimed -> do not apply
+              alert('คุณได้ใช้โปรโมชั่นนี้ไปแล้ว ไม่สามารถใช้ซ้ำได้');
+              return;
+            }
+          }
+        } catch (err) {
+          console.warn('Error while checking existing claims:', err);
+        }
+
         // ตรวจสอบสถานะ/วันหมดอายุ
         const now = new Date();
         if (promoRecord.status && promoRecord.status !== 'active') {
@@ -174,6 +200,36 @@ const PaymentPage = () => {
         discount = Math.round((originalAmount * promotions.discount_percentage / 100) * 100) / 100;
       } else if (promotions.discount_amount > 0) {
         discount = Math.min(promotions.discount_amount, originalAmount);
+      }
+
+      // ตรวจสอบว่า user เคย claim แล้วหรือไม่ (single-use)
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+        if (!userId) {
+          alert('กรุณาเข้าสู่ระบบก่อนใช้โปรโมชัน');
+          setPromoLoading(false);
+          return;
+        }
+
+        const { data: existingClaims, error: claimErr } = await supabase
+          .from('tbl_promo_claims')
+          .select('claim_id')
+          .eq('promo_id', promotions.promo_id || promotions.id)
+          .eq('user_id', userId)
+          .limit(1);
+
+        if (claimErr) {
+          console.warn('Error checking promo claims:', claimErr);
+        }
+
+        if (existingClaims && existingClaims.length > 0) {
+          alert('คุณได้ใช้รหัสโปรโมชันนี้ไปแล้ว ไม่สามารถใช้ซ้ำได้');
+          setPromoLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Error while checking existing promo claim:', err);
       }
 
       setAppliedPromo(promotions);

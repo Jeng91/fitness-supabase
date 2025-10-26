@@ -50,7 +50,6 @@ const FitnessDetailModal = (props) => {
   // โหลดข้อมูลอุปกรณ์และเจ้าของ
   useEffect(() => {
     const loadAdditionalData = async () => {
-      console.log('FitnessDetailModal loadAdditionalData - fitnessData:', fitnessData);
       console.log('FitnessDetailModal determined fitId:', fitId);
       if (!fitId) {
         console.warn('No fitId available for this fitnessData, skipping equipment/promotions load');

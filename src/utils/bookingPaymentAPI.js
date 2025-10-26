@@ -214,6 +214,21 @@ export const recordPromoClaim = async (promo, bookingId = null) => {
 
     const promoId = promo.promo_id || promo.id || promo.id;
     const promoCode = promo.promo_code || promo.code || null;
+    // ตรวจสอบก่อนว่าผู้ใช้คนนี้เคย claim promo นี้หรือยัง
+    const { data: existing, error: existErr } = await supabase
+      .from('tbl_promo_claims')
+      .select('claim_id')
+      .eq('promo_id', promoId)
+      .eq('user_id', user.id)
+      .limit(1);
+
+    if (existErr) {
+      console.warn('Error checking existing promo claims:', existErr);
+    }
+
+    if (existing && existing.length > 0) {
+      return { success: false, error: 'already_claimed' };
+    }
 
     const insertObj = {
       promo_id: promoId,
