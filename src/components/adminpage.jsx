@@ -176,8 +176,8 @@ const AdminPage = () => {
     try {
       setIsLoading(true);
       
-      // เพิ่มข้อมูลลงใน tbl_fitness
-      const { error: insertError } = await supabase
+      // เพิ่มข้อมูลลงใน tbl_fitness และรับข้อมูลที่ถูกเพิ่มกลับมา
+      const { data: insertedFitnessArr, error: insertError } = await supabase
         .from('tbl_fitness')
         .insert([
           {
@@ -193,9 +193,11 @@ const AdminPage = () => {
             created_at: new Date().toISOString(),
             status: 'active'
           }
-        ]);
+        ])
+        .select();
 
       if (insertError) throw insertError;
+      const insertedFitness = Array.isArray(insertedFitnessArr) && insertedFitnessArr.length > 0 ? insertedFitnessArr[0] : null;
 
       // อัปเดตสถานะใน tbl_fitness_requests
       const { error: updateError } = await supabase
@@ -210,7 +212,16 @@ const AdminPage = () => {
       if (updateError) throw updateError;
 
       setMessage('✅ อนุมัติฟิตเนสสำเร็จ!');
-      loadDashboardData(); // รีโหลดข้อมูล
+      // ถ้าได้ row ที่เพิ่มมา ให้อัปเดต state ทันทีเพื่่อให้ UI แสดงผลทันที
+      if (insertedFitness) {
+        setDashboardData(prev => ({
+          ...prev,
+          // เพิ่มรายการที่เพิ่งอนุมัติเข้าไปด้านบนของ approvedFitness
+          approvedFitness: [insertedFitness, ...(prev.approvedFitness || [])]
+        }));
+      }
+      // รีโหลดข้อมูลเพิ่มเติม (ปลอดภัย) แต่ UI จะอัปเดตก่อนจากการอัพเดต state ข้างต้น
+      await loadDashboardData();
       
     } catch (error) {
       console.error('Error approving fitness:', error);
@@ -775,9 +786,43 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
     setIsRefreshing(false);
   };
 
-  const handleViewDetails = (partner) => {
+  const handleViewDetails = async (partner) => {
+    // Open modal immediately
     setSelectedPartner(partner);
     setShowDetailModal(true);
+
+    // Try to fetch an associated tbl_fitness row to populate fit_name/fit_phone/fit_address
+    try {
+      let fitnessRows = [];
+      const { data: byOwner, error: byOwnerErr } = await supabase
+        .from('tbl_fitness')
+        .select('*')
+        .eq('owner_id', partner.owner_id)
+        .limit(1);
+      if (!byOwnerErr && byOwner && byOwner.length > 0) {
+        fitnessRows = byOwner;
+      } else {
+        // Fallback: try matching by fit_user (some records use fit_user = owner_name)
+        const { data: byUser, error: byUserErr } = await supabase
+          .from('tbl_fitness')
+          .select('*')
+          .eq('fit_user', partner.owner_name)
+          .limit(1);
+        if (!byUserErr && byUser && byUser.length > 0) fitnessRows = byUser;
+      }
+
+      if (fitnessRows.length > 0) {
+        const f = fitnessRows[0];
+        setSelectedPartner(prev => ({
+          ...prev,
+          fit_name: f.fit_name || prev.fit_name,
+          fit_phone: f.fit_phone || f.fit_contact || prev.fit_phone,
+          fit_address: f.fit_address || f.fit_location || prev.fit_address
+        }));
+      }
+    } catch (err) {
+      console.error('Error loading partner fitness for details modal:', err);
+    }
   };
 
   const handleEdit = (partner) => {
@@ -945,7 +990,6 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
                     >
                       ลบ
                     </button>
-                    <button className="btn-fitness" title="ดูฟิตเนสของพาร์ทเนอร์" onClick={() => onViewPartnerFitness && onViewPartnerFitness(partner)}>🏋️</button>
                   </td>
                 </tr>
               ))
@@ -995,10 +1039,7 @@ const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
                   <label>📱 เบอร์โทรฟิตเนส:</label>
                   <span>{selectedPartner.fit_phone || 'ไม่ระบุ'}</span>
                 </div>
-                <div className="detail-row">
-                  <label>☎️ เบอร์โทรเจ้าของ:</label>
-                  <span>{selectedPartner.owner_phone || 'ไม่ระบุ'}</span>
-                </div>
+                {/* owner_phone removed: not present in DB */}
                 <div className="detail-row">
                   <label>🏢 ชื่อฟิตเนส:</label>
                   <span>{selectedPartner.fit_name || 'ไม่ระบุ'}</span>
