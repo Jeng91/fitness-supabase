@@ -4,6 +4,7 @@ import './AdminPage.css';
 import PaymentAdmin from './PaymentAdmin';
 import PaymentApproval from './PaymentApproval';
 import ApprovedPayments from './ApprovedPayments';
+import FitnessTab from './admin/FitnessTab';
 import { SYSTEM_BANK_ACCOUNTS } from '../utils/paymentConfig';
 
 const AdminPage = () => {
@@ -19,240 +20,89 @@ const AdminPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState('');
   
-  // ข้อมูลสำหรับแดชบอร์ด
+  // ข้อมูลสำหรับแดชบอร์ด (ค่าเริ่มต้น)
   const [dashboardData, setDashboardData] = useState({
     users: [],
     partners: [],
     pendingFitness: [],
     approvedFitness: [],
-    pendingPayments: [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
+    pendingPayments: [],
     bookings: [],
     payments: [],
     totalRevenue: 0,
     systemRevenue: 0
   });
 
-  useEffect(() => {
-    checkAdminAuth();
-  }, []);
-
-  // Reload dashboardData เมื่อเปลี่ยน tab เป็น 'approval'
-  useEffect(() => {
-    if (activeTab === 'approval') {
-      loadDashboardData();
-    }
-  }, [activeTab]);
-
-  const checkAdminAuth = async () => {
-    try {
-      // Auth check implementation
-    } catch (error) {
-      console.error('Auth check error:', error);
-    }
-  };
-
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setMessage('');
-
-    try {
-      const { data: adminUser, error } = await supabase
-        .from('tbl_admin')
-        .select('*')
-        .eq('admin_name', loginForm.email)
-        .eq('admin_password', loginForm.password)
-        .single();
-
-      if (error || !adminUser) {
-        throw new Error('ข้อมูลการเข้าสู่ระบบไม่ถูกต้อง');
-      }
-
-      setAdminData(adminUser);
-      setIsAuthenticated(true);
-      setMessage('เข้าสู่ระบบสำเร็จ!');
-      setActiveTab('dashboard');
-      
-      loadDashboardData();
-    } catch (error) {
-      setMessage(`❌ ${error.message}`);
-    }
-    
-    setIsLoading(false);
-  };
-
+  // โหลดข้อมูลแดชบอร์ด (เรียกเมื่อเข้าหน้า หรือ refresh)
   const loadDashboardData = async () => {
     try {
-      // ดึงข้อมูลผู้ใช้
       const { data: users, error: usersError } = await supabase
         .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (usersError) {
-        console.error('Error loading users:', usersError);
-      }
+      if (usersError) console.error('Error loading users:', usersError);
 
-      // ดึงข้อมูลพาร์ทเนอร์
       const { data: partners, error: partnersError } = await supabase
         .from('tbl_owner')
         .select('*');
+      if (partnersError) console.error('Error loading partners:', partnersError);
 
-      if (partnersError) {
-        console.error('❌ Error loading partners:', partnersError);
-      }
-
-      // เชื่อมข้อมูลพาร์ทเนอร์กับข้อมูลฟิตเนส
-      let enrichedPartners = [];
-      if (partners && partners.length > 0) {
-        for (const partner of partners) {
-          // ดึงข้อมูลฟิตเนสของพาร์ทเนอร์
-          const { data: fitnessData } = await supabase
-            .from('tbl_fitness')
-            .select('fit_phone, fit_address, fit_name')
-            .eq('fit_user', partner.owner_name)
-            .single();
-
-          const enrichedPartner = {
-            ...partner,
-            fit_phone: fitnessData?.fit_phone || null,
-            fit_address: fitnessData?.fit_address || null,
-            fit_name: fitnessData?.fit_name || null
-          };
-
-          enrichedPartners.push(enrichedPartner);
-        }
-      }
-
-      // ดึงข้อมูลฟิตเนสที่รออนุมัติ (สมมติใช้ status = 'pending')
       const { data: pendingFitness, error: pendingError } = await supabase
         .from('tbl_fitness_requests')
         .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false });
+      if (pendingError) console.error('Error loading pending fitness requests:', pendingError);
 
-      if (pendingError) {
-        console.error('Error loading pending fitness requests:', pendingError);
-      }
-
-      // ดึงข้อมูลฟิตเนสที่อนุมัติแล้ว
       const { data: approvedFitness, error: fitnessError } = await supabase
         .from('tbl_fitness')
         .select('*')
         .order('created_at', { ascending: false });
+      if (fitnessError) console.error('Error loading fitness data:', fitnessError);
 
-      if (fitnessError) {
-        console.error('Error loading fitness data:', fitnessError);
-      }
+      const { data: pendingPayments, error: pendingPaymentsError } = await supabase
+        .from('pending_payments')
+        .select('*')
+        .in('status', ['pending', 'pending_approval'])
+        .order('created_at', { ascending: false });
+      if (pendingPaymentsError) console.error('Error loading pending payments:', pendingPaymentsError);
 
-      // ดึงข้อมูลการชำระเงินรอการอนุมัติ
-        // ดึง pending_payments และ profiles แยก แล้ว join ฝั่ง client
-        const { data: pendingPayments, error: pendingPaymentsError } = await supabase
-          .from('pending_payments')
-          .select('*')
-          .in('status', ['pending', 'pending_approval'])
-          .order('created_at', { ascending: false });
-
-        if (pendingPaymentsError) {
-          console.error('Error loading pending payments:', pendingPaymentsError);
-        }
-
-        // ดึง users/profiles ทั้งหมด (ใช้ users ที่ดึงมาก่อนหน้า)
-        // Join ข้อมูล user/profiles กับ pending_payments ด้วย user_id
-        let pendingPaymentsWithProfile = [];
-        if (pendingPayments && users) {
-          pendingPaymentsWithProfile = pendingPayments.map(payment => {
-            // Match user จากทุก key ที่เป็นไปได้
-            const userProfile = users.find(u => 
-              u.user_uid === payment.user_id
-            );
-            return {
-              ...payment,
-              profile: userProfile || null
-            };
-          });
-        } else {
-          pendingPaymentsWithProfile = pendingPayments || [];
-        }
-
-      // ดึงข้อมูล bookings
       const { data: bookings, error: bookingsError } = await supabase
         .from('bookings')
         .select('*')
         .order('created_at', { ascending: false });
+      if (bookingsError) console.error('Error loading bookings:', bookingsError);
 
-      if (bookingsError) {
-        console.error('Error loading bookings:', bookingsError);
-      }
-
-      // ดึงข้อมูล payments
       const { data: payments, error: paymentsError } = await supabase
         .from('payments')
         .select('*')
         .order('created_at', { ascending: false });
+      if (paymentsError) console.error('Error loading payments:', paymentsError);
 
-      if (paymentsError) {
-        console.error('Error loading payments:', paymentsError);
+      // Build pendingPaymentsWithProfile by matching user_id
+      let pendingPaymentsWithProfile = (pendingPayments || []).map(p => ({ ...p, profile: null }));
+      if (pendingPaymentsWithProfile.length > 0 && users && users.length > 0) {
+        pendingPaymentsWithProfile = pendingPaymentsWithProfile.map(payment => {
+          const userProfile = users.find(u => u.user_uid === payment.user_id) || null;
+          return { ...payment, profile: userProfile };
+        });
       }
 
-      // คำนวณรายได้รวม
-      let totalRevenue = payments?.reduce((sum, payment) => {
-        return payment.payment_status === 'completed' ? sum + (payment.total_amount || 0) : sum;
-      }, 0) || 0;
+      const totalRevenue = (payments || []).reduce((sum, payment) => payment.payment_status === 'completed' ? sum + (payment.total_amount || 0) : sum, 0);
+      const systemRevenue = (payments || []).reduce((sum, payment) => payment.payment_status === 'completed' ? sum + (payment.system_fee || 0) : sum, 0);
 
-      // คำนวณรายได้ของระบบ (20%)
-      let systemRevenue = payments?.reduce((sum, payment) => {
-        return payment.payment_status === 'completed' ? sum + (payment.system_fee || 0) : sum;
-      }, 0) || 0;
-
-      // จับคู่ข้อมูลฟิตเนสกับเจ้าของ
-      const enrichedApprovedFitness = approvedFitness?.map(fitness => {
-        const owner = enrichedPartners?.find(p => 
-          p.owner_name === fitness.fit_user || 
-          p.owner_uid === fitness.owner_uid ||
-          p.owner_id === fitness.owner_id
-        );
-        return {
-          ...fitness,
-          owner_info: owner
-        };
-      }) || [];
-
-      const enrichedPendingFitness = pendingFitness?.map(request => {
-        const owner = enrichedPartners?.find(p => 
-          p.owner_uid === request.owner_id ||
-          p.owner_name === request.owner_name
-        );
-        return {
-          ...request,
-          owner_info: owner
-        };
-      }) || [];
-
-      // เพิ่มข้อมูลตัวอย่างหากไม่มีข้อมูลจริง (สำหรับ demo)
-      // ป้องกันกรณีที่ owner_id/owner_uid ไม่ใช่ string (หรือเป็น null)
-      let finalPartners = (enrichedPartners || []).filter(p => {
-        const ownerId = p.owner_id == null ? '' : String(p.owner_id);
-        const ownerUid = p.owner_uid == null ? '' : String(p.owner_uid);
-        return !(ownerId.includes('demo') || ownerUid.includes('DEMO'));
-      });
-
-      let finalBookings = bookings || [];
-      let finalPayments = payments || [];
-      // ใช้ข้อมูลจริงจาก Supabase เท่านั้น
-
-      setDashboardData(prev => ({
-        ...prev,
+      setDashboardData({
         users: users || [],
-        partners: finalPartners || [],
-        pendingFitness: enrichedPendingFitness || [],
-        approvedFitness: enrichedApprovedFitness || [],
-  pendingPayments: pendingPaymentsWithProfile || [], // เพิ่มข้อมูลการชำระเงินรอการอนุมัติ
-        bookings: finalBookings,
-        payments: finalPayments,
-        totalRevenue: totalRevenue,
-        systemRevenue: systemRevenue
-      }));
+        partners: partners || [],
+        pendingFitness: pendingFitness || [],
+        approvedFitness: approvedFitness || [],
+        pendingPayments: pendingPaymentsWithProfile || [],
+        bookings: bookings || [],
+        payments: payments || [],
+        totalRevenue,
+        systemRevenue
+      });
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     }
@@ -271,6 +121,52 @@ const AdminPage = () => {
       ...prev,
       [name]: value
     }));
+  };
+
+  // ฟังก์ชันล็อกอิน (เรียกเมื่อ submit แบบฟอร์ม)
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setMessage('');
+    try {
+      // พยายามค้นหา admin ในตาราง tbl_admins (ถ้ามี)
+      const { data: admins, error } = await supabase
+        .from('tbl_admins')
+        .select('*')
+        .eq('email', loginForm.email)
+        .limit(1);
+
+      if (!error && admins && admins.length > 0) {
+        const admin = admins[0];
+        // หากตารางเก็บรหัสผ่านแบบ plain-text (ไม่แนะนำ) ให้ตรวจสอบ
+        if (admin.password && admin.password === loginForm.password) {
+          setAdminData(admin);
+          setIsAuthenticated(true);
+          setMessage('✅ เข้าสู่ระบบสำเร็จ');
+          await loadDashboardData();
+          return;
+        }
+      }
+
+      // fallback: ยอมรับค่า default credentials ที่ตั้งไว้ใน loginForm (สำหรับ dev)
+      if (
+        loginForm.email === 'admin@pjfitness.com' &&
+        loginForm.password === 'PJFitness@2025!'
+      ) {
+        setAdminData({ admin_id: 'local-admin', admin_name: 'Local Admin' });
+        setIsAuthenticated(true);
+        setMessage('✅ เข้าสู่ระบบ (local) สำเร็จ');
+        await loadDashboardData();
+        return;
+      }
+
+      setMessage('❌ อีเมลหรือรหัสผ่านไม่ถูกต้อง');
+    } catch (err) {
+      console.error('Login error:', err);
+      setMessage(`❌ เกิดข้อผิดพลาด: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // ฟังก์ชันอนุมัติฟิตเนส
@@ -1264,239 +1160,7 @@ const PartnersTab = ({ data, onRefresh }) => {
   );
 };
 
-// Fitness Tab Component
-const FitnessTab = ({ data, onApprove, onReject }) => {
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [showRejectModal, setShowRejectModal] = useState(false);
-
-  const handleViewDetails = (request) => {
-    setSelectedRequest(request);
-    setShowModal(true);
-  };
-
-  const handleApprove = (request) => {
-    onApprove(request);
-    setShowModal(false);
-  };
-
-  const handleReject = (request) => {
-    setSelectedRequest(request);
-    setShowRejectModal(true);
-    setShowModal(false);
-  };
-
-  const confirmReject = () => {
-    onReject(selectedRequest, rejectionReason);
-    setShowRejectModal(false);
-    setRejectionReason('');
-  };
-
-  return (
-    <div className="fitness-content">
-      <h2>🏋️ จัดการฟิตเนส</h2>
-      
-      {/* สถิติรวม */}
-      <div className="fitness-stats">
-        <div className="stat-card">
-          <h3>⏳ รออนุมัติ</h3>
-          <div className="stat-number">{data?.pendingFitness?.length || 0}</div>
-          <div className="stat-label">รายการ</div>
-        </div>
-        <div className="stat-card">
-          <h3>✅ อนุมัติแล้ว</h3>
-          <div className="stat-number">{data?.approvedFitness?.length || 0}</div>
-          <div className="stat-label">รายการ</div>
-        </div>
-      </div>
-
-      {/* รายการรออนุมัติ */}
-      <div className="section">
-        <h3>📝 คำขอสร้างฟิตเนสที่รออนุมัติ</h3>
-        {data?.pendingFitness?.length > 0 ? (
-          <div className="data-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>ชื่อฟิตเนส</th>
-                  <th>พาร์ทเนอร์</th>
-                  <th>ประเภท</th>
-                  <th>ราคา</th>
-                  <th>สถานที่</th>
-                  <th>วันที่ส่ง</th>
-                  <th>จัดการ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.pendingFitness.map((request, index) => (
-                  <tr key={request.id || index}>
-                    <td>{request.fit_name}</td>
-                    <td>{request.owner_info?.owner_name || request.owner_name || request.owner_id || 'ไม่ระบุ'}</td>
-                    <td>{request.fit_type}</td>
-                    <td>฿{request.fit_price}</td>
-                    <td>{request.fit_location}</td>
-                    <td>{new Date(request.created_at).toLocaleDateString('th-TH')}</td>
-                    <td>
-                      <button 
-                        className="btn-view" 
-                        onClick={() => handleViewDetails(request)}
-                      >
-                        ดูรายละเอียด
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="info-card">
-            <p>🎉 ไม่มีคำขอสร้างฟิตเนสที่รออนุมัติ</p>
-          </div>
-        )}
-      </div>
-
-      {/* รายการอนุมัติแล้ว */}
-      <div className="section">
-        <h3>✅ ฟิตเนสที่อนุมัติแล้ว</h3>
-        {data?.approvedFitness?.length > 0 ? (
-          <div className="data-table">
-            <table>
-              <thead>
-                <tr>
-                  <th>ชื่อฟิตเนส</th>
-                  <th>พาร์ทเนอร์</th>
-                  <th>ประเภท</th>
-                  <th>ราคา</th>
-                  <th>สถานที่</th>
-                  <th>วันที่อนุมัติ</th>
-                  <th>สถานะ</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.approvedFitness.map((fitness, index) => (
-                  <tr key={fitness.fit_id || index}>
-                    <td>{fitness.fit_name}</td>
-                    <td>{fitness.owner_info?.owner_name || fitness.fit_user || fitness.owner_name || 'ไม่ระบุ'}</td>
-                    <td>{fitness.fit_type}</td>
-                    <td>฿{fitness.fit_price}</td>
-                    <td>{fitness.fit_location}</td>
-                    <td>{new Date(fitness.created_at).toLocaleDateString('th-TH')}</td>
-                    <td>
-                      <span className="status-active">เปิดใช้งาน</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <div className="info-card">
-            <p>ไม่มีฟิตเนสที่อนุมัติแล้ว</p>
-          </div>
-        )}
-      </div>
-
-      {/* Modal แสดงรายละเอียด */}
-      {showModal && selectedRequest && (
-        <div className="modal-overlay" onClick={() => setShowModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>📝 รายละเอียดคำขอสร้างฟิตเนส</h3>
-              <button className="close-btn" onClick={() => setShowModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="detail-grid">
-                <div className="detail-item">
-                  <label>ชื่อฟิตเนส:</label>
-                  <span>{selectedRequest.fit_name}</span>
-                </div>
-                <div className="detail-item">
-                  <label>พาร์ทเนอร์:</label>
-                  <span>{selectedRequest.owner_info?.owner_name || selectedRequest.owner_name || selectedRequest.owner_id || 'ไม่ระบุ'}</span>
-                </div>
-                <div className="detail-item">
-                  <label>ประเภท:</label>
-                  <span>{selectedRequest.fit_type}</span>
-                </div>
-                <div className="detail-item">
-                  <label>ราคา:</label>
-                  <span>฿{selectedRequest.fit_price}</span>
-                </div>
-                <div className="detail-item">
-                  <label>ระยะเวลา:</label>
-                  <span>{selectedRequest.fit_duration} นาที</span>
-                </div>
-                <div className="detail-item">
-                  <label>สถานที่:</label>
-                  <span>{selectedRequest.fit_location}</span>
-                </div>
-                <div className="detail-item">
-                  <label>ติดต่อ:</label>
-                  <span>{selectedRequest.fit_contact}</span>
-                </div>
-                <div className="detail-item full-width">
-                  <label>คำอธิบาย:</label>
-                  <p>{selectedRequest.fit_description}</p>
-                </div>
-                {selectedRequest.fit_image && (
-                  <div className="detail-item full-width">
-                    <label>รูปภาพ:</label>
-                    <img src={selectedRequest.fit_image} alt="ฟิตเนส" className="fitness-image" />
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-approve" onClick={() => handleApprove(selectedRequest)}>
-                ✅ อนุมัติ
-              </button>
-              <button className="btn-reject" onClick={() => handleReject(selectedRequest)}>
-                ❌ ปฏิเสธ
-              </button>
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal ปฏิเสธ */}
-      {showRejectModal && (
-        <div className="modal-overlay" onClick={() => setShowRejectModal(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>❌ ปฏิเสธคำขอ</h3>
-              <button className="close-btn" onClick={() => setShowRejectModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>เหตุผลในการปฏิเสธ:</label>
-                <textarea 
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  placeholder="กรุณาระบุเหตุผลในการปฏิเสธ..."
-                  rows="4"
-                  className="form-textarea"
-                />
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn-reject" onClick={confirmReject}>
-                ยืนยันปฏิเสธ
-              </button>
-              <button className="btn-cancel" onClick={() => setShowRejectModal(false)}>
-                ยกเลิก
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
+// FitnessTab moved to its own file: src/components/admin/FitnessTab.jsx
 
 // Reports Tab Component
 // Bookings Tab Component
