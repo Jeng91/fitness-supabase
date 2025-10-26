@@ -515,8 +515,12 @@ const FitnessDetailModal = (props) => {
                       <div className="promo-info">
                         <div className="promo-title">{p.title || p.promo_name || 'โปรโมชั่น'}</div>
                         {p.description && <div className="promo-desc">{p.description}</div>}
-                        {p.discount_amount && <div className="promo-discount">ลด {p.discount_amount} บาท</div>}
-                        {p.discount_percent && <div className="promo-discount">ลด {p.discount_percent}%</div>}
+                        {/* แสดง % ส่วนลดเป็นหลัก ถ้ามี ถ้าไม่มีให้แสดงเป็นจำนวนบาท */}
+                        {p.discount_percentage ? (
+                          <div className="promo-discount">ลด {p.discount_percentage}%</div>
+                        ) : (
+                          p.discount_amount && <div className="promo-discount">ลด {p.discount_amount} บาท</div>
+                        )}
                         {p.start_date && <div className="promo-dates">เริ่ม: {new Date(p.start_date).toLocaleDateString()}</div>}
                         {p.end_date && <div className="promo-dates">สิ้นสุด: {new Date(p.end_date).toLocaleDateString()}</div>}
                       </div>

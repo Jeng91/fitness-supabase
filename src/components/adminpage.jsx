@@ -32,6 +32,8 @@ const AdminPage = () => {
     totalRevenue: 0,
     systemRevenue: 0
   });
+  // ใช้เพื่อกรองรายการฟิตเนสเมื่อกดปุ่มดูฟิตเนสของพาร์ทเนอร์
+  const [filterOwnerUid, setFilterOwnerUid] = useState(null);
 
   // โหลดข้อมูลแดชบอร์ด (เรียกเมื่อเข้าหน้า หรือ refresh)
   const loadDashboardData = async () => {
@@ -411,14 +413,14 @@ const AdminPage = () => {
         <main className="admin-main">
           {activeTab === 'dashboard' && <DashboardTab data={dashboardData} setActiveTab={setActiveTab} />}
           {activeTab === 'users' && <UsersTab data={dashboardData} />}
-          {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} />}
+          {activeTab === 'partners' && <PartnersTab data={dashboardData} onRefresh={loadDashboardData} onViewPartnerFitness={(p) => { setFilterOwnerUid(p?.owner_uid ?? p?.owner_id ?? null); setActiveTab('fitness'); }} />}
           {activeTab === 'bookings' && <BookingsTab data={dashboardData} />}
           {activeTab === 'payments' && <PaymentAdmin />}
           {activeTab === 'approval' && <PaymentApproval pendingPayments={dashboardData.pendingPayments} onRefresh={loadDashboardData} setActiveTab={setActiveTab} />}
           {activeTab === 'approved' && <ApprovedPayments />}
           {activeTab === 'bank' && <BankAccountTab />}
           {activeTab === 'partnerAccounts' && <PartnerAccountsTab />}
-          {activeTab === 'fitness' && <FitnessTab data={dashboardData} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
+          {activeTab === 'fitness' && <FitnessTab data={dashboardData} filterOwnerUid={filterOwnerUid} onApprove={handleApproveFitness} onReject={handleRejectFitness} />}
           {activeTab === 'reports' && <ReportsTab />}
         </main>
       </div>
@@ -646,7 +648,7 @@ const UsersTabWithModal = ({ data }) => {
                   <td>
                     <button className="btn-view" onClick={() => handleView(user)}>ดู</button>
                     <button className="btn-edit" onClick={() => handleEdit(user)}>แก้ไข</button>
-                    <button className="btn-delete" style={{background:'#ffd700',color:'#333'}} onClick={() => handleDelete(user)}>ลบ</button>
+                    <button className="btn-delete" style={{background:'#ff0000ff',color:'#ffffffff'}} onClick={() => handleDelete(user)}>ลบ</button>
                   </td>
                 </tr>
               ))
@@ -751,7 +753,7 @@ const UsersTabWithModal = ({ data }) => {
 
 
 // Partners Tab Component
-const PartnersTab = ({ data, onRefresh }) => {
+const PartnersTab = ({ data, onRefresh, onViewPartnerFitness }) => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedPartner, setSelectedPartner] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -943,7 +945,7 @@ const PartnersTab = ({ data, onRefresh }) => {
                     >
                       ลบ
                     </button>
-                    <button className="btn-fitness" title="ดูฟิตเนสของพาร์ทเนอร์">🏋️</button>
+                    <button className="btn-fitness" title="ดูฟิตเนสของพาร์ทเนอร์" onClick={() => onViewPartnerFitness && onViewPartnerFitness(partner)}>🏋️</button>
                   </td>
                 </tr>
               ))
