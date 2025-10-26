@@ -741,7 +741,7 @@
 .admin-content-wrapper {
   display: flex;
   min-height: calc(100vh - 80px);
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   gap: 0;
 }
@@ -840,7 +840,7 @@
 /* Main Content */
 .admin-main {
   flex: 1;
-  padding: 2rem;
+  padding: 3rem;
   overflow-y: auto;
   background: #f8f9fa;
 }
@@ -2426,7 +2426,7 @@
 /* Main Content */
 .admin-main {
   flex: 1;
-  padding: 2rem;
+  padding: 3rem;
   overflow-y: auto;
   background: #f8f9fa;
 }
@@ -4317,7 +4317,7 @@
 /* Main Content */
 .admin-main {
   flex: 1;
-  padding: 2rem;
+  padding: 3rem;
   overflow-y: auto;
   background: #f8f9fa;
 }
