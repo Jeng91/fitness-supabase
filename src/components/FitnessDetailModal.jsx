@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import supabase from '../supabaseClient';
 import './FitnessDetailModal.css';
@@ -38,135 +38,96 @@ const FitnessDetailModal = (props) => {
     yearly: ''
   });
   const [promotions, setPromotions] = useState([]);
-  const [selectedPromotion, setSelectedPromotion] = useState(null);
+  // removed unused selectedPromotion state (was assigned but never used)
 
+  // Derived stable keys to avoid unnecessary effect re-runs
+  const fitId = useMemo(() => (
+    fitnessData?.fit_id || fitnessData?.id || fitnessData?.fitness_id || fitnessData?.fitId || fitnessData?.partner_fitness_id
+  ), [fitnessData]);
+
+  const fitUser = useMemo(() => fitnessData?.fit_user, [fitnessData]);
+  const fitMoreDetails = useMemo(() => fitnessData?.fit_moredetails, [fitnessData]);
   // โหลดข้อมูลอุปกรณ์และเจ้าของ
   useEffect(() => {
     const loadAdditionalData = async () => {
-      // Determine fitness id from several possible fields used across the codebase
-      const fitId = fitnessData?.fit_id || fitnessData?.id || fitnessData?.fitness_id || fitnessData?.fitId || fitnessData?.partner_fitness_id;
       console.log('FitnessDetailModal loadAdditionalData - fitnessData:', fitnessData);
       console.log('FitnessDetailModal determined fitId:', fitId);
       if (!fitId) {
         console.warn('No fitId available for this fitnessData, skipping equipment/promotions load');
         return;
       }
-      
+
       try {
-        // โหลดข้อมูลอุปกรณ์
-        // Try different column names to find equipment rows related to this fitness
+        // โหลดข้อมูลอุปกรณ์ (ลองหลายๆ ชื่อคอลัมน์)
         const equipmentColumnsToTry = ['fitness_id', 'fit_id', 'partner_fitness_id', 'fitnessId'];
-        let equipment = null;
-        let equipmentError = null;
+        let equipment = [];
         for (const col of equipmentColumnsToTry) {
           try {
             const res = await supabase.from('tbl_equipment').select('*').eq(col, fitId).order('em_id', { ascending: true });
-            // res may be { data, error }
             const data = res.data || res;
             const error = res.error || null;
-            console.log(`Tried equipment column ${col} -> data length:`, (data && data.length) || 0, ' error:', error);
             if (!error && data && data.length > 0) {
               equipment = data;
-              equipmentError = null;
               break;
             }
-            // if no error but empty result, keep trying other columns
-            equipmentError = error;
           } catch (err) {
             console.error('Exception while querying equipment with column', col, err);
-            equipmentError = err;
           }
-        }
-
-        if (equipmentError && equipmentError.code !== 'PGRST116') {
-          console.error('Error loading equipment (after tries):', equipmentError);
         }
         setEquipmentData(equipment || []);
 
         // โหลดข้อมูลเจ้าของ
-        const { data: owner, error: ownerError } = await supabase
-          .from('tbl_owner')
-          .select('*')
-          .eq('owner_name', fitnessData.fit_user)
-          .single();
-
-        if (ownerError && ownerError.code !== 'PGRST116') {
-          console.error('Error loading owner:', ownerError);
-        } else {
-          setOwnerData(owner);
+        try {
+          const { data: owner, error: ownerError } = await supabase
+            .from('tbl_owner')
+            .select('*')
+            .eq('owner_name', fitUser)
+            .single();
+          if (!ownerError) setOwnerData(owner);
+        } catch (ownerErr) {
+          console.error('Error loading owner:', ownerErr);
         }
 
-        // โหลดข้อมูลรายละเอียดเพิ่มเติมจาก field fit_moredetails
-        
-        // ดึงข้อมูลจาก field fit_moredetails ในตาราง tbl_fitness
-        const moreDetailsText = fitnessData.fit_moredetails || '';
-        
-        // แปลงข้อความเป็น array สำหรับแสดงผล
+        // ดึงและประมวลผล more details
+        const moreDetailsText = fitMoreDetails || '';
         let processedMoreDetails = [];
         if (moreDetailsText && moreDetailsText.trim()) {
-          // แยกข้อความตาม newline หรือ bullet points
           const lines = moreDetailsText.split(/\n|•|◦|-/).filter(line => line.trim());
-          processedMoreDetails = lines.map((line, index) => ({
-            id: index + 1,
-            title: line.trim(),
-            description: '',
-            type: 'text'
-          }));
+          processedMoreDetails = lines.map((line, index) => ({ id: index + 1, title: line.trim(), description: '', type: 'text' }));
         }
-        
-        // Debug logging disabled for clean console  
         setMoreDetailsData(processedMoreDetails);
 
-        // โหลดโปรโมชั่นของฟิตเนสนี้ (active)
-        try {
-          // Promotions: try different column names and be tolerant to missing 'status' column
-          const promoColumnsToTry = ['fit_id', 'fitness_id', 'partner_fitness_id', 'fitnessId'];
-          let promoData = null;
-          let promoError = null;
-
-          for (const col of promoColumnsToTry) {
-            try {
-              // First try with status='active' if that column exists; if it fails, fall back to no status
-              let res = await supabase.from('tbl_promotions').select('*').eq(col, fitId).order('created_at', { ascending: false });
-              let data = res.data || res;
-              let error = res.error || null;
-              console.log(`Tried promotions column ${col} -> data length:`, (data && data.length) || 0, ' error:', error);
-              if (error) {
-                // try again without other filters (already no filters besides eq)
-                promoError = error;
-                continue;
-              }
-              // Accept empty arrays too (no promotions), but keep the returned value
+        // โหลดโปรโมชั่น
+        const promoColumnsToTry = ['fit_id', 'fitness_id', 'partner_fitness_id', 'fitnessId'];
+        let promoData = [];
+        for (const col of promoColumnsToTry) {
+          try {
+            const res = await supabase.from('tbl_promotions').select('*').eq(col, fitId).order('created_at', { ascending: false });
+            const data = res.data || res;
+            const error = res.error || null;
+            if (!error) {
               promoData = data || [];
-              promoError = null;
               break;
-            } catch (err) {
-              console.error('Exception while querying promotions with column', col, err);
-              promoError = err;
             }
+          } catch (err) {
+            console.error('Exception while querying promotions with column', col, err);
           }
+        }
 
-          if (promoError) {
-            console.error('Error loading promotions (after tries):', promoError);
-          }
-
-          // Filter by date range in JS (if start/end present)
-          if (promoData) {
-            const now = new Date();
-            const filtered = (promoData || []).filter(p => {
-              if (!p.start_date && !p.end_date) return true;
-              const start = p.start_date ? new Date(p.start_date) : null;
-              const end = p.end_date ? new Date(p.end_date) : null;
-              if (start && now < start) return false;
-              if (end && now > end) return false;
-              return true;
-            });
-            setPromotions(filtered);
-          } else {
-            setPromotions([]);
-          }
-        } catch (err) {
-          console.error('Error fetching promotions:', err);
+        // Filter by date range
+        if (promoData && promoData.length > 0) {
+          const now = new Date();
+          const filtered = promoData.filter(p => {
+            if (!p.start_date && !p.end_date) return true;
+            const start = p.start_date ? new Date(p.start_date) : null;
+            const end = p.end_date ? new Date(p.end_date) : null;
+            if (start && now < start) return false;
+            if (end && now > end) return false;
+            return true;
+          });
+          setPromotions(filtered);
+        } else {
+          setPromotions([]);
         }
 
       } catch (error) {
@@ -175,7 +136,7 @@ const FitnessDetailModal = (props) => {
     };
 
     loadAdditionalData();
-  }, [fitnessData?.fit_id, fitnessData?.fit_user, fitnessData?.fit_moredetails]);
+  }, [fitId, fitUser, fitMoreDetails]);
 
   if (!isOpen || !fitnessData) return null;
 
@@ -365,8 +326,8 @@ const FitnessDetailModal = (props) => {
         promotion: promo
       };
 
-      setSelectedPromotion(promo);
-      navigate('/payment', { state: { bookingData } });
+  // Navigate to payment (we don't need to keep selectedPromotion in local state currently)
+  navigate('/payment', { state: { bookingData } });
     } catch (err) {
       console.error('Error claiming promotion:', err);
       alert('เกิดข้อผิดพลาดขณะรับโปรโมชั่น');
