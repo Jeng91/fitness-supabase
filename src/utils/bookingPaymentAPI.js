@@ -197,6 +197,47 @@ export const createPayment = async (paymentData) => {
 };
 
 /**
+ * บันทึกการใช้งานโปรโมชั่นโดยผู้ใช้ (claim)
+ * promo: object หรือ id/code ของโปรโมชั่น
+ * bookingId: string (ถ้ามี)
+ */
+export const recordPromoClaim = async (promo, bookingId = null) => {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      throw new Error('ต้องเข้าสู่ระบบเพื่อบันทึกการใช้โปรโมชั่น');
+    }
+
+    if (!promo) {
+      throw new Error('ไม่มีข้อมูลโปรโมชั่นที่จะบันทึก');
+    }
+
+    const promoId = promo.promo_id || promo.id || promo.id;
+    const promoCode = promo.promo_code || promo.code || null;
+
+    const insertObj = {
+      promo_id: promoId,
+      promo_code: promoCode,
+      user_id: user.id,
+      booking_id: bookingId,
+      used_at: new Date().toISOString()
+    };
+
+    const { data, error } = await supabase
+      .from('tbl_promo_claims')
+      .insert([insertObj])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return { success: true, data };
+  } catch (error) {
+    console.error('Error recording promo claim:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * อัพเดทสถานะการชำระเงิน
  */
 export const updatePaymentStatus = async (paymentId, status, gatewayData = null) => {
@@ -640,6 +681,8 @@ const bookingPaymentAPI = {
   getBookingStats,
   getRevenueReport,
   processPaymentGateway
+  ,
+  recordPromoClaim
 };
 
 // eslint-disable-next-line import/no-anonymous-default-export

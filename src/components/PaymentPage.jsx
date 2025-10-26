@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Layout from './Layout';
-import { createPayment, updateBookingStatus } from '../utils/bookingPaymentAPI';
+import { createPayment, updateBookingStatus, recordPromoClaim } from '../utils/bookingPaymentAPI';
 import { createMembershipPayment } from '../utils/membershipAPI';
 import QRPayment from './QRPayment';
 import supabase from '../supabaseClient';
@@ -65,41 +65,60 @@ const PaymentPage = () => {
     }
   }, [bookingData, navigate]);
 
-  // ถ้ามี promotion ติดมากับ bookingData (มาจากปุ่ม "รับโปรโมชั่น") ให้พยายามใช้อัตโนมัติ
+  // ถ้ามี promotion ติดมากับ bookingData (มาจากปุ่ม "รับโปรโมชั่น") ให้ยืนยันกับฐานข้อมูลก่อนแล้วค่อย apply
   useEffect(() => {
-    const applyPromoObject = (promo) => {
-      if (!promo) return;
+    const applyPromoFromBookingData = async () => {
+      if (!bookingData || !bookingData.promotion) return;
       try {
-        const currentDate = new Date();
-        if (promo.status && promo.status !== 'active') {
-          console.warn('Promo in bookingData is not active:', promo);
-          return;
+        const promoRef = bookingData.promotion;
+        let promoRecord = null;
+
+        // ถ้ามี promo object ที่มี promo_id หรือ id ให้ดึงโดยตรง
+        if (promoRef.promo_id || promoRef.id) {
+          const id = promoRef.promo_id || promoRef.id;
+          const { data, error } = await supabase.from('tbl_promotions').select('*').eq('promo_id', id).single();
+          if (!error && data) promoRecord = data;
         }
-        if (promo.end_date && new Date(promo.end_date) < currentDate) {
-          console.warn('Promo in bookingData is expired:', promo);
+
+        // ถ้ายังไม่พบ ให้ลองหาโดย promo_code
+        if (!promoRecord && promoRef.promo_code) {
+          const { data, error } = await supabase.from('tbl_promotions').select('*').eq('promo_code', promoRef.promo_code).single();
+          if (!error && data) promoRecord = data;
+        }
+
+        if (!promoRecord) {
+          console.warn('ไม่พบโปรโมชั่นจาก bookingData.promotion ในฐานข้อมูล');
           return;
         }
 
-        // คำนวณส่วนลดตามโครงสร้างเดียวกับ validatePromoCode
+        // ตรวจสอบสถานะ/วันหมดอายุ
+        const now = new Date();
+        if (promoRecord.status && promoRecord.status !== 'active') {
+          console.warn('Promo from DB is not active:', promoRecord);
+          return;
+        }
+        if (promoRecord.end_date && new Date(promoRecord.end_date) < now) {
+          console.warn('Promo from DB is expired:', promoRecord);
+          return;
+        }
+
+        // คำนวณส่วนลด
         let discount = 0;
         const base = bookingData?.total_amount || originalAmount || 0;
-        if (promo.discount_percentage > 0) {
-          discount = Math.round((base * promo.discount_percentage / 100) * 100) / 100;
-        } else if (promo.discount_amount > 0) {
-          discount = Math.min(promo.discount_amount, base);
+        if (promoRecord.discount_percentage > 0) {
+          discount = Math.round((base * promoRecord.discount_percentage / 100) * 100) / 100;
+        } else if (promoRecord.discount_amount > 0) {
+          discount = Math.min(promoRecord.discount_amount, base);
         }
 
-        setAppliedPromo(promo);
+        setAppliedPromo(promoRecord);
         setDiscountAmount(discount);
       } catch (err) {
-        console.error('Error applying promo from bookingData:', err);
+        console.error('Error applying promo from bookingData (DB confirm):', err);
       }
     };
 
-    if (bookingData && bookingData.promotion) {
-      applyPromoObject(bookingData.promotion);
-    }
-    // only run when bookingData changes
+    applyPromoFromBookingData();
   }, [bookingData, originalAmount]);
 
   const handleInputChange = (e) => {
@@ -277,6 +296,16 @@ const PaymentPage = () => {
 
     setIsProcessing(false);
     
+    // ถ้ามีโปรโมชั่นที่ใช้ ให้บันทึกการใช้งานโปรโมชั่น (claim)
+    if (appliedPromo) {
+      try {
+        const res = await recordPromoClaim(appliedPromo, bookingData.booking_id || null);
+        if (!res.success) console.warn('Failed to record promo claim for membership:', res.error);
+      } catch (err) {
+        console.error('Error recording promo claim for membership:', err);
+      }
+    }
+
     // กลับไปหน้าหลัก
     setTimeout(() => {
       navigate('/');
@@ -369,6 +398,16 @@ const PaymentPage = () => {
 
     if (!bookingUpdateResult.success) {
       console.warn('⚠️ Warning: Payment saved but failed to update booking status:', bookingUpdateResult.error);
+    }
+
+    // ถ้ามีโปรโมชั่นที่ใช้ ให้บันทึกการใช้งานโปรโมชั่น (claim)
+    if (appliedPromo) {
+      try {
+        const res = await recordPromoClaim(appliedPromo, bookingData.booking_id || null);
+        if (!res.success) console.warn('Failed to record promo claim for booking:', res.error);
+      } catch (err) {
+        console.error('Error recording promo claim for booking:', err);
+      }
     }
 
     // แสดงผลสำเร็จ

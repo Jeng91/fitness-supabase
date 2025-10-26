@@ -26,6 +26,7 @@ CREATE TABLE public.approved_payments (
   notes text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
+  fitness_int_id integer,
   CONSTRAINT approved_payments_pkey PRIMARY KEY (id),
   CONSTRAINT approved_payments_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
   CONSTRAINT approved_payments_original_payment_id_fkey FOREIGN KEY (original_payment_id) REFERENCES public.pending_payments(id),
@@ -178,7 +179,9 @@ CREATE TABLE public.tbl_admin (
   admin_name character varying NOT NULL,
   admin_password character varying,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT tbl_admin_pkey PRIMARY KEY (admin_id)
+  auth_user_id uuid,
+  CONSTRAINT tbl_admin_pkey PRIMARY KEY (admin_id),
+  CONSTRAINT tbl_admin_auth_user_fk FOREIGN KEY (auth_user_id) REFERENCES auth.users(id)
 );
 CREATE TABLE public.tbl_class_enrollments (
   enrollment_id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -348,6 +351,16 @@ CREATE TABLE public.tbl_partner_transfers (
   CONSTRAINT tbl_partner_transfers_pkey PRIMARY KEY (transfer_id),
   CONSTRAINT tbl_partner_transfers_partner_fitness_id_fkey FOREIGN KEY (partner_fitness_id) REFERENCES public.tbl_fitness(fit_id),
   CONSTRAINT tbl_partner_transfers_payment_id_fkey FOREIGN KEY (payment_id) REFERENCES public.payments(payment_id)
+);
+CREATE TABLE public.tbl_promo_claims (
+  claim_id bigint NOT NULL DEFAULT nextval('tbl_promo_claims_claim_id_seq'::regclass),
+  promo_id bigint,
+  promo_code text,
+  user_id uuid NOT NULL,
+  booking_id text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  used_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT tbl_promo_claims_pkey PRIMARY KEY (claim_id)
 );
 CREATE TABLE public.tbl_promotions (
   promotion_id integer NOT NULL DEFAULT nextval('tbl_promotions_promotion_id_seq'::regclass),
