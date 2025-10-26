@@ -33,17 +33,22 @@
 }
 /* ปุ่มมาตรฐานในระบบ Admin */
 .btn-view, .btn-edit, .btn-delete, .btn-approve, .btn-reject, .btn-fitness, .btn-refresh, .btn-retry, .btn-cancel, .btn-danger, .btn-primary, .btn-secondary {
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1.4rem; /* wider so text fits comfortably */
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  margin: 0 0.2rem 0.5rem 0.2rem;
-  transition: background 0.2s, box-shadow 0.2s, color 0.2s;
-  box-shadow: 0 2px 8px rgba(102,126,234,0.08);
+  margin: 0 0.3rem 0.6rem 0.3rem;
+  transition: background 0.2s, box-shadow 0.2s, color 0.2s, transform 0.12s;
+  box-shadow: 0 4px 12px rgba(102,126,234,0.06);
   outline: none;
-  display: inline-block;
+  display: inline-flex; /* center text and icons nicely */
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem; /* space between icon and label */
+  white-space: nowrap; /* keep text on one line */
+  min-width: 72px; /* ensure a pleasant minimum width */
 }
 .btn-view {
   background: #17a2b8;
