@@ -105,7 +105,7 @@
   padding: 14px 18px;
   border-radius: 10px;
   background: linear-gradient(180deg, #ffffff, #fbfdff);
-  border: 1px dashed rgba(0,0,0,0.06);
+  border: 3px dashed #007bff;
   cursor: pointer;
   display: flex;
   flex-direction: column;

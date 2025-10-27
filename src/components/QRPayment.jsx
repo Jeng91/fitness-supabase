@@ -316,7 +316,7 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
             <div className="slip-upload-section">
               <h4>📄 อัปโหลดสลิปการโอนเงิน</h4>
               
-              {/* File Input */}
+              {/* File Input - improved visual box (click to open file chooser) */}
               <div className="file-input-wrapper">
                 <input
                   type="file"
@@ -325,9 +325,16 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
                   onChange={handleSlipFileChange}
                   style={{ display: 'none' }}
                 />
-                <label htmlFor="slip-upload" className="file-input-label">
-                  📁 เลือกไฟล์สลิป
-                </label>
+                <div
+                  className="file-input-box"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => document.getElementById('slip-upload')?.click()}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') document.getElementById('slip-upload')?.click(); }}
+                >
+                  <strong>อัปโหลดสลิปที่ชัดเจน</strong>
+                  <div className="file-input-sub">คลิกเพื่อเลือกไฟล์รูปภาพ (.jpg, .png) ขนาดไม่เกิน 5MB</div>
+                </div>
               </div>
 
               {/* Slip Preview */}
