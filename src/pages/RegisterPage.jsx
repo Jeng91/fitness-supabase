@@ -76,21 +76,27 @@ const RegisterPage = () => {
         // สร้าง profile ใน database ตาม role
         if (formData.role === 'partner') {
           // สร้างใน tbl_owner สำหรับ partner
-          const { error: ownerError } = await supabase
+          // NOTE: the table uses `auth_user_id` (uuid) to reference auth.users
+          // Do NOT try to set `owner_uid` (integer identity) from the uuid — that causes insert/type errors.
+          const { data: ownerData, error: ownerError } = await supabase
             .from('tbl_owner')
             .insert([
               {
-                owner_uid: data.user.id,
+                auth_user_id: data.user.id,
                 owner_name: formData.fullName,
                 owner_email: formData.email,
                 owner_password: formData.password,
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               }
-            ]);
+            ])
+            .select();
 
           if (ownerError) {
+            // log full details to help debugging (status, message, details)
             console.error('Error creating owner profile:', ownerError);
+          } else {
+            console.log('Created owner record:', ownerData && ownerData[0]);
           }
         } else {
           // สร้างใน profiles สำหรับ user

@@ -646,6 +646,30 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
+/* Stronger, scoped fallback to ensure the label appears as a button
+   even if broader/global styles override the simpler selector above. */
+.qr-payment-container .slip-upload-section .file-input-wrapper .file-input-label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 12px 20px !important;
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  font-weight: 600 !important;
+  border: none !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+}
+
+.qr-payment-container .slip-upload-section .file-input-wrapper .file-input-label:focus,
+.qr-payment-container .slip-upload-section .file-input-wrapper .file-input-label:active {
+  outline: none !important;
+  transform: translateY(-1px) !important;
+}
+
 .slip-preview {
   text-align: center;
   margin: 16px 0;
