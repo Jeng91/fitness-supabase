@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import supabase from '../supabaseClient';
 import './PaymentApproval.css';
+import { useEffect } from 'react';
 
 // ฟังก์ชันวิเคราะห์ข้อมูลการจอง
 const getBookingTypeFromDescription = (description) => {
@@ -64,6 +65,88 @@ const extractPartnerNameFromDescription = (description) => {
 // ลบ PaymentApproval ที่ซ้ำซ้อนออก
 const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
   const [processing, setProcessing] = useState(null);
+  const [pricingInfo, setPricingInfo] = useState({}); // map payment.id -> { label, amount }
+
+  useEffect(() => {
+    // Fetch pricing details for pending payments (booking/membership/class)
+    const fetchPricing = async () => {
+      const newInfo = {};
+      for (const payment of pendingPayments) {
+        try {
+          const bookingType = getBookingTypeFromDescription(payment.description);
+
+          // default fallback: use payment.amount
+          let label = 'จำนวนเงิน (รวม)';
+          let amount = payment.amount || 0;
+
+          // If booking_id available, try to fetch booking and fitness prices
+          if (payment.booking_id) {
+            const { data: booking, error: bookingErr } = await supabase
+              .from('bookings')
+              .select(`*, tbl_fitness:fitness_id (fit_price, fit_price_memberm, fit_price_membery, fit_name)`)
+              .eq('booking_id', payment.booking_id)
+              .single();
+
+            if (!bookingErr && booking) {
+              // pick price based on bookingType
+              if (bookingType === 'daily') {
+                // fit_price may be stored as string in tbl_fitness.fit_price
+                amount = booking.tbl_fitness?.fit_price ? Number(booking.tbl_fitness.fit_price) : Number(booking.total_amount || payment.amount || 0);
+                label = 'จำนวนเงิน (รายวัน)';
+              } else if (bookingType === 'monthly') {
+                amount = booking.tbl_fitness?.fit_price_memberm ?? Number(booking.total_amount || payment.amount || 0);
+                label = 'จำนวนเงิน (รายเดือน)';
+              } else if (bookingType === 'yearly') {
+                amount = booking.tbl_fitness?.fit_price_membery ?? Number(booking.total_amount || payment.amount || 0);
+                label = 'จำนวนเงิน (รายปี)';
+              } else if (bookingType === 'class') {
+                // For class bookings the booking.total_amount likely represents class price
+                amount = Number(booking.total_amount || payment.amount || 0);
+                label = 'จำนวนเงิน (คลาส)';
+              } else {
+                // membership/other
+                amount = Number(booking.total_amount || payment.amount || 0);
+                label = 'จำนวนเงิน (รวม)';
+              }
+            }
+          }
+
+          // If membership_id available, try to fetch membership row
+          if (payment.membership_id) {
+            const { data: membership, error: memErr } = await supabase
+              .from('tbl_memberships')
+              .select(`amount, membership_type, fitness_id`)
+              .eq('membership_id', payment.membership_id)
+              .single();
+
+            if (!memErr && membership) {
+              amount = membership.amount || amount;
+              label = membership.membership_type === 'monthly' ? 'จำนวนเงิน (สมาชิก รายเดือน)' : 'จำนวนเงิน (สมาชิก รายปี)';
+            }
+          }
+
+          // Fallback: if description indicates class and we couldn't find booking, use payment.amount
+          if (getBookingTypeFromDescription(payment.description) === 'class' && !newInfo[payment.id]) {
+            label = 'จำนวนเงิน (คลาส)';
+            amount = payment.amount || amount;
+          }
+
+          newInfo[payment.id] = { label, amount };
+        } catch (err) {
+          console.error('Error fetching pricing for payment', payment.id, err);
+          newInfo[payment.id] = { label: 'จำนวนเงิน', amount: payment.amount || 0 };
+        }
+      }
+
+      setPricingInfo(newInfo);
+    };
+
+    if (pendingPayments && pendingPayments.length > 0) {
+      fetchPricing();
+    } else {
+      setPricingInfo({});
+    }
+  }, [pendingPayments]);
 
   const handleApprovePayment = async (paymentId, transactionId) => {
     try {
@@ -264,6 +347,13 @@ const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
                   <span className="label">เบอร์โทร:</span>
                   <span className="value">
                     {payment.profile?.usertel || 'ไม่ระบุ'}
+                  </span>
+                </div>
+                {/* แสดงจำนวนเงินของฟิตเนส ตามประเภทการจอง */}
+                <div className="detail-row">
+                  <span className="label">{pricingInfo[payment.id]?.label || 'จำนวนเงินของฟิตเนส:'}</span>
+                  <span className="value">
+                    ฿{formatAmount(pricingInfo[payment.id]?.amount ?? payment.amount ?? 0)}
                   </span>
                 </div>
                 <div className="detail-row">

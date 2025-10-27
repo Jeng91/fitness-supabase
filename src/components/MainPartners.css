@@ -3479,7 +3479,7 @@
 
 .payment-details {
   display: grid;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 .payment-details .detail-group {
