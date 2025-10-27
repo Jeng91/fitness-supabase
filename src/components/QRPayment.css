@@ -219,12 +219,18 @@
 }
 
 .qr-code-image {
-  width: 200px;
-  height: 200px;
-  border-radius: 8px;
+  /* Force small square QR preview to fit inside qr-display */
+  width: 50px !important;
+  height: 50px !important;
+  max-width: 50px !important;
+  max-height: 50px !important;
+  object-fit: contain;
+  border-radius: 6px;
   background: white;
-  padding: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: inline-block;
+  margin: 0 auto;
 }
 
 .qr-instruction {
@@ -505,6 +511,11 @@
     padding: 16px;
   }
   
+  /* Smaller QR on mobile */
+  .qr-code-image {
+    max-width: 240px;
+    padding: 6px;
+  }
   .qr-code-image {
     width: 180px;
     height: 180px;
