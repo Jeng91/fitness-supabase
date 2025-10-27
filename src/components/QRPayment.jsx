@@ -333,7 +333,12 @@ const QRPayment = memo(({ paymentData, onSuccess, onCancel, onError }) => {
               {/* Slip Preview */}
               {slipPreview && (
                 <div className="slip-preview" >
-                  <img src={slipPreview} alt="ตัวอย่างสลิป" className="slip-preview-image" />
+                  <img
+                    src={slipPreview}
+                    alt="ตัวอย่างสลิป"
+                    className="slip-preview-image"
+                    style={{ width: '400px', height: '400px', objectFit: 'contain' }}
+                  />
                   <p className="slip-filename">{slipFile?.name}</p>
                 </div>
               )}
