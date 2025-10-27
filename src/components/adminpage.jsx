@@ -482,8 +482,6 @@ const DashboardTab = ({ data, setActiveTab }) => (
                 <th>Transaction ID</th>
                 <th>ผู้ใช้</th>
                 <th>จำนวนเงิน</th>
-                <th>รายละเอียด</th>
-                <th>วันที่ส่ง</th>
                 <th>สถานะ</th>
                 <th>จัดการ</th>
               </tr>
@@ -494,7 +492,7 @@ const DashboardTab = ({ data, setActiveTab }) => (
                   <td>
                     <span
                       className="transaction-id"
-                      style={{display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+                      style={{display: 'inline-block', maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
                       title={payment.transaction_id}
                     >
                       {payment.transaction_id}
@@ -503,7 +501,7 @@ const DashboardTab = ({ data, setActiveTab }) => (
                   <td>
                     <div
                       className="user-info"
-                      style={{maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+                      style={{maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
                       title={payment.profile?.full_name || payment.profile?.useremail || 'ไม่ระบุ'}
                     >
                       <div>
@@ -515,15 +513,7 @@ const DashboardTab = ({ data, setActiveTab }) => (
                     </div>
                   </td>
                   <td>
-                    <span className="amount" style={{display: 'inline-block', minWidth: 80}}>฿{Number(payment.amount || 0).toLocaleString()}</span>
-                  </td>
-                  <td>
-                    <div className="description" style={{maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={payment.description || 'ไม่ระบุ'}>
-                      {payment.description || 'ไม่ระบุ'}
-                    </div>
-                  </td>
-                  <td>
-                    {payment.created_at ? new Date(payment.created_at).toLocaleDateString('th-TH') : ''}
+                    <span className="amount" style={{display: 'inline-block', minWidth: 100}}>฿{Number(payment.amount || 0).toLocaleString()}</span>
                   </td>
                   <td>
                     <span className="status pending">รอการอนุมัติ</span>
