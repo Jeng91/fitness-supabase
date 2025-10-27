@@ -326,17 +326,11 @@ const NearbyFitness = () => {
                         <span className="rating-count">{fitness.review_count || '138'} ความคิดเห็น</span>
                       </div>
                     </div>
-                    <button className="fitness-card-detail-btn" onClick={() => setSelectedFitness(fitness)}>
+                    <button className="view-details-btn" onClick={() => navigate(`/fitness/${fitness.fit_id}`)}>
                       ดูรายละเอียด
                     </button>
                     {/* เพิ่มปุ่มลิ้งค์ไปหน้ารายละเอียดฟิตเนส */}
-                    <button
-                      className="fitness-card-detail-btn"
-                      style={{ marginTop: '8px', background: '#667eea', color: '#fff' }}
-                      onClick={() => navigate(`/fitness-detail/${fitness.fit_id}`)}
-                    >
-                      ไปหน้ารายละเอียดฟิตเนส
-                    </button>
+                    
                   </div>
                 </div>
               ))}
