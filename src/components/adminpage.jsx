@@ -492,22 +492,38 @@ const DashboardTab = ({ data, setActiveTab }) => (
               {data.pendingPayments.slice(0, 5).map((payment, index) => (
                 <tr key={payment.id || index}>
                   <td>
-                    <span className="transaction-id">{payment.transaction_id}</span>
+                    <span
+                      className="transaction-id"
+                      style={{display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+                      title={payment.transaction_id}
+                    >
+                      {payment.transaction_id}
+                    </span>
                   </td>
                   <td>
-                    <div className="user-info">
-                      <div>{payment.profiles?.full_name || 'ไม่ระบุ'}</div>
-                      <small>{payment.profiles?.useremail || ''}</small>
+                    <div
+                      className="user-info"
+                      style={{maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}
+                      title={payment.profile?.full_name || payment.profile?.useremail || 'ไม่ระบุ'}
+                    >
+                      <div>
+                        {payment.profile?.full_name || 'ไม่ระบุ'}
+                      </div>
+                      <small style={{display: 'block', color: '#666', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}}>
+                        {payment.profile?.useremail || payment.profile?.email || ''}
+                      </small>
                     </div>
                   </td>
                   <td>
-                    <span className="amount">฿{payment.amount?.toLocaleString()}</span>
+                    <span className="amount" style={{display: 'inline-block', minWidth: 80}}>฿{Number(payment.amount || 0).toLocaleString()}</span>
                   </td>
                   <td>
-                    <div className="description">{payment.description || 'ไม่ระบุ'}</div>
+                    <div className="description" style={{maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'}} title={payment.description || 'ไม่ระบุ'}>
+                      {payment.description || 'ไม่ระบุ'}
+                    </div>
                   </td>
                   <td>
-                    {new Date(payment.created_at).toLocaleDateString('th-TH')}
+                    {payment.created_at ? new Date(payment.created_at).toLocaleDateString('th-TH') : ''}
                   </td>
                   <td>
                     <span className="status pending">รอการอนุมัติ</span>
