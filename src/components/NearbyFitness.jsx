@@ -11,7 +11,7 @@ const NearbyFitness = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [locationStatus, setLocationStatus] = useState(''); // 'requesting', 'success', 'error'
   const [statusMessage, setStatusMessage] = useState('');
-  const [searchRadius, setSearchRadius] = useState(10); // กิโลเมตร
+  const [searchRadius, setSearchRadius] = useState(20); // กิโลเมตร
   const [sortBy, setSortBy] = useState('distance'); // 'distance', 'name', 'type'
   const [selectedFitness, setSelectedFitness] = useState(null);
   const [showMap, setShowMap] = useState(false);
@@ -155,19 +155,10 @@ const NearbyFitness = () => {
       <div className="nearby-header">
         <h2 className="nearby-title">
           <span className="location-icon">📍</span>
-          ฟิตเนสใกล้เคียง (รัศมี 10 กิโลเมตร)
+          ฟิตเนสใกล้เคียง (รัศมี 20 กิโลเมตร)
         </h2>
         <div style={{ display: 'flex', gap: '12px' }}>
-          {nearbyFitness.length > 0 && (
-            <button
-              onClick={() => setShowMap(!showMap)}
-              className="find-nearby-btn"
-              style={{ background: 'linear-gradient(135deg, #9b59b6, #8e44ad)' }}
-            >
-              <span>{showMap ? '📋' : '🗺️'}</span>
-              {showMap ? 'รายการ' : 'แผนที่'}
-            </button>
-          )}
+          
           <button
             onClick={() => handleFindNearby(false)}
             disabled={isLoading}
@@ -185,15 +176,6 @@ const NearbyFitness = () => {
                 รีเฟรช
               </>
             )}
-          </button>
-          <button
-            onClick={() => handleFindNearby(true)}
-            disabled={isLoading}
-            className="find-nearby-btn"
-            style={{ background: 'linear-gradient(135deg, #f39c12, #e67e22)' }}
-          >
-            <span>🏫</span>
-            Demo
           </button>
         </div>
       </div>
@@ -269,8 +251,11 @@ const NearbyFitness = () => {
             <div className="fitness-results">
               <div className="results-header">
                 <div className="results-count">
-                  พบฟิตเนส {nearbyFitness.length} แห่ง
-                </div>
+                    พบฟิตเนส {nearbyFitness.length} แห่ง
+                    {nearbyFitness.length > 5 && (
+                      <div className="showing-note">แสดง {Math.min(5, nearbyFitness.length)} ที่ใกล้ที่สุด</div>
+                    )}
+                  </div>
                 <div className="sort-options">
                   <button
                     className={`sort-btn ${sortBy === 'distance' ? 'active' : ''}`}
@@ -294,7 +279,7 @@ const NearbyFitness = () => {
               </div>
 
               {/* รายการฟิตเนส */}
-              {sortedFitness.map((fitness, index) => (
+              {sortedFitness.slice(0, 5).map((fitness, index) => (
                 <div 
                     key={fitness.fit_id} 
                     id={`fitness-card-${fitness.fit_id}`}
@@ -329,11 +314,23 @@ const NearbyFitness = () => {
                     <button className="view-details-btn" onClick={() => navigate(`/fitness/${fitness.fit_id}`)}>
                       ดูรายละเอียด
                     </button>
+                      {/* แสดงป้ายระยะทางถ้ามี */}
+                      {fitness.distanceText && (
+                        <div className="fitness-distance">{fitness.distanceText}</div>
+                      )}
                     {/* เพิ่มปุ่มลิ้งค์ไปหน้ารายละเอียดฟิตเนส */}
                     
                   </div>
                 </div>
               ))}
+              {/* ถ้ามีมากกว่า 5 รายการ ให้มีปุ่มแสดงรายการทั้งหมด */}
+              {sortedFitness.length > 5 && (
+                <div className="show-more-wrapper">
+                  <button className="show-more-btn" onClick={() => setShowMap(true)}>
+                    แสดงทั้งหมดบนแผนที่ ({sortedFitness.length} รายการ)
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </>

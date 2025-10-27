@@ -808,6 +808,7 @@ const FitnessDetailModal = (props) => {
                     <div className="additional-images-grid">
                       {fitnessData.fit_image2 && (
                         <img 
+                          key={fitnessData.fit_image2}
                           src={fitnessData.fit_image2} 
                           alt="รูปเสริม 1" 
                           className="detail-additional-image"
@@ -816,6 +817,7 @@ const FitnessDetailModal = (props) => {
                       )}
                       {fitnessData.fit_image3 && (
                         <img 
+                          key={fitnessData.fit_image3}
                           src={fitnessData.fit_image3} 
                           alt="รูปเสริม 2" 
                           className="detail-additional-image"
@@ -824,6 +826,7 @@ const FitnessDetailModal = (props) => {
                       )}
                       {fitnessData.fit_image4 && (
                         <img 
+                          key={fitnessData.fit_image4}
                           src={fitnessData.fit_image4} 
                           alt="รูปเสริม 3" 
                           className="detail-additional-image"
