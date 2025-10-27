@@ -91,6 +91,58 @@
   border: 1px solid #dee2e6;
 }
 
+/* File input wrapper (visual upload box) */
+.file-input-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.file-input-box {
+  flex: 1;
+  padding: 14px 18px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  border: 1px dashed rgba(0,0,0,0.06);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-input-box strong {
+  color: #2b6cb0;
+}
+
+.file-input-sub {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+/* Upload button style (match other action buttons) */
+.upload-slip-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.upload-slip-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(32, 201, 151, 0.18);
+}
+
+.upload-slip-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 .slip-actions {
   display: flex;
   align-items: center;

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import supabase from '../supabaseClient';
 import './PaymentApproval.css';
 import { useEffect } from 'react';
+import { uploadSlipFile } from '../utils/pendingPaymentAPI';
 
 // ฟังก์ชันวิเคราะห์ข้อมูลการจอง
 const getBookingTypeFromDescription = (description) => {
@@ -66,6 +67,7 @@ const extractPartnerNameFromDescription = (description) => {
 const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
   const [processing, setProcessing] = useState(null);
   const [pricingInfo, setPricingInfo] = useState({}); // map payment.id -> { label, amount }
+  const [uploadingId, setUploadingId] = useState(null);
 
   useEffect(() => {
     // Fetch pricing details for pending payments (booking/membership/class)
@@ -394,6 +396,8 @@ const PaymentApproval = ({ pendingPayments = [], onRefresh, setActiveTab }) => {
                     </div>
                   </div>
                 )}
+
+                
               </div>
 
               <div className="payment-actions">
